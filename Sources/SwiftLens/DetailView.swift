@@ -487,33 +487,13 @@ struct DetailView: View {
             if let v = cs.signatureType { RowView(key: "Signature", value: v) }
             if let v = cs.runtimeVersion { RowView(key: "Runtime Version", value: v) }
 
-            if let v = cs.codeDirectoryVersion {
-                RowView(key: "CodeDirectory v", value: v)
-            }
-            if let v = cs.codeDirectorySize { RowView(key: "CodeDirectory size", value: v) }
-            if let v = cs.codeDirectoryHashes { RowView(key: "CodeDirectory hashes", value: v) }
             if let v = cs.flags { RowView(key: "flags (原始)", value: v) }
             if !cs.decodedFlags.isEmpty {
                 RowView(key: "flags (解码)", value: cs.decodedFlags.joined(separator: ", "))
             }
 
             if let v = cs.cdHash { RowView(key: "CDHash", value: v) }
-            if let v = cs.candidateCDHash { RowView(key: "CandidateCDHash", value: v) }
-            if let v = cs.candidateCDHashFull { RowView(key: "CandidateCDHashFull", value: v) }
             if let v = cs.hashType { RowView(key: "Hash type", value: v) }
-            if let v = cs.hashChoices { RowView(key: "Hash choices", value: v) }
-            if let v = cs.cmsDigest { RowView(key: "CMSDigest", value: v) }
-            if let v = cs.cmsDigestType { RowView(key: "CMSDigestType", value: v) }
-
-            if let v = cs.sealedResourcesVersion {
-                RowView(key: "Sealed Resources version", value: v)
-            }
-            if let v = cs.sealedResourcesRules { RowView(key: "Sealed rules", value: v) }
-            if let v = cs.sealedResourcesFiles { RowView(key: "Sealed files", value: v) }
-            if let v = cs.internalRequirements { RowView(key: "Internal requirements", value: v) }
-            if let v = cs.infoPlistEntries { RowView(key: "Info.plist entries", value: v) }
-            if let v = cs.totalSignatures { RowView(key: "Total signatures", value: v) }
-            if let v = cs.chosenSignature { RowView(key: "Chosen signature", value: v) }
 
             if !cs.authorities.isEmpty {
                 Divider().padding(.vertical, 4)
@@ -665,10 +645,10 @@ struct DetailView: View {
         }
     }
 
-    // MARK: codesign 原始输出
+    // MARK: 签名详情 (合成)
     private var rawCodesignSection: some View {
         SectionView(L10n.t(.rawCodesign)) {
-            DisclosureGroup("展开 codesign -dvvv 输出") {
+            DisclosureGroup("展开签名详情 (Security 框架合成)") {
                 ScrollView {
                     Text(info.codeSign.detailRaw.isEmpty ? "(无)" : info.codeSign.detailRaw)
                         .font(.system(.caption, design: .monospaced))

@@ -48,7 +48,5 @@ targets:
     entitlements:
       path: SwiftLens/SwiftLens.entitlements
       properties:
-        com.apple.security.app-sandbox: false
-        com.apple.security.cs.allow-jit: true
-        com.apple.security.cs.allow-unsigned-executable-memory: true
-        com.apple.security.cs.disable-library-validation: true
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-only: true

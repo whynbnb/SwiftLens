@@ -128,7 +128,7 @@ enum SubBundleScanner {
         let ver  = pull("CFBundleShortVersionString") ?? pull("CFBundleVersion")
         let exec = pull("CFBundleExecutable")
 
-        // 轻量签名检查 —— 仅取 codesign -dv 的 Signature / Runtime Version 行
+        // 轻量签名检查 —— 使用 Security 框架 (沙盒兼容)
         let (state, sigType, runtime) = quickSign(at: url)
 
         return SubBundle(
@@ -144,32 +144,35 @@ enum SubBundleScanner {
         )
     }
 
+    /// 沙盒兼容的轻量签名检查: SecStaticCode + SecCodeCopySigningInformation
     private static func quickSign(at url: URL) -> (CodeSignInfo.SignedState, String?, String?) {
-        let proc = Process()
-        let pipe = Pipe()
-        proc.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
-        proc.arguments = ["-dvv", url.path]
-        proc.standardOutput = pipe
-        proc.standardError = pipe
-        do { try proc.run() } catch { return (.unknown, nil, nil) }
-        proc.waitUntilExit()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let text = String(data: data, encoding: .utf8) ?? ""
-        if proc.terminationStatus != 0 {
-            if text.contains("not signed at all") { return (.unsigned, nil, nil) }
+        var staticCode: SecStaticCode?
+        let createStatus = SecStaticCodeCreateWithPath(
+            url as CFURL,
+            SecCSFlags(rawValue: 0),
+            &staticCode
+        )
+        guard createStatus == errSecSuccess, let code = staticCode else {
             return (.unknown, nil, nil)
         }
-        var sig: String?
-        var runtime: String?
-        for line in text.split(separator: "\n") {
-            let s = String(line)
-            if s.hasPrefix("Signature=") { sig = String(s.dropFirst("Signature=".count)) }
-            else if s.hasPrefix("Runtime Version=") { runtime = String(s.dropFirst("Runtime Version=".count)) }
+        var infoDict: CFDictionary?
+        // 仅 kSecCSSigningInformation; 附加 kSecCSEntitlements 会导致调用失败
+        let signStatus = SecCodeCopySigningInformation(
+            code,
+            SecCSFlags(rawValue: kSecCSSigningInformation),
+            &infoDict
+        )
+        guard signStatus == errSecSuccess, let dict = infoDict as? [String: Any] else {
+            if signStatus == errSecCSUnsigned { return (.unsigned, nil, nil) }
+            return (.unknown, nil, nil)
         }
-        let state: CodeSignInfo.SignedState
-        if let s = sig, s.lowercased().contains("adhoc") { state = .adhoc }
-        else { state = .signed }
-        return (state, sig, runtime)
+        let flags = (dict["flags"] as? NSNumber)?.uint32Value ?? 0
+        let isAdhoc = flags & 0x2 != 0   // CS_ADHOC
+        let isRuntime = flags & 0x10000 != 0  // CS_RUNTIME
+        let state: CodeSignInfo.SignedState = isAdhoc ? .adhoc : .signed
+        let sigType: String? = isAdhoc ? "adhoc" : "signed"
+        let runtime: String? = isRuntime ? "Hardened Runtime" : nil
+        return (state, sigType, runtime)
     }
 
     private static func directorySize(at url: URL) -> UInt64 {

@@ -106,12 +106,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let v = cs.runtimeVersion { lines.append("  Runtime Version: \(v)") }
         if !cs.decodedFlags.isEmpty { lines.append("  flags(解码): \(cs.decodedFlags.joined(separator: ", "))") }
         if let v = cs.flags { lines.append("  flags(原始): \(v)") }
-        if let v = cs.sealedResourcesVersion {
-            var sealed = "version=\(v)"
-            if let r = cs.sealedResourcesRules { sealed += " rules=\(r)" }
-            if let f = cs.sealedResourcesFiles { sealed += " files=\(f)" }
-            lines.append("  Sealed Resources: \(sealed)")
-        }
         if !cs.authorities.isEmpty {
             lines.append("  Authority:")
             cs.authorities.forEach { lines.append("    - \($0)") }
