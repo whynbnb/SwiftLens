@@ -586,7 +586,7 @@ struct DetailView: View {
 
     // MARK: 子 bundle (Frameworks / Helpers / XPC / PlugIns)
     /// 数量超过该阈值时启用固定高度内嵌滚动，避免单一分区把整页拉得太长。
-    private static let subBundlesCollapsableThreshold = 8
+    private static let subBundlesCollapsableThreshold = 4
 
     private var subBundlesSection: some View {
         SectionView(
