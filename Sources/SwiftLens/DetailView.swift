@@ -118,8 +118,18 @@ struct DetailView: View {
                     .foregroundStyle(.secondary)
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text(info.displayName ?? info.bundleName ?? info.bundleURL.lastPathComponent)
-                    .font(.system(.title2, design: .default).bold())
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(info.displayName ?? info.bundleName ?? info.bundleURL.lastPathComponent)
+                        .font(.system(.title2, design: .default).bold())
+                    // 版本徽章 —— 一眼可见
+                    if info.bundleShortVersion != nil || info.bundleVersion != nil {
+                        Text(versionBadgeText())
+                            .font(.system(.callout, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Capsule().strokeBorder(.tertiary.opacity(0.5)))
+                    }
+                }
                 if let bid = info.bundleIdentifier {
                     Text(bid).font(.system(.body, design: .monospaced))
                         .textSelection(.enabled)
@@ -973,6 +983,18 @@ struct DetailView: View {
 
     private func formattedSize(_ bytes: UInt64) -> String {
         ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
+    }
+
+    /// 顶部版本徽章文本：`1.2.3` / `1.2.3 (456)` / `(456)`，按可用字段组合
+    private func versionBadgeText() -> String {
+        let v = info.bundleShortVersion
+        let b = info.bundleVersion
+        switch (v, b) {
+        case let (v?, b?):     return "\(v) (\(b))"
+        case let (v?, nil):    return v
+        case let (nil, b?):    return "(\(b))"
+        default:               return "—"
+        }
     }
 
     private func badgeColor(for s: CodeSignInfo.SignedState) -> Color {
