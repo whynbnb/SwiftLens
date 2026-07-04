@@ -306,19 +306,6 @@ struct DetailView: View {
                 }
 
                 if info.documentTypes.count > Self.documentTypesCollapsableThreshold {
-                    HStack {
-                        Text("\(info.documentTypes.count) 项文档类型")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("可滚动")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Capsule().strokeBorder(.tertiary.opacity(0.5)))
-                    }
-                    .padding(.bottom, 4)
-
                     ScrollView {
                         bodyContent
                     }
@@ -551,6 +538,9 @@ struct DetailView: View {
     }
 
     // MARK: Entitlements
+    /// 数量超过该阈值时启用固定高度内嵌滚动，避免单一分区把整页拉得太长。
+    private static let entitlementsCollapsableThreshold = 12
+
     private var entitlementsSection: some View {
         let cs = info.codeSign
         return SectionView(L10n.t(.entitlements),
@@ -559,8 +549,21 @@ struct DetailView: View {
             RowView(key: "App Sandbox",
                     value: info.isSandboxed ? "✅ 已启用 (com.apple.security.app-sandbox)" : "❌ 未启用")
             if let ent = cs.entitlements, !ent.isEmpty {
-                ForEach(InfoPlistParser.flatten(ent).sorted { $0.0 < $1.0 }, id: \.0) { row in
-                    RowView(key: row.0, value: row.1)
+                let rows = InfoPlistParser.flatten(ent).sorted { $0.0 < $1.0 }
+                let bodyContent = VStack(alignment: .leading, spacing: 8) {
+                    ForEach(rows, id: \.0) { row in
+                        RowView(key: row.0, value: row.1)
+                    }
+                }
+
+                if rows.count > Self.entitlementsCollapsableThreshold {
+                    ScrollView {
+                        bodyContent
+                    }
+                    .frame(maxHeight: 320)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.2)))
+                } else {
+                    bodyContent
                 }
             } else if let raw = cs.entitlementsRaw {
                 DisclosureGroup("原始 XML") {
@@ -590,6 +593,9 @@ struct DetailView: View {
     }
 
     // MARK: 子 bundle (Frameworks / Helpers / XPC / PlugIns)
+    /// 数量超过该阈值时启用固定高度内嵌滚动，避免单一分区把整页拉得太长。
+    private static let subBundlesCollapsableThreshold = 8
+
     private var subBundlesSection: some View {
         SectionView(
             L10n.t(.subBundles),
@@ -598,41 +604,53 @@ struct DetailView: View {
             if info.subBundles.isEmpty {
                 PlaceholderRow(text: "—")
             } else {
-                ForEach(Array(info.subBundles.enumerated()), id: \.element.id) { i, sub in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 8) {
-                            Image(systemName: subBundleIcon(for: sub.kind))
-                                .foregroundStyle(.tint)
-                                .frame(width: 20)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(sub.relativePath)
-                                    .font(.system(.body, design: .monospaced).bold())
-                                if let bid = sub.bundleIdentifier {
-                                    Text(bid)
-                                        .font(.system(.caption2, design: .monospaced))
-                                        .foregroundStyle(.secondary)
+                let bodyContent = VStack(alignment: .leading, spacing: 4) {
+                    ForEach(Array(info.subBundles.enumerated()), id: \.element.id) { i, sub in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 8) {
+                                Image(systemName: subBundleIcon(for: sub.kind))
+                                    .foregroundStyle(.tint)
+                                    .frame(width: 20)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(sub.relativePath)
+                                        .font(.system(.body, design: .monospaced).bold())
+                                    if let bid = sub.bundleIdentifier {
+                                        Text(bid)
+                                            .font(.system(.caption2, design: .monospaced))
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
+                                Spacer()
+                                Badge(text: sub.signatureState.rawValue,
+                                      color: badgeColor(for: sub.signatureState))
                             }
-                            Spacer()
-                            Badge(text: sub.signatureState.rawValue,
-                                  color: badgeColor(for: sub.signatureState))
+                            if let ver = sub.bundleVersion {
+                                RowView(key: "版本", value: ver)
+                            }
+                            if let exec = sub.executableName {
+                                RowView(key: "CFBundleExecutable", value: exec)
+                            }
+                            if let sig = sub.signatureType {
+                                RowView(key: "Signature", value: sig)
+                            }
+                            if let runtime = sub.runtimeVersion {
+                                RowView(key: "Runtime Version", value: runtime)
+                            }
                         }
-                        if let ver = sub.bundleVersion {
-                            RowView(key: "版本", value: ver)
-                        }
-                        if let exec = sub.executableName {
-                            RowView(key: "CFBundleExecutable", value: exec)
-                        }
-                        if let sig = sub.signatureType {
-                            RowView(key: "Signature", value: sig)
-                        }
-                        if let runtime = sub.runtimeVersion {
-                            RowView(key: "Runtime Version", value: runtime)
-                        }
+                        .padding(8)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.3)))
+                        if i < info.subBundles.count - 1 { Spacer().frame(height: 4) }
                     }
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.3)))
-                    if i < info.subBundles.count - 1 { Spacer().frame(height: 4) }
+                }
+
+                if info.subBundles.count > Self.subBundlesCollapsableThreshold {
+                    ScrollView {
+                        bodyContent
+                    }
+                    .frame(maxHeight: 360)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.2)))
+                } else {
+                    bodyContent
                 }
             }
         }
