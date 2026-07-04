@@ -5,11 +5,6 @@ import AppKit
 struct DetailView: View {
     let info: AppInfo
 
-    // 本地状态：用户点击「移除隔离」后即时刷新本区块，
-    // 无需重新跑 AppInfoLoader 即可反映结果。
-    @State private var quarantineRemoved: Bool = false
-    @State private var removeError: String?
-
     /// 顶部状态对应的目标位置锚点。
     enum DetailAnchor: Hashable {
         case architectures
@@ -442,7 +437,7 @@ struct DetailView: View {
 
     // MARK: Quarantine
     private var quarantineSection: some View {
-        let q = quarantineRemoved ? nil : info.quarantine
+        let q = info.quarantine
         return SectionView(
             L10n.t(.quarantine),
             subtitle: q == nil ? "—" : L10n.t(.badgeIsolated)
@@ -459,35 +454,22 @@ struct DetailView: View {
                 Divider().padding(.vertical, 4)
 
                 HStack {
-                    Button(role: .destructive) {
-                        let err = QuarantineReader.remove(for: info.bundleURL)
-                        if let err = err {
-                            removeError = "移除失败: \(err)"
-                        } else {
-                            quarantineRemoved = true
-                            removeError = nil
-                        }
+                    Button {
+                        copyToPasteboard("xattr -d com.apple.quarantine \"\(info.bundleURL.path)\"")
                     } label: {
-                        Label("移除 Quarantine 隔离标记", systemImage: "xmark.shield")
+                        Label("复制移除命令", systemImage: "doc.on.doc")
                     }
                     .buttonStyle(.borderedProminent)
 
                     Spacer()
 
-                    if info.codeSign.state == .adhoc || info.codeSign.state == .unsigned {
-                        Text("提示：ad-hoc / 未签名应用移除隔离后可绕过 Gatekeeper，请自行确认来源可信。")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                            .frame(width: 320, alignment: .trailing)
-                    }
-                }
-                if let err = removeError {
-                    Text(err).font(.caption).foregroundStyle(.red)
+                    Text("在终端粘贴运行即可移除隔离标记")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 360, alignment: .trailing)
                 }
             } else {
-                PlaceholderRow(text: quarantineRemoved
-                                ? "已成功移除 com.apple.quarantine (本进程内即时生效)"
-                                : "未检测到 com.apple.quarantine 扩展属性 (可信来源 / 已清隔离)")
+                PlaceholderRow(text: "未检测到 com.apple.quarantine 扩展属性 (可信来源 / 已清隔离)")
             }
         }
     }
