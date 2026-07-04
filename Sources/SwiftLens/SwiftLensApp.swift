@@ -96,6 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         lines.append("文档类型: \(info.documentTypes.count) 项")
         let cs = info.codeSign
         lines.append("签名: \(cs.state.rawValue) — \(cs.validity.rawValue) — \(cs.notarization.rawValue)")
+        lines.append("沙盒: \(info.isSandboxed ? "是 (App Sandbox)" : "否")")
         if let v = cs.format { lines.append("  Format: \(v)") }
         if let v = cs.identifier { lines.append("  Identifier: \(v)") }
         if let v = cs.teamIdentifier { lines.append("  TeamIdentifier: \(v)") }

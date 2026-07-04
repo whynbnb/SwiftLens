@@ -277,4 +277,15 @@ extension AppInfo {
         formatter.countStyle = .file
         return formatter.string(fromByteCount: Int64(fileSize))
     }
+
+    /// 是否启用了 App Sandbox：entitlements 中含 `com.apple.security.app-sandbox = true`
+    var isSandboxed: Bool {
+        guard let ent = codeSign.entitlements else { return false }
+        if let v = ent["com.apple.security.app-sandbox"] as? Bool { return v }
+        // 部分签名工具输出该键为字符串 "true" / "1"
+        if let s = ent["com.apple.security.app-sandbox"] as? String {
+            return s.lowercased() == "true" || s == "1"
+        }
+        return false
+    }
 }

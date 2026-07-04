@@ -36,6 +36,8 @@ enum L10n {
         case badgeAgentApp
         case badgeBackground
         case badgeIOSPort
+        case badgeSandboxed
+        case badgeNoSandbox
         // 分区标题
         case basicInfo
         case runtime
@@ -89,6 +91,7 @@ enum L10n {
         .badgeIsolated: "已隔离", .badgeNoQuarantine: "无隔离",
         .badgeAgentApp: "Agent App (无 Dock)", .badgeBackground: "仅后台 (Background)",
         .badgeIOSPort: "iOS 移植包",
+        .badgeSandboxed: "沙盒应用", .badgeNoSandbox: "非沙盒",
         .basicInfo: "基本信息", .runtime: "运行环境 & 部署",
         .architectures: "架构 (Mach-O)", .documentTypes: "文档类型 (CFBundleDocumentTypes)",
         .urlSchemes: "URL Schemes", .privacy: "隐私权限描述 (TCC Usage Descriptions)",
@@ -121,6 +124,7 @@ enum L10n {
         .badgeIsolated: "Quarantined", .badgeNoQuarantine: "No Quarantine",
         .badgeAgentApp: "Agent App (no Dock)", .badgeBackground: "Background-only",
         .badgeIOSPort: "iOS port",
+        .badgeSandboxed: "Sandboxed", .badgeNoSandbox: "Not Sandboxed",
         .basicInfo: "Basic", .runtime: "Runtime & Deployment",
         .architectures: "Architectures (Mach-O)", .documentTypes: "Document Types (CFBundleDocumentTypes)",
         .urlSchemes: "URL Schemes", .privacy: "Privacy (TCC Usage Descriptions)",

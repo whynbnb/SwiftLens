@@ -15,6 +15,7 @@ struct DetailView: View {
         case architectures
         case quarantine
         case codeSign
+        case entitlements
         case privacy
         case ats
         case subBundles
@@ -68,6 +69,7 @@ struct DetailView: View {
                     codeSignSection
                         .id(DetailAnchor.codeSign)
                     entitlementsSection
+                        .id(DetailAnchor.entitlements)
                     subBundlesSection
                         .id(DetailAnchor.subBundles)
                     sparkleSection
@@ -184,6 +186,16 @@ struct DetailView: View {
                     .buttonStyle(.plain)
                     .help("跳转到「代码签名」分区")
                 }
+
+                // 沙盒状态徽章 —— 跳转到 Entitlements 分区
+                Button {
+                    withAnimation { proxy.scrollTo(DetailAnchor.entitlements, anchor: .top) }
+                } label: {
+                    Badge(text: L10n.t(info.isSandboxed ? .badgeSandboxed : .badgeNoSandbox),
+                          color: info.isSandboxed ? .green : .orange)
+                }
+                .buttonStyle(.plain)
+                .help("跳转到「Entitlements」分区")
             }
         }
         .padding(12)
@@ -543,6 +555,9 @@ struct DetailView: View {
         let cs = info.codeSign
         return SectionView(L10n.t(.entitlements),
                            subtitle: cs.entitlements == nil ? "—" : "\(cs.entitlements!.count)") {
+            // 顶部明确显示沙盒状态
+            RowView(key: "App Sandbox",
+                    value: info.isSandboxed ? "✅ 已启用 (com.apple.security.app-sandbox)" : "❌ 未启用")
             if let ent = cs.entitlements, !ent.isEmpty {
                 ForEach(InfoPlistParser.flatten(ent).sorted { $0.0 < $1.0 }, id: \.0) { row in
                     RowView(key: row.0, value: row.1)
