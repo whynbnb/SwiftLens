@@ -99,6 +99,10 @@ SwiftLens/
 
 MIT —— 如存在 `LICENSE` 文件则以其为准。源码按 "as-is" 提供。
 
+## 鸣谢
+
+灵感来自 Bilibili Up 主 [小调mac实验室](https://space.bilibili.com/3632303882373576)。
+
 ---
 
 English version: [README.md](./README.md)

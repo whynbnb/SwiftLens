@@ -99,6 +99,10 @@ SwiftLens/
 
 MIT — see `LICENSE` if present. Source code is provided as-is.
 
+## Acknowledgements
+
+Inspired by Bilibili creator [小调mac实验室](https://space.bilibili.com/3632303882373576).
+
 ---
 
 中文版说明：[README.zh-CN.md](./README.zh-CN.md)
