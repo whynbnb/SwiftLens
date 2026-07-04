@@ -15,7 +15,7 @@ struct ContentView: View {
         Group {
             if let info = info {
                 DetailView(info: info)
-                    .id(appState.language.rawValue)
+                    .id("\(appState.language.rawValue)-\(info.bundleURL.path)")
             } else {
                 placeholder
                     .opacity(loading ? 0 : 1)      // 加载时隐藏占位避免与 ProgressView 重叠
