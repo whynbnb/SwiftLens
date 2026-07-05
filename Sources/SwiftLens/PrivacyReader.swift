@@ -7,9 +7,19 @@ struct PrivacyEntry: Identifiable {
     // 用 key 作 id, 身份稳定 (语言切换/重渲染时 diff 一致)
     var id: String { key }
     let key: String
-    let displayTitle: String
-    let systemImage: String          // SF Symbol 名称
+    /// 本地化 key (运行时通过 L10n.t 求值, 切语言实时跟随)
+    let titleKey: L10n.Key?
+    /// 兜底派生标题 (key 不在 descriptor 中时使用, 已经按当前语言派生好)
+    let derivedTitle: String?
+    let systemImage: String
     let description: String          // Info.plist 里的描述串
+
+    /// 当前语言下的展示标题: 优先用 titleKey, 否则用 derivedTitle, 最后兜底 key
+    var displayTitle: String {
+        if let k = titleKey { return L10n.t(k) }
+        if let d = derivedTitle, !d.isEmpty { return d }
+        return key
+    }
 }
 
 enum PrivacyReader {
@@ -101,12 +111,16 @@ enum PrivacyReader {
             if let meta = descriptor[key] {
                 results.append(PrivacyEntry(
                     key: key,
-                    displayTitle: L10n.t(meta.key),
+                    titleKey: meta.key,
+                    derivedTitle: nil,
                     systemImage: meta.symbol,
                     description: value
                 ))
             } else if isUsageKey {
-                // 自动从 key 派生显示名
+                // 自动从 key 派生显示名 — 派生时已按当前语言替换 Always/WhenInUse;
+                // 切语言时 derivedTitle 作为静态字符串不会跟随,
+                // 但绝大多数 NS***UsageDescription 都在 descriptor 里走 titleKey 路径。
+                // 极少数兜底场景下切语言需重新拖入 app 才更新。
                 let title = key
                     .replacingOccurrences(of: "NS", with: "")
                     .replacingOccurrences(of: "UsageDescription", with: "")
@@ -114,7 +128,8 @@ enum PrivacyReader {
                     .replacingOccurrences(of: "WhenInUse", with: L10n.t(.pWhenInUse))
                 results.append(PrivacyEntry(
                     key: key,
-                    displayTitle: title.isEmpty ? key : title,
+                    titleKey: nil,
+                    derivedTitle: title.isEmpty ? nil : title,
                     systemImage: "questionmark.shield",
                     description: value
                 ))
