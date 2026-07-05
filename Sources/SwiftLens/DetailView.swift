@@ -101,57 +101,99 @@ struct DetailView: View {
 
     // MARK: 顶部头
     private func headerSection(proxy: ScrollViewProxy) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            if let icon = info.icon {
-                Image(nsImage: icon)
-                    .resizable()
-                    .frame(width: 72, height: 72)
-            } else {
-                Image(systemName: "app")
-                    .resizable()
-                    .frame(width: 72, height: 72)
-                    .foregroundStyle(.secondary)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(info.displayName ?? info.bundleName ?? info.bundleURL.lastPathComponent)
-                        .font(.system(.title2, design: .default).bold())
-                    // 版本徽章 —— 一眼可见
-                    if info.bundleShortVersion != nil || info.bundleVersion != nil {
-                        Text(versionBadgeText())
-                            .font(.system(.callout, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Capsule().strokeBorder(.tertiary.opacity(0.5)))
-                    }
+        VStack(alignment: .leading, spacing: 10) {
+            // 第一行：图标 + 名称 + 版本徽章；右上 架构 + 形态徽章两组
+            HStack(alignment: .top, spacing: 16) {
+                if let icon = info.icon {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 72, height: 72)
+                } else {
+                    Image(systemName: "app")
+                        .resizable()
+                        .frame(width: 72, height: 72)
+                        .foregroundStyle(.secondary)
                 }
-                if let bid = info.bundleIdentifier {
-                    Text(bid).font(.system(.body, design: .monospaced))
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(info.displayName ?? info.bundleName ?? info.bundleURL.lastPathComponent)
+                            .font(.system(.title2, design: .default).bold())
+                        // 版本徽章 —— 一眼可见
+                        if info.bundleShortVersion != nil || info.bundleVersion != nil {
+                            Text(versionBadgeText())
+                                .font(.system(.callout, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Capsule().strokeBorder(.tertiary.opacity(0.5)))
+                        }
+                    }
+                    if let bid = info.bundleIdentifier {
+                        Text(bid).font(.system(.body, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                    Text(info.bundleURL.path)
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                 }
-                Text(info.bundleURL.path)
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
+                Spacer(minLength: 12)
+                // 右上：架构徽章 + 形态徽章 纵向两组（均右对齐，不独占行）
+                VStack(alignment: .trailing, spacing: 6) {
+                    HStack(spacing: 6) { archBadges(proxy: proxy) }
+                    HStack(spacing: 6) {
+                        if info.lsUIElement == true {
+                            Badge(text: L10n.t(.badgeAgentApp), color: .purple)
+                        }
+                        if info.lsBackgroundOnly == true {
+                            Badge(text: L10n.t(.badgeBackground), color: .indigo)
+                        }
+                        if info.isIOSPort {
+                            Badge(text: L10n.t(.badgeIOSPort), color: .pink)
+                        }
+                    }
+                }
             }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 8) {
-                // 顺序与下方分区一致：架构 → 隔离 → 代码签名
-                // 架构通用二进制时会拆成多个独立 badge (Universal · arm64 · x86_64 ...)
-                HStack(spacing: 6) {
-                    archBadges(proxy: proxy)
+            // 第二行：签名 / 有效性 / 公证（点击跳到代码签名分区）
+            HStack(spacing: 6) {
+                Button {
+                    withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
+                } label: {
+                    Badge(text: info.codeSign.state.localizedName,
+                          color: badgeColor(for: info.codeSign.state))
                 }
+                .buttonStyle(.plain)
+                .help(L10n.t(.goCodeSignSection))
 
-                // Agent App / 仅后台 / iOS 移植 等标识
-                if info.lsUIElement == true {
-                    Badge(text: L10n.t(.badgeAgentApp), color: .purple)
+                Button {
+                    withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
+                } label: {
+                    Badge(text: info.codeSign.validity.localizedName,
+                          color: validityColor(info.codeSign.validity))
                 }
-                if info.lsBackgroundOnly == true {
-                    Badge(text: L10n.t(.badgeBackground), color: .indigo)
+                .buttonStyle(.plain)
+                .help(L10n.t(.goCodeSignSection))
+
+                Button {
+                    withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
+                } label: {
+                    Badge(text: info.codeSign.notarization.localizedName,
+                          color: notarizationColor(info.codeSign.notarization))
                 }
-                if info.isIOSPort {
-                    Badge(text: L10n.t(.badgeIOSPort), color: .pink)
+                .buttonStyle(.plain)
+                .help(L10n.t(.goCodeSignSection))
+
+                Spacer(minLength: 0)
+            }
+            // 第三行：沙盒 + 隔离
+            HStack(spacing: 6) {
+                Button {
+                    withAnimation { proxy.scrollTo(DetailAnchor.entitlements, anchor: .top) }
+                } label: {
+                    Badge(text: L10n.t(info.isSandboxed ? .badgeSandboxed : .badgeNoSandbox),
+                          color: info.isSandboxed ? .green : .orange)
                 }
+                .buttonStyle(.plain)
+                .help(L10n.t(.goEntitlementsSection))
 
                 Button {
                     withAnimation { proxy.scrollTo(DetailAnchor.quarantine, anchor: .top) }
@@ -162,45 +204,7 @@ struct DetailView: View {
                 .buttonStyle(.plain)
                 .help(L10n.t(.goQuarantineSection))
 
-                // 签名状态 + 有效性 + 公证，同一行，三个都跳转到代码签名分区
-                HStack(spacing: 6) {
-                    Button {
-                        withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
-                    } label: {
-                        Badge(text: info.codeSign.state.localizedName,
-                              color: badgeColor(for: info.codeSign.state))
-                    }
-                    .buttonStyle(.plain)
-                    .help(L10n.t(.goCodeSignSection))
-
-                    Button {
-                        withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
-                    } label: {
-                        Badge(text: info.codeSign.validity.localizedName,
-                              color: validityColor(info.codeSign.validity))
-                    }
-                    .buttonStyle(.plain)
-                    .help(L10n.t(.goCodeSignSection))
-
-                    Button {
-                        withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
-                    } label: {
-                        Badge(text: info.codeSign.notarization.localizedName,
-                              color: notarizationColor(info.codeSign.notarization))
-                    }
-                    .buttonStyle(.plain)
-                    .help(L10n.t(.goCodeSignSection))
-                }
-
-                // 沙盒状态徽章 —— 跳转到 Entitlements 分区
-                Button {
-                    withAnimation { proxy.scrollTo(DetailAnchor.entitlements, anchor: .top) }
-                } label: {
-                    Badge(text: L10n.t(info.isSandboxed ? .badgeSandboxed : .badgeNoSandbox),
-                          color: info.isSandboxed ? .green : .orange)
-                }
-                .buttonStyle(.plain)
-                .help(L10n.t(.goEntitlementsSection))
+                Spacer(minLength: 0)
             }
         }
         .padding(12)
