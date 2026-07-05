@@ -85,12 +85,12 @@ struct HelpView: View {
     // MARK: - 签名有效性
     private var signatureStateSection: some View {
         helpSection(title: "签名有效性", icon: "signature") {
-            badgeRow(color: .green,  title: "通过 (Valid)",
-                     desc: "SecStaticCodeCheckValidity 基础验证通过。签名结构完整。")
+            badgeRow(color: .green,  title: "基础有效 (Basic Valid)",
+                     desc: "SecStaticCodeCheckValidity 基础验证通过 (kSecCSBasicValidateOnly)。仅校验签名结构完整, 不等同于 Gatekeeper 完整验证或资源封印验证。完整可信度请参考「签名状态/公证状态」徽章。")
             badgeRow(color: .red,    title: "无效 (Invalid)",
                      desc: "基础验证失败。签名可能被篡改或损坏。")
             badgeRow(color: .gray,   title: "未验证",
-                     desc: "未签名应用，无法进行有效性验证。")
+                     desc: "未签名应用, 无法进行有效性验证。")
         }
     }
 

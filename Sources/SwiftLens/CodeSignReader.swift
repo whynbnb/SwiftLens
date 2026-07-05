@@ -11,7 +11,7 @@ struct CodeSignInfo {
         case unknown      = "未知"
     }
     enum Validity: String {
-        case valid    = "通过 (Valid)"
+        case valid    = "基础有效 (Basic Valid)"
         case invalid  = "无效 (Invalid)"
         case untested = "未验证"
     }
