@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var dropHover: Bool = false
     @State private var lastError: String?
     @State private var spinnerSpin: Bool = false   // 持续旋转的触发开关
+    @State private var loadID: UInt = 0            // 加载请求 token, 防止旧任务覆盖新结果
 
     var body: some View {
         Group {
@@ -148,10 +149,14 @@ struct ContentView: View {
         }
         lastError = nil
         loading = true
+        loadID &+= 1
+        let currentID = loadID
         let work = url
         DispatchQueue.global(qos: .userInitiated).async {
             let result = AppInfoLoader.load(url: work)
             DispatchQueue.main.async {
+                // 只接受最新一次请求的结果, 丢弃过期任务
+                guard currentID == loadID else { return }
                 self.info = result
                 self.loading = false
                 // 加载完成后把应用拉到前台并使窗口获得焦点
