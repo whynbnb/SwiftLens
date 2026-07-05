@@ -988,6 +988,7 @@ struct DetailView: View {
     private func notarizationColor(_ n: CodeSignInfo.Notarization) -> Color {
         switch n {
         case .notarized:    return .green
+        case .devID:        return .orange
         case .macAppStore:  return .blue
         case .iosAppStore:  return .pink
         case .appleSystem:  return .teal

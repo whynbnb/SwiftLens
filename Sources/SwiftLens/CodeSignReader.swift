@@ -17,6 +17,7 @@ struct CodeSignInfo {
     }
     enum Notarization: String {
         case notarized      = "已公证 (Notarized)"
+        case devID          = "Developer ID 签名"
         case macAppStore    = "Mac App Store"
         case iosAppStore    = "iOS App Store"
         case appleSystem    = "Apple 系统签名"
@@ -201,8 +202,9 @@ enum CodeSignReader {
         // 10. 有效性验证
         let validity = checkValidity(code: code)
 
-        // 11. 公证检测 (沙盒下无法用 spctl, 启发式判断)
+        // 11. 公证/分发渠道检测 (沙盒下用 Security 框架 strict 验证替代 spctl)
         let notarization = checkNotarization(
+            code: code,
             state: state,
             validity: validity,
             authorities: authorities
@@ -358,9 +360,12 @@ enum CodeSignReader {
     /// 公证/分发渠道检测 (沙盒下启发式):
     /// - macOS Software Signing 证书 → Apple 系统签名 (系统自带应用)
     /// - Apple Mac OS Application Signing 证书 → Mac App Store 分发
-    /// - Developer ID Application 证书 + valid → 已公证 (Gatekeeper 通过)
+    /// - Apple iPhone OS Application Signing 证书 → iOS App Store 分发
+    /// - Developer ID Application 证书 + strict 验证通过 → 已公证 (Gatekeeper 通过)
+    /// - Developer ID Application 证书 + strict 验证失败 → Developer ID 签名 (签名可能有损)
     /// - 其它 → 未公证
     private static func checkNotarization(
+        code: SecStaticCode,
         state: CodeSignInfo.SignedState,
         validity: CodeSignInfo.Validity,
         authorities: [String]
@@ -381,10 +386,15 @@ enum CodeSignReader {
             if authorities.contains(where: { $0.contains("Apple iPhone OS Application Signing") }) {
                 return .iosAppStore
             }
-            // Developer ID 应用: valid → 已公证
+            // Developer ID 应用: 用 strict 验证判断是否真正通过 Gatekeeper
             let hasDevID = authorities.contains { $0.contains("Developer ID Application") }
             if hasDevID {
-                return validity == .valid ? .notarized : .notNotarized
+                // strict 验证会检查 sealed resources / bundle format 等,
+                // basic 验证只检查签名结构, 可能放过签名损坏的应用
+                let strictStatus = SecStaticCodeCheckValidity(
+                    code, SecCSFlags(rawValue: kSecCSStrictValidate), nil
+                )
+                return strictStatus == errSecSuccess ? .notarized : .devID
             }
             // 其它 → 未公证
             return .notNotarized
