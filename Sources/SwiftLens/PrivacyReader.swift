@@ -4,7 +4,8 @@ import Foundation
 
 /// 提取 Info.plist 中所有 NS[Resource]UsageDescription 描述并归入分类。
 struct PrivacyEntry: Identifiable {
-    let id = UUID()
+    // 用 key 作 id, 身份稳定 (语言切换/重渲染时 diff 一致)
+    var id: String { key }
     let key: String
     let displayTitle: String
     let systemImage: String          // SF Symbol 名称

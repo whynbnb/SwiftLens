@@ -189,7 +189,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !ex.ubiquitousContainers.isEmpty {
             lines.append("iCloud Containers (\(ex.ubiquitousContainers.count) 项):")
             for (i, c) in ex.ubiquitousContainers.enumerated() {
-                lines.append("  [\(i)] \(InfoPlistParser.flatten(c).map { "\($0.0)=\($0.1)" }.joined(separator: ", "))")
+                lines.append("  [\(i)] \(c.identifier): \(InfoPlistParser.flatten(c.config).map { "\($0.0)=\($0.1)" }.joined(separator: ", "))")
             }
         }
         // Notifications
@@ -250,7 +250,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             lines.append("NSBonjourServices: \(ex.bonjourServices.joined(separator: ", "))")
         }
         if let q = info.quarantine {
-            lines.append("Quarantine: flags=\(q.flags) agent=\(q.agent) 时间=\(q.timestampString) 日期=\(q.downloadDate.map { ISO8601DateFormatter().string(from: $0) } ?? "—")")
+            lines.append("Quarantine: flags=\(q.flags) agent=\(q.agent) uuid=\(q.uuid) 时间=\(q.timestampString) 日期=\(q.downloadDate.map { ISO8601DateFormatter().string(from: $0) } ?? "—")")
         } else {
             lines.append("Quarantine: 无")
         }

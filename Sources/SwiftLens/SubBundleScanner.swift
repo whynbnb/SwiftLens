@@ -32,8 +32,15 @@ struct SubBundleScanResult {
 }
 
 enum SubBundleScanner {
+    /// 扫描 .app 包内嵌的子 bundle。
+    /// 覆盖目录: Frameworks / EmbeddedFrameworks / PlugIns / XPCServices /
+    /// Helpers / Library/LoginItems / Extensions / Library/SystemExtensions /
+    /// Library/LaunchServices。
+    /// 注: 仅扫描上述常见目录, 不递归整个 bundle 树; 旨在覆盖主流布局而非穷举,
+    ///     极少数自托管嵌套 bundle 可能漏报, 完整审计请配合 find / xargs 使用。
     static func scan(parent: URL) -> SubBundleScanResult {
         let contents = parent.appendingPathComponent("Contents")
+        let library = contents.appendingPathComponent("Library")
 
         let directories: [(URL, SubBundle.Kind)] = [
             (contents.appendingPathComponent("Frameworks"), .framework),
@@ -41,7 +48,10 @@ enum SubBundleScanner {
             (contents.appendingPathComponent("PlugIns"), .plugin),
             (contents.appendingPathComponent("XPCServices"), .xpc),
             (contents.appendingPathComponent("Helpers"), .app),
-            (contents.appendingPathComponent("Library/LoginItems"), .loginItem)
+            (contents.appendingPathComponent("Extensions"), .plugin),
+            (library.appendingPathComponent("LoginItems"), .loginItem),
+            (library.appendingPathComponent("SystemExtensions"), .plugin),
+            (library.appendingPathComponent("LaunchServices"), .app)
         ]
 
         var out: [SubBundle] = []

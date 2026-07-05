@@ -41,7 +41,9 @@ struct ExtraInfo {
     let safariExtensionCorrespondingIOSApp: String?  // SFSafariCorrespondingIOSAppBundleIdentifier
 
     // C. iCloud / Container
-    let ubiquitousContainers: [[String: Any]]  // NSUbiquitousContainers
+    /// NSUbiquitousContainers — dict 结构: { "iCloud.com.example": {NSUbiquitousContainerName=...} }
+    /// 拆成 [(identifier, config)] 列表, 每个 container 单独展示
+    let ubiquitousContainers: [(identifier: String, config: [String: Any])]
 
     // D. 通知
     let userNotificationAlertStyle: String?    // NSUserNotificationAlertStyle (none/badge/alert)
@@ -125,10 +127,17 @@ enum ExtraInfoReader {
                 return nil
             }
         }
-        func dicts(_ key: String) -> [[String: Any]] {
-            (plist[key] as? [[String: Any]])
-                ?? (plist[key] as? [String: Any]).map { [$0] }
-                ?? []
+        func dictEntries(_ key: String) -> [(identifier: String, config: [String: Any])] {
+            if let dict = plist[key] as? [String: Any] {
+                return dict.compactMap { (k, v) in
+                    if let cfg = v as? [String: Any] {
+                        return (identifier: k, config: cfg)
+                    }
+                    // 值非字典时仍保留 identifier, 包装成单值
+                    return (identifier: k, config: ["value": v])
+                }
+            }
+            return []
         }
 
         let sp = ExtraInfo.SparkleInfo(
@@ -154,7 +163,7 @@ enum ExtraInfoReader {
             userActivityTypes: arr("NSUserActivityTypes"),
             intentsSupported: arr("INIntentsSupported"),
             safariExtensionCorrespondingIOSApp: str("SFSafariCorrespondingIOSAppBundleIdentifier"),
-            ubiquitousContainers: dicts("NSUbiquitousContainers"),
+            ubiquitousContainers: dictEntries("NSUbiquitousContainers"),
             userNotificationAlertStyle: str("NSUserNotificationAlertStyle"),
             userNotificationsUsageDescription: str("NSUserNotificationsUsageDescription"),
             localNotificationUsageDescription: str("NSLocalNotificationUsageDescription"),

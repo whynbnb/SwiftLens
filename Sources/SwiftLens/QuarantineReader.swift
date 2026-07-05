@@ -15,6 +15,8 @@ struct QuarantineInfo {
     let agent: String
     let timestampString: String
     let downloadDate: Date?
+    /// 下载事件 UUID, 可用于溯源 (与 unified log 配合可定位下载来源)
+    let uuid: String
 }
 
 enum QuarantineReader {
@@ -40,13 +42,13 @@ enum QuarantineReader {
         if let secs = UInt64(ts, radix: 16) {
             date = Date(timeIntervalSince1970: TimeInterval(secs))
         }
-        _ = uuid
         return QuarantineInfo(
             raw: raw,
             flags: flags,
             agent: agent,
             timestampString: ts,
-            downloadDate: date
+            downloadDate: date,
+            uuid: uuid
         )
     }
 }

@@ -246,7 +246,7 @@ struct DetailView: View {
             RowView(key: "NSSupportsAutomaticGraphicsSwitching", value: bool(info.supportsAutomaticGraphicsSwitching))
             RowView(key: "NSQuitAlwaysKeepsWindows", value: bool(info.quitAlwaysKeepsWindows))
             RowView(key: "NSPrefersDisplaySafeAreaCompatibilityMode", value: bool(info.prefersDisplaySafeAreaCompatibilityMode))
-            RowView(key: "LSBackgroundOnly", value: bool(info.requiresBackgroundGesture))
+            RowView(key: "LSBackgroundOnly", value: bool(info.lsBackgroundOnly))
             RowView(key: "CSResourcesFileMapped", value: bool(info.csResourcesFileMapped))
             RowView(key: "CFBundleUses24HourClock", value: bool(info.uses24HourClock))
             if !info.lsEnvironment.isEmpty {
@@ -449,6 +449,9 @@ struct DetailView: View {
                 RowView(key: "原始值", value: q.raw)
                 RowView(key: "Flags", value: q.flags)
                 RowView(key: "下载 Agent", value: q.agent.isEmpty ? "—" : q.agent)
+                if !q.uuid.isEmpty {
+                    RowView(key: "下载 UUID", value: q.uuid)
+                }
                 RowView(key: "时间戳(十六进制)", value: q.timestampString)
                 if let d = q.downloadDate {
                     RowView(key: "下载时间", value: iso(d))
@@ -780,7 +783,9 @@ struct DetailView: View {
             } else {
                 ForEach(Array(ub.enumerated()), id: \.offset) { i, c in
                     VStack(alignment: .leading, spacing: 4) {
-                        ForEach(InfoPlistParser.flatten(c).sorted(by: { $0.0 < $1.0 }), id: \.0) { row in
+                        // 容器标识作为标题, 突出显示
+                        RowView(key: "Container Identifier", value: c.identifier)
+                        ForEach(InfoPlistParser.flatten(c.config).sorted(by: { $0.0 < $1.0 }), id: \.0) { row in
                             RowView(key: row.0, value: row.1)
                         }
                     }
@@ -962,7 +967,8 @@ struct DetailView: View {
                 PlaceholderRow(text: "未声明 NSBonjourServices")
             } else {
                 ForEach(ex.bonjourServices, id: \.self) { s in
-                    RowView(key: s, value: "_\(s)._tcp")
+                    // NSBonjourServices 值已是完整服务类型 (如 _http._tcp), 不再追加后缀
+                    RowView(key: s, value: s)
                 }
             }
         }
@@ -1134,7 +1140,7 @@ struct DetailView: View {
         if !ex.bonjourServices.isEmpty {
             lines.append("NSBonjourServices: \(ex.bonjourServices.joined(separator: ", "))")
         }
-        if let q = info.quarantine { lines.append("Quarantine: flags=\(q.flags) agent=\(q.agent) 时间=\(q.timestampString)") }
+        if let q = info.quarantine { lines.append("Quarantine: flags=\(q.flags) agent=\(q.agent) uuid=\(q.uuid) 时间=\(q.timestampString)") }
         else { lines.append("Quarantine: 无") }
         if !info.extendedXattrs.names.isEmpty {
             lines.append("扩展属性: \(info.extendedXattrs.names.joined(separator: ", "))")

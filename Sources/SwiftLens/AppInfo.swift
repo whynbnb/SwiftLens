@@ -30,7 +30,6 @@ struct AppInfo {
     let highResolutionCapable: Bool?
     let canAnimateAlpha: Bool?
     let supportsHighResolutionDisplays: Bool?
-    let requiresBackgroundGesture: Bool?
     let uses24HourClock: Bool?
 
     // 链接 / 部署
@@ -202,19 +201,36 @@ enum AppInfoLoader {
             .contains { rawPlist[$0] != nil }
 
         // 图标 — 优先从 Info.plist 声明的图标文件加载, 回退到 NSWorkspace
+        // CFBundleIcons 是字典 (含 CFBundlePrimaryIcon.CFBundleIconFiles 数组),
+        // 不能用 str() 取, 需解析字典提取图标名
         var icon: NSImage?
-        let iconName = str("CFBundleIconFile") ?? str("CFBundleIcons") ?? "AppIcon"
-        var iconCandidates = [
-            url.appendingPathComponent("Contents/Resources/\(iconName)"),
-            url.appendingPathComponent("Contents/Resources/\(iconName).icns"),
-        ]
+        var iconCandidates: [URL] = []
+        // 1) CFBundleIconFile — 直接是文件名
+        if let name = str("CFBundleIconFile") {
+            iconCandidates.append(url.appendingPathComponent("Contents/Resources/\(name)"))
+            iconCandidates.append(url.appendingPathComponent("Contents/Resources/\(name).icns"))
+        }
+        // 2) CFBundleIcons 字典 → CFBundlePrimaryIcon.CFBundleIconFiles 数组
+        if let iconsDict = rawPlist["CFBundleIcons"] as? [String: Any],
+           let primary = iconsDict["CFBundlePrimaryIcon"] as? [String: Any],
+           let files = primary["CFBundleIconFiles"] as? [Any] {
+            for f in files {
+                if let name = f as? String {
+                    iconCandidates.append(url.appendingPathComponent("Contents/Resources/\(name)"))
+                    iconCandidates.append(url.appendingPathComponent("Contents/Resources/\(name).icns"))
+                    iconCandidates.append(url.appendingPathComponent("Contents/Resources/\(name)@2x.png"))
+                }
+            }
+        }
+        // 3) 默认 AppIcon
+        iconCandidates.append(url.appendingPathComponent("Contents/Resources/AppIcon"))
+        iconCandidates.append(url.appendingPathComponent("Contents/Resources/AppIcon.icns"))
         // iOS Wrapper 布局: Wrapper/<name>.app/<iconName>
         let wrapperDir = url.appendingPathComponent("Wrapper")
         if let entries = try? FileManager.default.contentsOfDirectory(atPath: wrapperDir.path) {
             for appDir in entries where appDir.hasSuffix(".app") {
-                iconCandidates.append(wrapperDir.appendingPathComponent("\(appDir)/\(iconName)"))
-                iconCandidates.append(wrapperDir.appendingPathComponent("\(appDir)/\(iconName).icns"))
                 iconCandidates.append(wrapperDir.appendingPathComponent("\(appDir)/AppIcon60x60@2x.png"))
+                iconCandidates.append(wrapperDir.appendingPathComponent("\(appDir)/AppIcon.icns"))
             }
         }
         for c in iconCandidates {
@@ -247,7 +263,6 @@ enum AppInfoLoader {
             highResolutionCapable: (rawPlist["NSHighResolutionCapable"] as? Bool),
             canAnimateAlpha: (rawPlist["NSCanAnimateAlpha"] as? Bool),
             supportsHighResolutionDisplays: (rawPlist["NSSupportsHighResolutionDisplays"] as? Bool),
-            requiresBackgroundGesture: (rawPlist["LSBackgroundOnly"] as? Bool),
             uses24HourClock: (rawPlist["CFBundleUses24HourClock"] as? Bool),
             sdkVersion: str("DTSDKName"),
             platformName: str("DTPlatformName"),
@@ -276,7 +291,7 @@ enum AppInfoLoader {
             exportedTypeIdentifiers: dict("UTExportedTypeDeclarations"),
             importedTypeIdentifiers: dict("UTImportedTypeDeclarations"),
             services: dict("NSServices"),
-            hasDockIcon: lsUIElement != true,
+            hasDockIcon: lsUIElement != true && lsBackgroundOnly != true,
             lsUIElement: lsUIElement,
             lsBackgroundOnly: lsBackgroundOnly,
             documentControllerEnabled: (rawPlist["NSMainNibFile"] != nil),

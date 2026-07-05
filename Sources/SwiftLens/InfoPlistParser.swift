@@ -35,8 +35,13 @@ enum InfoPlistParser {
     /// 将任意 plist 值规整为可展示字符串。
     static func describe(_ value: Any) -> String {
         if let s = value as? String { return s }
+        // plist 中 Bool 经 PropertyListSerialization 加载后是 CFBoolean (NSNumber 子类),
+        // 单纯 `as? Bool` 或 `as? NSNumber` 都不可靠: NSNumber(value:1) as? Bool 也会成功。
+        // 用 CFGetTypeID 区分真正的布尔: 只有 CFBoolean 才走 YES/NO 分支。
+        if let n = value as? NSNumber, CFGetTypeID(n) == CFBooleanGetTypeID() {
+            return n.boolValue ? "YES" : "NO"
+        }
         if let n = value as? NSNumber { return n.stringValue }
-        if let b = value as? Bool { return b ? "YES" : "NO" }
         if let d = value as? Data { return "Data (\(d.count) bytes)" }
         if let date = value as? Date { return ISO8601DateFormatter().string(from: date) }
         if let arr = value as? [Any] {

@@ -139,7 +139,7 @@ struct ContentView: View {
     }
 
     private func handle(url: URL) {
-        guard url.pathExtension == "app" else {
+        guard url.pathExtension.lowercased() == "app" else {
             lastError = "不是 .app bundle: \(url.lastPathComponent)"
             return
         }
@@ -231,6 +231,6 @@ private final class DropNSView: NSView {
     private func extractedURL(from sender: NSDraggingInfo) -> URL? {
         guard let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL],
               let url = urls.first else { return nil }
-        return url.pathExtension == "app" ? url : nil
+        return url.pathExtension.lowercased() == "app" ? url : nil
     }
 }
