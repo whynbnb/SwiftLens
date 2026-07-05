@@ -351,8 +351,10 @@ enum CodeSignReader {
     }
 
     /// 有效性验证: SecStaticCodeCheckValidity
+    /// 附加 kSecCSCheckAllArchitectures, 对 fat 二进制所有切片(arm64/x86_64)都做校验,
+    /// 而非仅校验当前主机架构切片。
     private static func checkValidity(code: SecStaticCode) -> CodeSignInfo.Validity {
-        let flags = SecCSFlags(rawValue: kSecCSBasicValidateOnly)
+        let flags = SecCSFlags(rawValue: kSecCSBasicValidateOnly | kSecCSCheckAllArchitectures)
         let status = SecStaticCodeCheckValidity(code, flags, nil)
         return status == errSecSuccess ? .valid : .invalid
     }
@@ -391,8 +393,9 @@ enum CodeSignReader {
             if hasDevID {
                 // strict 验证会检查 sealed resources / bundle format 等,
                 // basic 验证只检查签名结构, 可能放过签名损坏的应用
+                // 附加 kSecCSCheckAllArchitectures, 对所有架构切片做 strict 校验
                 let strictStatus = SecStaticCodeCheckValidity(
-                    code, SecCSFlags(rawValue: kSecCSStrictValidate), nil
+                    code, SecCSFlags(rawValue: kSecCSStrictValidate | kSecCSCheckAllArchitectures), nil
                 )
                 return strictStatus == errSecSuccess ? .notarized : .devID
             }
