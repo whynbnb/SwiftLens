@@ -104,6 +104,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let v = cs.hashType { lines.append("  HashType: \(v)") }
         if let v = cs.signatureType { lines.append("  Signature: \(v)") }
         if let v = cs.runtimeVersion { lines.append("  Runtime Version: \(v)") }
+        if let v = cs.signingTime { lines.append("  Signing Time: \(v)") }
+        if let v = cs.totalSignatures { lines.append("  Total signatures: \(v)") }
+        if let v = cs.chosenSignature { lines.append("  Chosen signature: \(v)") }
+        if let v = cs.infoPlistEntries { lines.append("  Info.plist entries: \(v)") }
         if !cs.decodedFlags.isEmpty { lines.append("  flags(解码): \(cs.decodedFlags.joined(separator: ", "))") }
         if let v = cs.flags { lines.append("  flags(原始): \(v)") }
         if !cs.authorities.isEmpty {

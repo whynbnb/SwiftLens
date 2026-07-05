@@ -494,6 +494,10 @@ struct DetailView: View {
 
             if let v = cs.cdHash { RowView(key: "CDHash", value: v) }
             if let v = cs.hashType { RowView(key: "Hash type", value: v) }
+            if let v = cs.signingTime { RowView(key: "Signing Time", value: v) }
+            if let v = cs.totalSignatures { RowView(key: "Total signatures", value: v) }
+            if let v = cs.chosenSignature { RowView(key: "Chosen signature", value: v) }
+            if let v = cs.infoPlistEntries { RowView(key: "Info.plist entries", value: v) }
 
             if !cs.authorities.isEmpty {
                 Divider().padding(.vertical, 4)
@@ -1018,6 +1022,7 @@ struct DetailView: View {
         if let cdh = cs.cdHash { lines.append("CDHash: \(cdh)") }
         if !cs.decodedFlags.isEmpty { lines.append("签名 flags: \(cs.decodedFlags.joined(separator: ", "))") }
         if let v = cs.runtimeVersion { lines.append("Runtime Version: \(v)") }
+        if let v = cs.signingTime { lines.append("Signing Time: \(v)") }
         if !cs.authorities.isEmpty {
             lines.append("Authority:")
             cs.authorities.forEach { lines.append("  - \($0)") }

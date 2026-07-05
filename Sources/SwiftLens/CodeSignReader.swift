@@ -36,8 +36,12 @@ struct CodeSignInfo {
     let flags: String?               // 原始 flags 十六进制
     let decodedFlags: [String]       // 解码后的标志列表
     let format: String?
-    let runtimeVersion: String?      // Hardened Runtime 时填 "Hardened Runtime", 否则 nil
-    let entitlementsRaw: String?     // 由 entitlements dict 序列化的 XML plist
+    let runtimeVersion: String?      // 管制化运行时的版本号, 如 "26.2.0"
+    let signingTime: String?          // 签名时间
+    let totalSignatures: String?      // 总签名数
+    let chosenSignature: String?      // 选中签名索引
+    let infoPlistEntries: String?     // 已纳入签名的 Info.plist 项数
+    let entitlementsRaw: String?      // 由 entitlements dict 序列化的 XML plist
     let entitlements: [String: Any]?
     let error: String?
 }
@@ -121,13 +125,13 @@ enum CodeSignReader {
         let isRuntime = decodedFlags.contains("runtime")
         let runtimeVersion: String? = {
             guard isRuntime else { return nil }
-            // dict["runtime-version"] 是编码后的数字 0xMMmmrr
+            // dict["runtime-version"] 是编码后的数字 0xMMmmrr (如 0x1A0200 → 26.2.0)
             if let rvNum = dict["runtime-version"] as? NSNumber {
                 let rv = rvNum.uint32Value
                 let major = (rv >> 16) & 0xFF
                 let minor = (rv >> 8) & 0xFF
                 let rev   = rv & 0xFF
-                return "Hardened Runtime \(major).\(minor).\(rev)"
+                return "\(major).\(minor).\(rev)"
             }
             return "Hardened Runtime"
         }()
@@ -156,7 +160,21 @@ enum CodeSignReader {
             authorities: authorities
         )
 
-        // 12. Entitlements (来自 "entitlements-dict" 键)
+        // 12. 补充字段: 签名时间 / 总签名数 / 选中签名 / 已签 Info.plist 项数
+        let signingTime: String? = {
+            if let d = dict["signing-time"] as? Date {
+                let f = DateFormatter()
+                f.dateFormat = "yyyy-MM-dd HH:mm:ss ZZZ"
+                f.locale = Locale(identifier: "en_US_POSIX")
+                return f.string(from: d)
+            }
+            return dict["signing-time"] as? String
+        }()
+        let totalSignatures = (dict["total-signatures"] as? NSNumber).map { "\($0.intValue)" }
+        let chosenSignature = (dict["chosen-signature"] as? NSNumber).map { "\($0.intValue)" }
+        let infoPlistEntries = (dict["info-plist"] as? [String: Any]).map { "\($0.count)" }
+
+        // 13. Entitlements (来自 "entitlements-dict" 键)
         var entitlementsRaw: String?
         let entitlements = dict["entitlements-dict"] as? [String: Any]
         if let ent = entitlements {
@@ -180,6 +198,10 @@ enum CodeSignReader {
             flagsHex: flagsHex,
             decodedFlags: decodedFlags,
             runtimeVersion: runtimeVersion,
+            signingTime: signingTime,
+            totalSignatures: totalSignatures,
+            chosenSignature: chosenSignature,
+            infoPlistEntries: infoPlistEntries,
             hashType: hashType,
             signatureType: signatureType,
             authorities: authorities,
@@ -203,6 +225,10 @@ enum CodeSignReader {
             decodedFlags: decodedFlags,
             format: format,
             runtimeVersion: runtimeVersion,
+            signingTime: signingTime,
+            totalSignatures: totalSignatures,
+            chosenSignature: chosenSignature,
+            infoPlistEntries: infoPlistEntries,
             entitlementsRaw: entitlementsRaw,
             entitlements: entitlements,
             error: nil
@@ -213,33 +239,39 @@ enum CodeSignReader {
 
     private static let CS_ADHOC: UInt32 = 0x00000002
 
-    /// 解码 flags 位字段为可读字符串数组
+    /// 解码 CodeDirectory flags 位字段为可读字符串数组。
+    /// 标注基于实际 codesign 工具在本机 (macOS 26) 的输出, 与旧 xnu/cs_common.h 的命名已不同
+    /// (例如 0x2000 旧称 CS_KILL, codesign 现称 "library-validation"; 0x10000 旧称 CS_ENFORCEMENT,
+    /// codesign 现称 "runtime" 即 Hardened Runtime)。
     private static func decodeFlags(_ raw: UInt32) -> [String] {
         if raw == 0 { return [] }
-        var out: [String] = []
-        // 逐位匹配 (排除冲突位, 单独处理)
+        // 位 -> 名称 (按 codesign 工具实际输出顺序排列)
         let knownBits: [(UInt32, String)] = [
             (0x00000001, "valid"),
             (0x00000002, "adhoc"),
             (0x00000004, "get-task-allow"),
             (0x00000008, "installer"),
-            (0x00000100, "force-hard"),
-            (0x00000200, "force-kill"),
-            (0x00000400, "force-expires"),
-            (0x00001000, "hard"),
-            (0x00002000, "kill"),
+            (0x00000100, "hard"),
+            (0x00000200, "kill"),
+            (0x00000400, "expires"),
+            (0x00000800, "restrict"),
+            (0x00001000, "hard"),                 // 注意: 与 0x100 同名, 需视 codesign 实际输出取舍
+            (0x00002000, "library-validation"),
             (0x00004000, "check-expires"),
-            (0x00008000, "restrict"),
-            (0x00010000, "runtime"),          // Hardened Runtime
-            // 0x00020000 既有 require-lv 又有 linker-signed, 无法从 flags 单独区分; 统一标 runtime-lv
-            (0x00020000, "require-lv/linker-signed"),
+            (0x00008000, "restrict"),             // 同名: 见上
+            (0x00010000, "runtime"),              // Hardened Runtime (CS_ENFORCEMENT)
+            (0x00020000, "linker-signed"),        // CS_REQUIRE_LV 旧名, codesign 现称 linker-signed
             (0x00040000, "entitlements-validated")
         ]
-        for (bit, name) in knownBits {
-            if raw & bit != 0 { out.append(name) }
-        }
-        // 检测未识别的高位
+        var out: [String] = []
+        var seen = Set<String>()
         let knownMask: UInt32 = knownBits.map { $0.0 }.reduce(0, |)
+        for (bit, name) in knownBits {
+            if raw & bit != 0, !seen.contains(name) {
+                out.append(name)
+                seen.insert(name)
+            }
+        }
         let unknown = raw & ~knownMask
         if unknown != 0 {
             out.append(String(format: "unknown(0x%x)", unknown))
@@ -296,6 +328,10 @@ enum CodeSignReader {
             decodedFlags: [],
             format: nil,
             runtimeVersion: nil,
+            signingTime: nil,
+            totalSignatures: nil,
+            chosenSignature: nil,
+            infoPlistEntries: nil,
             entitlementsRaw: nil,
             entitlements: nil,
             error: error
@@ -312,6 +348,10 @@ enum CodeSignReader {
         flagsHex: String?,
         decodedFlags: [String],
         runtimeVersion: String?,
+        signingTime: String?,
+        totalSignatures: String?,
+        chosenSignature: String?,
+        infoPlistEntries: String?,
         hashType: String?,
         signatureType: String?,
         authorities: [String],
@@ -332,6 +372,10 @@ enum CodeSignReader {
             lines.append("CodeDirectory flags=\(fh)\(decoded)")
         }
         if let rt = runtimeVersion { lines.append("Runtime Version=\(rt)") }
+        if let st = signingTime { lines.append("Signing Time=\(st)") }
+        if let ts = totalSignatures { lines.append("Total signatures=\(ts)") }
+        if let cs = chosenSignature { lines.append("Chosen signature=\(cs)") }
+        if let ip = infoPlistEntries { lines.append("Info.plist entries=\(ip)") }
         lines.append("Validity=\(validity.rawValue)")
         lines.append("Notarization=\(notarization.rawValue)")
         if !authorities.isEmpty {
