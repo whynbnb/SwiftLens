@@ -484,6 +484,32 @@ struct DetailView: View {
             RowView(key: "签名状态", value: cs.state.rawValue)
             RowView(key: "有效性", value: cs.validity.rawValue)
             RowView(key: "公证 (Notarization)", value: cs.notarization.rawValue)
+
+            // 手动验证命令 — 沙盒内无法调用 spctl/codesign, 提供复制命令让用户在终端运行
+            HStack(spacing: 10) {
+                Button {
+                    copyToPasteboard("codesign -dvvv --strict --deep \"\(info.bundleURL.path)\"")
+                } label: {
+                    Label("复制 codesign 命令", systemImage: "doc.on.doc")
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    copyToPasteboard("spctl --assess -vvv \"\(info.bundleURL.path)\"")
+                } label: {
+                    Label("复制 spctl 命令", systemImage: "doc.on.doc")
+                }
+                .buttonStyle(.bordered)
+
+                Spacer()
+
+                Text("在终端粘贴运行即可手动验证签名 / 公证状态")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 320, alignment: .trailing)
+            }
+            .padding(.vertical, 2)
+
             if let v = cs.format { RowView(key: "Format", value: v) }
             if let v = cs.identifier { RowView(key: "Identifier", value: v) }
             RowView(key: "TeamIdentifier", value: cs.teamIdentifier ?? "not set")
