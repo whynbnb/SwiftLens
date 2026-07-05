@@ -9,6 +9,7 @@ struct SwiftLensApp: App {
     @StateObject private var appState = AppState()
     @State private var showSettings: Bool = false
     @State private var showAbout: Bool = false
+    @State private var showHelp: Bool = false
 
     var body: some Scene {
         WindowGroup("SwiftLens") {
@@ -25,11 +26,18 @@ struct SwiftLensApp: App {
                     AboutView()
                         .id(appState.language.rawValue)
                 }
+                .sheet(isPresented: $showHelp) {
+                    HelpView()
+                        .id(appState.language.rawValue)
+                }
                 .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
                     showSettings = true
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openAbout)) { _ in
                     showAbout = true
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .openHelp)) { _ in
+                    showHelp = true
                 }
         }
         .commands {
@@ -45,6 +53,12 @@ struct SwiftLensApp: App {
                 }
                 .keyboardShortcut(",", modifiers: .command)
             }
+            CommandGroup(after: .help) {
+                Button(L10n.t(.help)) {
+                    showHelp = true
+                }
+                .keyboardShortcut("?", modifiers: .command)
+            }
         }
     }
 }
@@ -52,6 +66,7 @@ struct SwiftLensApp: App {
 extension Notification.Name {
     static let openSettings = Notification.Name("SwiftLens.openSettings")
     static let openAbout    = Notification.Name("SwiftLens.openAbout")
+    static let openHelp     = Notification.Name("SwiftLens.openHelp")
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {

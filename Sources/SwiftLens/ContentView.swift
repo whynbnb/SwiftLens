@@ -48,6 +48,11 @@ struct ContentView: View {
                 } label: {
                     Label(L10n.t(.settings), systemImage: "gearshape")
                 }
+                Button {
+                    NotificationCenter.default.post(name: .openHelp, object: nil)
+                } label: {
+                    Label(L10n.t(.help), systemImage: "questionmark.circle")
+                }
             }
         }
         .navigationTitle(info?.bundleURL.lastPathComponent ?? L10n.t(.appName))
