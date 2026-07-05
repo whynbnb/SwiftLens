@@ -17,6 +17,7 @@ struct CodeSignInfo {
     }
     enum Notarization: String {
         case notarized      = "已公证 (Notarized)"
+        case macAppStore    = "Mac App Store"
         case notNotarized   = "未公证"
         case unknown        = "未知"
     }
@@ -286,8 +287,10 @@ enum CodeSignReader {
         return status == errSecSuccess ? .valid : .invalid
     }
 
-    /// 公证检测 (沙盒下启发式): signed + valid + Developer ID Application 证书 → 已公证
-    /// 注: 无法 100% 准确区分 "带票据" 与 "未带票据", 这里给最可能的结果
+    /// 公证/分发渠道检测 (沙盒下启发式):
+    /// - Apple Mac OS Application Signing 证书 → Mac App Store 分发
+    /// - Developer ID Application 证书 + valid → 已公证 (Gatekeeper 通过)
+    /// - 其它 → 未公证
     private static func checkNotarization(
         state: CodeSignInfo.SignedState,
         validity: CodeSignInfo.Validity,
@@ -297,16 +300,20 @@ enum CodeSignReader {
         case .adhoc, .unsigned, .unknown:
             return .notNotarized
         case .signed:
-            // 只有 Developer ID Application 签名才涉及公证
+            // Mac App Store 应用 (Apple Mac OS Application Signing 证书)
+            if authorities.contains(where: { $0.contains("Apple Mac OS Application Signing") }) {
+                return .macAppStore
+            }
+            // iOS App Store 应用 (Apple iPhone OS Application Signing 证书)
+            if authorities.contains(where: { $0.contains("Apple iPhone OS Application Signing") }) {
+                return .macAppStore
+            }
+            // Developer ID 应用: valid → 已公证
             let hasDevID = authorities.contains { $0.contains("Developer ID Application") }
-            if !hasDevID {
-                // Apple Mac OS Application Signing / 其它 Apple 系统签名不需要 notarization
-                return .notNotarized
+            if hasDevID {
+                return validity == .valid ? .notarized : .notNotarized
             }
-            if validity == .valid {
-                // Developer ID + 有效 → 大概率已公证 (Gatekeeper 已通过)
-                return .notarized
-            }
+            // 其它 Apple 系统签名 (macOS Software Signing 等) → 未公证
             return .notNotarized
         }
     }
