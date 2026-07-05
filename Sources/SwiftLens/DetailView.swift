@@ -234,7 +234,10 @@ struct DetailView: View {
     // MARK: 运行时 / 部署
     private var runtimeSection: some View {
         SectionView(L10n.t(.runtime)) {
-            RowView(key: "LSMinimumSystemVersion", value: info.minimumOSVersion ?? "—")
+            RowView(key: "LSMinimumSystemVersion", value: info.lsMinimumSystemVersion ?? "—")
+            if let v = info.minimumOSVersionIOS {
+                RowView(key: "MinimumOSVersion", value: v)
+            }
             RowView(key: "LSApplicationCategoryType", value: info.applicationCategoryType ?? "—")
             RowView(key: "LSRequiresAquaSystemAppearance", value: bool(info.requiresAquaSystemAppearance))
             RowView(key: "NSHighResolutionCapable", value: bool(info.highResolutionCapable))

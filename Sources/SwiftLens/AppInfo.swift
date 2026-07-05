@@ -20,8 +20,11 @@ struct AppInfo {
     let developmentRegion: String?
 
     // 运行环境
+    /// 通用最低系统版本: 优先 LSMinimumSystemVersion (macOS), 回退 MinimumOSVersion (iOS/Catalyst)
     let minimumOSVersion: String?
     let lsMinimumSystemVersion: String?
+    /// iOS / Catalyst 移植包使用的最低系统版本键
+    let minimumOSVersionIOS: String?
     let applicationCategoryType: String?
     let requiresAquaSystemAppearance: Bool?
     let highResolutionCapable: Bool?
@@ -236,8 +239,9 @@ enum AppInfoLoader {
             bundlePackageType: str("CFBundlePackageType"),
             infoDictionaryVersion: str("CFBundleInfoDictionaryVersion"),
             developmentRegion: str("CFBundleDevelopmentRegion"),
-            minimumOSVersion: str("LSMinimumSystemVersion"),
+            minimumOSVersion: str("LSMinimumSystemVersion") ?? str("MinimumOSVersion"),
             lsMinimumSystemVersion: str("LSMinimumSystemVersion"),
+            minimumOSVersionIOS: str("MinimumOSVersion"),
             applicationCategoryType: str("LSApplicationCategoryType"),
             requiresAquaSystemAppearance: (rawPlist["LSRequiresAquaSystemAppearance"] as? Bool),
             highResolutionCapable: (rawPlist["NSHighResolutionCapable"] as? Bool),
