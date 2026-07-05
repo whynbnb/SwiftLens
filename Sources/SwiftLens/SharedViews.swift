@@ -20,10 +20,12 @@ struct RowView: View {
                 .frame(width: 200, alignment: .leading)
                 .lineLimit(1)
                 .truncationMode(.middle)
+                .help(key)
             Text(value.isEmpty ? "—" : value)
                 .font(.system(.body, design: .monospaced))
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .help(value.isEmpty ? "" : value)
         }
         .contextMenu {
             Button("复制值") { copyToPasteboard(value) }

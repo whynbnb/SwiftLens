@@ -1215,6 +1215,7 @@ struct DocumentTypeRowView: View {
                     .font(.system(.body, design: .default).bold())
                     .lineLimit(1)
                     .truncationMode(.middle)
+                    .help(name)
                 if let r = role {
                     Spacer()
                     Text(r)
