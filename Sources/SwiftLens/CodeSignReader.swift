@@ -18,6 +18,8 @@ struct CodeSignInfo {
     enum Notarization: String {
         case notarized      = "已公证 (Notarized)"
         case macAppStore    = "Mac App Store"
+        case iosAppStore    = "iOS App Store"
+        case appleSystem    = "Apple 系统签名"
         case notNotarized   = "未公证"
         case unknown        = "未知"
     }
@@ -29,10 +31,12 @@ struct CodeSignInfo {
     /// 合成的签名详情文本（替代旧版 codesign -dvvv 输出）
     let detailRaw: String
     let identifier: String?
-    let teamIdentifier: String?
+    let teamIdentifier: String?        // nil 时 UI 显示 "not set"
     let authorities: [String]        // 证书链 subject 列表
-    let cdHash: String?              // 十六进制字符串
+    let cdHash: String?              // 十六进制字符串 (20 bytes, truncated)
+    let candidateCDHashFull: String? // 十六进制字符串 (32 bytes, full sha256)
     let hashType: String?            // sha256 / sha1
+    let hashChoices: String?         // Hash choices, 如 "sha256"
     let signatureType: String?       // "adhoc" / "Developer ID" / "adhoc" 等
     let flags: String?               // 原始 flags 十六进制
     let decodedFlags: [String]       // 解码后的标志列表
@@ -42,6 +46,9 @@ struct CodeSignInfo {
     let totalSignatures: String?      // 总签名数
     let chosenSignature: String?      // 选中签名索引
     let infoPlistEntries: String?     // 已纳入签名的 Info.plist 项数
+    let signatureSize: String?        // 签名大小 (字节)
+    let platformIdentifier: String?   // 平台标识
+    let source: String?               // 签名位置, 如 "embedded"
     let entitlementsRaw: String?      // 由 entitlements dict 序列化的 XML plist
     let entitlements: [String: Any]?
     let error: String?
@@ -82,12 +89,37 @@ enum CodeSignReader {
         let teamIdentifier = dict["teamid"] as? String
         let format       = dict["format"] as? String
         let flagsValue   = (dict["flags"] as? NSNumber)?.uint32Value
-        // cdhashes 是数组 (universal binary 每个切片一个), 取第一个
-        let cdHashData   = (dict["cdhashes"] as? [Data])?.first
+        // cdhashes-full 是 dict: {算法编号 = Data(完整 hash)}
+        //   1 = sha1 (20 bytes), 2 = sha256 (32 bytes)
+        // cdhashes 是 [Data] 数组, 每个元素是 20 bytes 的 truncated hash
+        //   顺序通常是 [sha1, sha256] (dual-algorithm apps)
+        let cdHashFullDict = dict["cdhashes-full"] as? [AnyHashable: Data]
+        let cdHashFullData_sha256 = cdHashFullDict?[2] ?? cdHashFullDict?[NSNumber(value: 2)]
+        let cdHashFullData_sha1   = cdHashFullDict?[1] ?? cdHashFullDict?[NSNumber(value: 1)]
         let certs        = (dict["certificates"] as? [SecCertificate]) ?? []
 
         // 4. CDHash → hex
-        let cdHash = cdHashData.map { $0.map { String(format: "%02x", $0) }.joined() }
+        // codesign 的 "CDHash=" 显示的是 sha256 truncated (前 20 字节),
+        // 没有 sha256 时回退到 sha1, 再没有就用 cdhashes 数组最后一个
+        let cdHash: String? = {
+            if let full = cdHashFullData_sha256, full.count >= 20 {
+                return Data(full.prefix(20)).map { String(format: "%02x", $0) }.joined()
+            }
+            if let arr = dict["cdhashes"] as? [Data], let last = arr.last {
+                return last.map { String(format: "%02x", $0) }.joined()
+            }
+            return nil
+        }()
+        // CandidateCDHashFull: sha256 完整 (32 字节), 回退 sha1
+        let candidateCDHashFull: String? = {
+            if let full = cdHashFullData_sha256 {
+                return full.map { String(format: "%02x", $0) }.joined()
+            }
+            if let full = cdHashFullData_sha1 {
+                return full.map { String(format: "%02x", $0) }.joined()
+            }
+            return nil
+        }()
 
         // 5. flags 解码
         let flagsHex = flagsValue.map { String(format: "0x%x", $0) }
@@ -100,6 +132,25 @@ enum CodeSignReader {
             }
             return "(未知证书)"
         }
+
+        // 6.5 Hash choices (digest-algorithms 数组 → sha256/sha1 字符串)
+        let hashChoices: String? = {
+            if let algs = dict["digest-algorithms"] as? [NSNumber] {
+                return algs.map { Self.algoName($0.int32Value) }.joined(separator: ",")
+            }
+            if let alg = dict["digest-algorithm"] as? NSNumber {
+                return Self.algoName(alg.int32Value)
+            }
+            return nil
+        }()
+
+        // 6.6 Signature size (cms blob 字节数)
+        let signatureSize = (dict["cms"] as? Data).map { "\($0.count)" }
+
+        // 6.7 Platform identifier / source
+        let platformIdentifier = (dict["platform-identifier"] as? NSNumber).map { "\($0.intValue)" }
+            ?? (dict["platform-identifier"] as? String)
+        let source = dict["source"] as? String
 
         // 7. 判断签名状态
         let isAdhoc = (flagsValue ?? 0) & CS_ADHOC != 0
@@ -115,6 +166,8 @@ enum CodeSignReader {
                 signatureType = "Developer ID Application"
             } else if authorities.first(where: { $0.contains("Apple Mac OS Application Signing") }) != nil {
                 signatureType = "Apple Mac OS Application Signing"
+            } else if authorities.first(where: { $0.contains("Apple iPhone OS Application Signing") }) != nil {
+                signatureType = "Apple iPhone OS Application Signing"
             } else if authorities.first(where: { $0.contains("Software Signing") }) != nil {
                 signatureType = "Apple Software Signing"
             } else {
@@ -140,13 +193,7 @@ enum CodeSignReader {
         // 9. Hash type
         let hashType: String? = {
             if let algNum = dict["digest-algorithm"] as? NSNumber {
-                switch algNum.int32Value {
-                case 1:  return "sha1"
-                case 2:  return "sha256"
-                case 3:  return "sha256_truncated"
-                case 4:  return "sha384"
-                default: return "alg=\(algNum.int32Value)"
-                }
+                return Self.algoName(algNum.int32Value)
             }
             return nil
         }()
@@ -196,6 +243,7 @@ enum CodeSignReader {
             teamIdentifier: teamIdentifier,
             format: format,
             cdHash: cdHash,
+            candidateCDHashFull: candidateCDHashFull,
             flagsHex: flagsHex,
             decodedFlags: decodedFlags,
             runtimeVersion: runtimeVersion,
@@ -203,7 +251,11 @@ enum CodeSignReader {
             totalSignatures: totalSignatures,
             chosenSignature: chosenSignature,
             infoPlistEntries: infoPlistEntries,
+            signatureSize: signatureSize,
+            platformIdentifier: platformIdentifier,
+            source: source,
             hashType: hashType,
+            hashChoices: hashChoices,
             signatureType: signatureType,
             authorities: authorities,
             validity: validity,
@@ -220,7 +272,9 @@ enum CodeSignReader {
             teamIdentifier: teamIdentifier,
             authorities: authorities,
             cdHash: cdHash,
+            candidateCDHashFull: candidateCDHashFull,
             hashType: hashType,
+            hashChoices: hashChoices,
             signatureType: signatureType,
             flags: flagsHex,
             decodedFlags: decodedFlags,
@@ -230,6 +284,9 @@ enum CodeSignReader {
             totalSignatures: totalSignatures,
             chosenSignature: chosenSignature,
             infoPlistEntries: infoPlistEntries,
+            signatureSize: signatureSize,
+            platformIdentifier: platformIdentifier,
+            source: source,
             entitlementsRaw: entitlementsRaw,
             entitlements: entitlements,
             error: nil
@@ -239,6 +296,17 @@ enum CodeSignReader {
     // MARK: - Helpers
 
     private static let CS_ADHOC: UInt32 = 0x00000002
+
+    /// 算法编号 → 名称 (来自 SecCode.h kSecCodeInfoDigestAlgorithm)
+    private static func algoName(_ n: Int32) -> String {
+        switch n {
+        case 1:  return "sha1"
+        case 2:  return "sha256"
+        case 3:  return "sha256_truncated"
+        case 4:  return "sha384"
+        default: return "alg=\(n)"
+        }
+    }
 
     /// 解码 CodeDirectory flags 位字段为可读字符串数组。
     /// 标注基于实际 codesign 工具在本机 (macOS 26) 的输出, 与旧 xnu/cs_common.h 的命名已不同
@@ -288,6 +356,7 @@ enum CodeSignReader {
     }
 
     /// 公证/分发渠道检测 (沙盒下启发式):
+    /// - macOS Software Signing 证书 → Apple 系统签名 (系统自带应用)
     /// - Apple Mac OS Application Signing 证书 → Mac App Store 分发
     /// - Developer ID Application 证书 + valid → 已公证 (Gatekeeper 通过)
     /// - 其它 → 未公证
@@ -300,20 +369,24 @@ enum CodeSignReader {
         case .adhoc, .unsigned, .unknown:
             return .notNotarized
         case .signed:
+            // Apple 系统签名 (macOS Software Signing) → 系统自带应用
+            if authorities.contains(where: { $0.contains("macOS Software Signing") }) {
+                return .appleSystem
+            }
             // Mac App Store 应用 (Apple Mac OS Application Signing 证书)
             if authorities.contains(where: { $0.contains("Apple Mac OS Application Signing") }) {
                 return .macAppStore
             }
             // iOS App Store 应用 (Apple iPhone OS Application Signing 证书)
             if authorities.contains(where: { $0.contains("Apple iPhone OS Application Signing") }) {
-                return .macAppStore
+                return .iosAppStore
             }
             // Developer ID 应用: valid → 已公证
             let hasDevID = authorities.contains { $0.contains("Developer ID Application") }
             if hasDevID {
                 return validity == .valid ? .notarized : .notNotarized
             }
-            // 其它 Apple 系统签名 (macOS Software Signing 等) → 未公证
+            // 其它 → 未公证
             return .notNotarized
         }
     }
@@ -329,7 +402,9 @@ enum CodeSignReader {
             teamIdentifier: nil,
             authorities: [],
             cdHash: nil,
+            candidateCDHashFull: nil,
             hashType: nil,
+            hashChoices: nil,
             signatureType: nil,
             flags: nil,
             decodedFlags: [],
@@ -339,6 +414,9 @@ enum CodeSignReader {
             totalSignatures: nil,
             chosenSignature: nil,
             infoPlistEntries: nil,
+            signatureSize: nil,
+            platformIdentifier: nil,
+            source: nil,
             entitlementsRaw: nil,
             entitlements: nil,
             error: error
@@ -352,6 +430,7 @@ enum CodeSignReader {
         teamIdentifier: String?,
         format: String?,
         cdHash: String?,
+        candidateCDHashFull: String?,
         flagsHex: String?,
         decodedFlags: [String],
         runtimeVersion: String?,
@@ -359,7 +438,11 @@ enum CodeSignReader {
         totalSignatures: String?,
         chosenSignature: String?,
         infoPlistEntries: String?,
+        signatureSize: String?,
+        platformIdentifier: String?,
+        source: String?,
         hashType: String?,
+        hashChoices: String?,
         signatureType: String?,
         authorities: [String],
         validity: CodeSignInfo.Validity,
@@ -369,15 +452,20 @@ enum CodeSignReader {
         var lines: [String] = []
         lines.append("Bundle: \(bundleURL.lastPathComponent)")
         lines.append("Identifier=\(identifier ?? "—")")
-        if let team = teamIdentifier { lines.append("TeamIdentifier=\(team)") }
+        lines.append("TeamIdentifier=\(teamIdentifier ?? "not set")")
         if let fmt = format { lines.append("Format=\(fmt)") }
         if let cdh = cdHash { lines.append("CDHash=\(cdh)") }
+        if let cdf = candidateCDHashFull { lines.append("CandidateCDHashFull=\(cdf)") }
         if let ht = hashType { lines.append("Hash type=\(ht)") }
+        if let hc = hashChoices { lines.append("Hash choices=\(hc)") }
         if let sig = signatureType { lines.append("Signature=\(sig)") }
+        if let sz = signatureSize { lines.append("Signature size=\(sz)") }
         if let fh = flagsHex {
-            let decoded = decodedFlags.isEmpty ? "" : "(\(decodedFlags.joined(separator: ",")))"
+            let decoded = decodedFlags.isEmpty ? "(none)" : "(\(decodedFlags.joined(separator: ",")))"
             lines.append("CodeDirectory flags=\(fh)\(decoded)")
         }
+        if let pi = platformIdentifier { lines.append("Platform identifier=\(pi)") }
+        if let src = source { lines.append("Source=\(src)") }
         if let rt = runtimeVersion { lines.append("Runtime Version=\(rt)") }
         if let st = signingTime { lines.append("Signing Time=\(st)") }
         if let ts = totalSignatures { lines.append("Total signatures=\(ts)") }

@@ -119,12 +119,22 @@ enum AppInfoLoader {
         }
 
         let execName = str("CFBundleExecutable")
-        let execPath: String?
-        if let name = execName {
-            execPath = url.appendingPathComponent("Contents/MacOS/\(name)").path
-        } else {
-            execPath = nil
-        }
+        let execPath: String? = {
+            if let name = execName {
+                // 标准 macOS: Contents/MacOS/<exec>
+                let stdPath = url.appendingPathComponent("Contents/MacOS/\(name)").path
+                if FileManager.default.fileExists(atPath: stdPath) { return stdPath }
+                // iOS Wrapper: Wrapper/<name>.app/<exec>
+                let wrapperDir = url.appendingPathComponent("Wrapper")
+                if let entries = try? FileManager.default.contentsOfDirectory(atPath: wrapperDir.path) {
+                    for appDir in entries where appDir.hasSuffix(".app") {
+                        let iosPath = wrapperDir.appendingPathComponent("\(appDir)/\(name)").path
+                        if FileManager.default.fileExists(atPath: iosPath) { return iosPath }
+                    }
+                }
+            }
+            return nil
+        }()
 
         // 文件系统属性
         var fileSize: UInt64 = 0
@@ -188,12 +198,29 @@ enum AppInfoLoader {
                          "UIStatusBarStyle"]
             .contains { rawPlist[$0] != nil }
 
-        // 图标
+        // 图标 — 优先从 Info.plist 声明的图标文件加载, 回退到 NSWorkspace
         var icon: NSImage?
-        let iconURL = url.appendingPathComponent("Contents/Resources/\(str("CFBundleIconFile") ?? "AppIcon")")
-        if FileManager.default.fileExists(atPath: iconURL.path) {
-            icon = NSImage(contentsOf: iconURL)
-        } else {
+        let iconName = str("CFBundleIconFile") ?? str("CFBundleIcons") ?? "AppIcon"
+        var iconCandidates = [
+            url.appendingPathComponent("Contents/Resources/\(iconName)"),
+            url.appendingPathComponent("Contents/Resources/\(iconName).icns"),
+        ]
+        // iOS Wrapper 布局: Wrapper/<name>.app/<iconName>
+        let wrapperDir = url.appendingPathComponent("Wrapper")
+        if let entries = try? FileManager.default.contentsOfDirectory(atPath: wrapperDir.path) {
+            for appDir in entries where appDir.hasSuffix(".app") {
+                iconCandidates.append(wrapperDir.appendingPathComponent("\(appDir)/\(iconName)"))
+                iconCandidates.append(wrapperDir.appendingPathComponent("\(appDir)/\(iconName).icns"))
+                iconCandidates.append(wrapperDir.appendingPathComponent("\(appDir)/AppIcon60x60@2x.png"))
+            }
+        }
+        for c in iconCandidates {
+            if FileManager.default.fileExists(atPath: c.path) {
+                icon = NSImage(contentsOf: c)
+                if icon != nil { break }
+            }
+        }
+        if icon == nil {
             icon = NSWorkspace.shared.icon(forFile: url.path)
         }
 
@@ -278,14 +305,21 @@ extension AppInfo {
         return formatter.string(fromByteCount: Int64(fileSize))
     }
 
-    /// 是否启用了 App Sandbox：entitlements 中含 `com.apple.security.app-sandbox = true`
+    /// 是否启用了 App Sandbox：
+    /// - entitlements 中含 `com.apple.security.app-sandbox = true`
+    /// - 或为 iOS 应用 (通过 iPhone OS Application Signing 证书判定, iOS 应用天然沙盒)
     var isSandboxed: Bool {
-        guard let ent = codeSign.entitlements else { return false }
+        guard let ent = codeSign.entitlements else {
+            // iOS 应用: 无 entitlements 时, 通过签名状态判定
+            return codeSign.notarization == .iosAppStore
+        }
         if let v = ent["com.apple.security.app-sandbox"] as? Bool { return v }
         // 部分签名工具输出该键为字符串 "true" / "1"
         if let s = ent["com.apple.security.app-sandbox"] as? String {
             return s.lowercased() == "true" || s == "1"
         }
+        // iOS 应用: 即使无显式 app-sandbox entitlement, 也是沙盒的
+        if codeSign.notarization == .iosAppStore { return true }
         return false
     }
 }

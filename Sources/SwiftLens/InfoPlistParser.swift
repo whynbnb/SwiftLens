@@ -6,15 +6,30 @@ import Foundation
 enum InfoPlistParser {
 
     /// 读取 .app bundle 的 Info.plist 为字典。
+    /// 支持两种 bundle 布局:
+    ///   - 标准 macOS: Contents/Info.plist
+    ///   - iOS 应用 (Apple Silicon "iTMSTransporter" Wrapper): Wrapper/<name>.app/Info.plist
     static func parse(at bundleURL: URL) -> [String: Any]? {
-        let plistURL = bundleURL.appendingPathComponent("Contents/Info.plist")
-        guard FileManager.default.fileExists(atPath: plistURL.path) else { return nil }
-        guard let data = try? Data(contentsOf: plistURL) else { return nil }
-        return try? PropertyListSerialization.propertyList(
-            from: data,
-            options: [],
-            format: nil
-        ) as? [String: Any]
+        // 1. 标准 macOS 布局
+        let standardPlist = bundleURL.appendingPathComponent("Contents/Info.plist")
+        if FileManager.default.fileExists(atPath: standardPlist.path),
+           let data = try? Data(contentsOf: standardPlist),
+           let pl = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
+            return pl
+        }
+        // 2. iOS 应用 Wrapper 布局: Wrapper/<name>.app/Info.plist
+        let wrapperDir = bundleURL.appendingPathComponent("Wrapper")
+        if let entries = try? FileManager.default.contentsOfDirectory(atPath: wrapperDir.path) {
+            for name in entries where name.hasSuffix(".app") {
+                let iosPlist = wrapperDir.appendingPathComponent("\(name)/Info.plist")
+                if FileManager.default.fileExists(atPath: iosPlist.path),
+                   let data = try? Data(contentsOf: iosPlist),
+                   let pl = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
+                    return pl
+                }
+            }
+        }
+        return nil
     }
 
     /// 将任意 plist 值规整为可展示字符串。

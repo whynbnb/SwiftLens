@@ -16,30 +16,51 @@ enum ArchitectureReader {
     }
 
     static func read(for bundleURL: URL) -> [ArchInfo] {
+        // 1. 标准 macOS 布局: Contents/MacOS/<CFBundleExecutable>
         let execURL = bundleURL.appendingPathComponent("Contents/MacOS")
-        // 优先从 Info.plist 的 CFBundleExecutable 中拿到主可执行文件名，
-        // 因 Contents/MacOS 可能还包含资源子目录，按字母序会选到错误条目。
+        if FileManager.default.fileExists(atPath: execURL.path) {
+            return readExec(at: bundleURL, execDir: execURL)
+        }
+        // 2. iOS 应用 Wrapper 布局: Wrapper/<name>.app/<CFBundleExecutable>
+        let wrapperDir = bundleURL.appendingPathComponent("Wrapper")
+        if let entries = try? FileManager.default.contentsOfDirectory(atPath: wrapperDir.path) {
+            for name in entries where name.hasSuffix(".app") {
+                let iosAppURL = wrapperDir.appendingPathComponent(name)
+                let plist = InfoPlistParser.parse(at: bundleURL)
+                let execName = (plist?["CFBundleExecutable"] as? String) ?? name.replacingOccurrences(of: ".app", with: "")
+                let execPath = iosAppURL.appendingPathComponent(execName)
+                if let data = try? Data(contentsOf: execPath) {
+                    return parseMachO(data: data, execPath: execPath)
+                }
+            }
+        }
+        return []
+    }
+
+    /// 从 Contents/MacOS 目录下找到主可执行文件并解析架构
+    private static func readExec(at bundleURL: URL, execDir: URL) -> [ArchInfo] {
         let execName: String?
         if let plist = InfoPlistParser.parse(at: bundleURL),
            let name = plist["CFBundleExecutable"] as? String {
             execName = name
         } else {
             execName = try? FileManager.default
-                .contentsOfDirectory(atPath: execURL.path)
-                .first(where: { !isDirectory(at: execURL.appendingPathComponent($0)) })
+                .contentsOfDirectory(atPath: execDir.path)
+                .first(where: { !isDirectory(at: execDir.appendingPathComponent($0)) })
         }
         guard let name = execName else { return [] }
-        let execPath = execURL.appendingPathComponent(name)
+        let execPath = execDir.appendingPathComponent(name)
         guard let data = try? Data(contentsOf: execPath) else { return [] }
+        return parseMachO(data: data, execPath: execPath)
+    }
+
+    /// 解析 Mach-O 数据 (支持 fat / single)
+    private static func parseMachO(data: Data, execPath: URL) -> [ArchInfo] {
         guard data.count >= 4 else { return [] }
-
         let magBE = data.readUInt32BE(at: 0)
-
-        // Fat / Universal binary (fat 头总是大端存储)
         if magBE == FAT_MAGIC || magBE == FAT_MAGIC_64 {
             return parseFat(data: data, is64: magBE == FAT_MAGIC_64, execPath: execPath)
         }
-        // 普通 Mach-O
         if let single = parseSingle(data: data, fatOffset: 0, execPath: execPath) {
             return [single]
         }

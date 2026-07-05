@@ -99,10 +99,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         lines.append("沙盒: \(info.isSandboxed ? "是 (App Sandbox)" : "否")")
         if let v = cs.format { lines.append("  Format: \(v)") }
         if let v = cs.identifier { lines.append("  Identifier: \(v)") }
-        if let v = cs.teamIdentifier { lines.append("  TeamIdentifier: \(v)") }
+        lines.append("  TeamIdentifier: \(cs.teamIdentifier ?? "not set")")
         if let v = cs.cdHash { lines.append("  CDHash: \(v)") }
+        if let v = cs.candidateCDHashFull { lines.append("  CandidateCDHashFull: \(v)") }
         if let v = cs.hashType { lines.append("  HashType: \(v)") }
+        if let v = cs.hashChoices { lines.append("  Hash choices: \(v)") }
         if let v = cs.signatureType { lines.append("  Signature: \(v)") }
+        if let v = cs.signatureSize { lines.append("  Signature size: \(v)") }
+        if let v = cs.platformIdentifier { lines.append("  Platform identifier: \(v)") }
+        if let v = cs.source { lines.append("  Source: \(v)") }
         if let v = cs.runtimeVersion { lines.append("  Runtime Version: \(v)") }
         if let v = cs.signingTime { lines.append("  Signing Time: \(v)") }
         if let v = cs.totalSignatures { lines.append("  Total signatures: \(v)") }

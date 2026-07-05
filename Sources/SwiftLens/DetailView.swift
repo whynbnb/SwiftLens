@@ -483,9 +483,12 @@ struct DetailView: View {
             RowView(key: "公证 (Notarization)", value: cs.notarization.rawValue)
             if let v = cs.format { RowView(key: "Format", value: v) }
             if let v = cs.identifier { RowView(key: "Identifier", value: v) }
-            if let v = cs.teamIdentifier { RowView(key: "TeamIdentifier", value: v) }
+            RowView(key: "TeamIdentifier", value: cs.teamIdentifier ?? "not set")
             if let v = cs.signatureType { RowView(key: "Signature", value: v) }
+            if let v = cs.signatureSize { RowView(key: "Signature size", value: v) }
             if let v = cs.runtimeVersion { RowView(key: "Runtime Version", value: v) }
+            if let v = cs.platformIdentifier { RowView(key: "Platform identifier", value: v) }
+            if let v = cs.source { RowView(key: "Source", value: v) }
 
             if let v = cs.flags { RowView(key: "flags (原始)", value: v) }
             if !cs.decodedFlags.isEmpty {
@@ -493,7 +496,9 @@ struct DetailView: View {
             }
 
             if let v = cs.cdHash { RowView(key: "CDHash", value: v) }
+            if let v = cs.candidateCDHashFull { RowView(key: "CandidateCDHashFull", value: v) }
             if let v = cs.hashType { RowView(key: "Hash type", value: v) }
+            if let v = cs.hashChoices { RowView(key: "Hash choices", value: v) }
             if let v = cs.signingTime { RowView(key: "Signing Time", value: v) }
             if let v = cs.totalSignatures { RowView(key: "Total signatures", value: v) }
             if let v = cs.chosenSignature { RowView(key: "Chosen signature", value: v) }
@@ -984,6 +989,8 @@ struct DetailView: View {
         switch n {
         case .notarized:    return .green
         case .macAppStore:  return .blue
+        case .iosAppStore:  return .pink
+        case .appleSystem:  return .teal
         case .notNotarized: return .gray
         case .unknown:      return .gray
         }
