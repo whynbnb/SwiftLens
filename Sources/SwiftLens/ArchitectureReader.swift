@@ -151,7 +151,7 @@ enum ArchitectureReader {
             // CPU_SUBTYPE_ARM64E = 2 (带指针身份验证扩展)。
             // mach_header 中 cpusubtype 高位常被设为库授权位 (0x80000000)，需要屏蔽。
             let sub = UInt32(bitPattern: subtype) & 0x00FFFFFF
-            if sub == 2 { return ("arm64e", "ARM 64-bit (arm64e, 带指针身份验证)", 64) }
+            if sub == 2 { return ("arm64e", "ARM 64-bit (arm64e, PAC)", 64) }
             if sub == 0 { return ("arm64", "ARM 64-bit", 64) }
             return ("arm64(sub=\(sub))", "ARM 64-bit", 64)
         case CPU_TYPE_ARM:

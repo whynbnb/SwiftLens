@@ -95,23 +95,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func summary(for info: AppInfo) -> String {
         var lines: [String] = []
         lines.append("# \(info.displayName ?? info.bundleName ?? info.bundleURL.lastPathComponent)")
-        lines.append("路径: \(info.bundleURL.path)")
+        lines.append("\(L10n.t(.cliPath)): \(info.bundleURL.path)")
         lines.append("BundleID: \(info.bundleIdentifier ?? "—")")
-        lines.append("版本: \(info.bundleShortVersion ?? "—") (\(info.bundleVersion ?? "—"))")
-        lines.append("最低系统版本: \(info.minimumOSVersion ?? "—")")
-        lines.append("SDK: \(info.sdkVersion ?? "—") / \(info.platformName ?? "—") \(info.sdkBuild ?? "")")
-        lines.append("Info.plist keys: \(info.flatRows.count) 项")
-        lines.append("架构: \(info.architectures.map { "\($0.name)(\($0.bits)-bit, \($0.cpuType))" }.joined(separator: ", "))")
+        lines.append("\(L10n.t(.cliVersion)): \(info.bundleShortVersion ?? "—") (\(info.bundleVersion ?? "—"))")
+        lines.append("\(L10n.t(.cliMinOS)): \(info.minimumOSVersion ?? "—")")
+        lines.append("\(L10n.t(.cliSDK)): \(info.sdkVersion ?? "—") / \(info.platformName ?? "—") \(info.sdkBuild ?? "")")
+        lines.append("Info.plist \(L10n.t(.cliPlistKeys)): \(info.flatRows.count)")
+        lines.append("\(L10n.t(.cliArchs)): \(info.architectures.map { "\($0.name)(\($0.bits)-bit, \($0.cpuType))" }.joined(separator: ", "))")
         if !info.supportedPlatforms.isEmpty {
-            lines.append("支持平台: \(info.supportedPlatforms.joined(separator: ", "))")
+            lines.append("\(L10n.t(.cliPlatforms)): \(info.supportedPlatforms.joined(separator: ", "))")
         }
         if let p = info.principalClass { lines.append("NSPrincipalClass: \(p)") }
-        if let c = info.humanReadableCopyright { lines.append("版权: \(c)") }
-        lines.append("URL Schemes: \(info.urlSchemes.isEmpty ? "—" : info.urlSchemes.joined(separator: ", "))")
-        lines.append("文档类型: \(info.documentTypes.count) 项")
+        if let c = info.humanReadableCopyright { lines.append("\(L10n.t(.cliCopyright)): \(c)") }
+        lines.append("\(L10n.t(.cliUrlSchemes)): \(info.urlSchemes.isEmpty ? "—" : info.urlSchemes.joined(separator: ", "))")
+        lines.append("\(L10n.t(.cliDocTypes)): \(info.documentTypes.count) \(L10n.t(.cliPlistKeys))")
         let cs = info.codeSign
-        lines.append("签名: \(cs.state.rawValue) — \(cs.validity.rawValue) — \(cs.notarization.rawValue)")
-        lines.append("沙盒: \(info.isSandboxed ? "是 (App Sandbox)" : "否")")
+        lines.append("\(L10n.t(.cliSign)): \(cs.state.localizedName) — \(cs.validity.localizedName) — \(cs.notarization.localizedName)")
+        lines.append("\(L10n.t(.cliSandbox)): \(info.isSandboxed ? L10n.t(.cliSandboxYes) : L10n.t(.cliSandboxNo))")
         if let v = cs.format { lines.append("  Format: \(v)") }
         if let v = cs.identifier { lines.append("  Identifier: \(v)") }
         lines.append("  TeamIdentifier: \(cs.teamIdentifier ?? "not set")")
@@ -128,40 +128,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let v = cs.totalSignatures { lines.append("  Total signatures: \(v)") }
         if let v = cs.chosenSignature { lines.append("  Chosen signature: \(v)") }
         if let v = cs.infoPlistEntries { lines.append("  Info.plist entries: \(v)") }
-        if !cs.decodedFlags.isEmpty { lines.append("  flags(解码): \(cs.decodedFlags.joined(separator: ", "))") }
-        if let v = cs.flags { lines.append("  flags(原始): \(v)") }
+        if !cs.decodedFlags.isEmpty { lines.append("  \(L10n.t(.cliFlagsDecoded)): \(cs.decodedFlags.joined(separator: ", "))") }
+        if let v = cs.flags { lines.append("  \(L10n.t(.cliFlagsRaw)): \(v)") }
         if !cs.authorities.isEmpty {
-            lines.append("  Authority:")
+            lines.append("  \(L10n.t(.cliAuthority)):")
             cs.authorities.forEach { lines.append("    - \($0)") }
         }
         if let ent = cs.entitlements {
-            lines.append("  Entitlements (\(ent.count) 项):")
+            lines.append("  Entitlements (\(ent.count) \(L10n.t(.cliEntitlementsCount))):")
             InfoPlistParser.flatten(ent).sorted { $0.0 < $1.0 }
                 .forEach { lines.append("    \($0.0) = \($0.1)") }
         } else {
-            lines.append("  Entitlements: 无")
+            lines.append("  Entitlements: \(L10n.t(.cliEntitlementsNone))")
         }
-        lines.append("隐私权限描述: \(info.privacyEntries.count) 项")
+        lines.append("\(L10n.t(.cliPrivacy)): \(info.privacyEntries.count) \(L10n.t(.cliPlistKeys))")
         for e in info.privacyEntries.prefix(8) {
             lines.append("  · \(e.displayTitle) [\(e.key)]: \(e.description)")
         }
         if info.privacyEntries.count > 8 {
-            lines.append("  ... 另外 \(info.privacyEntries.count - 8) 项")
+            lines.append("  ... \(L10n.t(.cliMore)) \(info.privacyEntries.count - 8) \(L10n.t(.cliPlistKeys))")
         }
-        if info.appTransportSecurity != nil { lines.append("ATS: 已声明 NSAppTransportSecurity") }
-        if info.electronAsarIntegrity != nil { lines.append("Electron: 已声明 ElectronAsarIntegrity") }
-        if info.lsUIElement == true { lines.append("形态: Agent App (无 Dock 图标)") }
-        if info.lsBackgroundOnly == true { lines.append("形态: 仅后台运行 (LSBackgroundOnly)") }
-        if info.isIOSPort { lines.append("形态: iOS 移植包 (含 UI* 键)") }
+        if info.appTransportSecurity != nil { lines.append("ATS: \(L10n.t(.cliATS))") }
+        if info.electronAsarIntegrity != nil { lines.append("Electron: \(L10n.t(.cliElectron))") }
+        if info.lsUIElement == true { lines.append(L10n.t(.cliFormAgent)) }
+        if info.lsBackgroundOnly == true { lines.append(L10n.t(.cliFormBackground)) }
+        if info.isIOSPort { lines.append(L10n.t(.cliFormIOSPort)) }
         // Sparkle 自动更新
         if let sp = info.extra.sparkle {
-            lines.append("Sparkle 自动更新:")
+            lines.append("\(L10n.t(.cliSparkle)):")
             if let v = sp.feedURL { lines.append("  SUFeedURL: \(v)") }
             if let v = sp.publicEDKey { lines.append("  SUPublicEDKey: \(v)") }
             if let v = sp.publicDSAKeyFile { lines.append("  SUPublicDSAKeyFile: \(v)") }
             if let v = sp.enableAutomaticChecks { lines.append("  SUEnableAutomaticChecks: \(v)") }
             if let v = sp.scheduledCheckInterval {
-                lines.append("  SUScheduledCheckInterval: \(v) 秒 (\(Double(v)/86400.0) 天)")
+                lines.append("  SUScheduledCheckInterval: \(v) \(L10n.t(.cliSeconds)) (\(Double(v)/86400.0) \(L10n.t(.cliDays)))")
             }
             if let v = sp.allowsAutomaticUpdates { lines.append("  SUAllowsAutomaticUpdates: \(v)") }
             if let v = sp.enableInstallerLauncherService { lines.append("  SUEnableInstallerLauncherService: \(v)") }
@@ -187,7 +187,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         // iCloud
         if !ex.ubiquitousContainers.isEmpty {
-            lines.append("iCloud Containers (\(ex.ubiquitousContainers.count) 项):")
+            lines.append("iCloud Containers (\(ex.ubiquitousContainers.count) \(L10n.t(.cliICloudContainers))):")
             for (i, c) in ex.ubiquitousContainers.enumerated() {
                 lines.append("  [\(i)] \(c.identifier): \(InfoPlistParser.flatten(c.config).map { "\($0.0)=\($0.1)" }.joined(separator: ", "))")
             }
@@ -250,21 +250,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             lines.append("NSBonjourServices: \(ex.bonjourServices.joined(separator: ", "))")
         }
         if let q = info.quarantine {
-            lines.append("Quarantine: flags=\(q.flags) agent=\(q.agent) uuid=\(q.uuid) 时间=\(q.timestampString) 日期=\(q.downloadDate.map { ISO8601DateFormatter().string(from: $0) } ?? "—")")
+            lines.append("Quarantine: flags=\(q.flags) agent=\(q.agent) uuid=\(q.uuid) \(L10n.t(.cliQuarantine))=\(q.timestampString) \(L10n.t(.cliDownloadTime))=\(q.downloadDate.map { ISO8601DateFormatter().string(from: $0) } ?? "—")")
         } else {
-            lines.append("Quarantine: 无")
+            lines.append("Quarantine: \(L10n.t(.cliQuarantineNone))")
         }
         if !info.extendedXattrs.names.isEmpty {
-            lines.append("扩展属性 (xattrs): \(info.extendedXattrs.names.joined(separator: ", "))")
+            lines.append("\(L10n.t(.cliXattrs)): \(info.extendedXattrs.names.joined(separator: ", "))")
         }
-        lines.append("子 bundle: \(info.subBundles.count) 项 (\(ByteCountFormatter.string(fromByteCount: Int64(info.subBundlesTotalSize), countStyle: .file)))")
+        lines.append("\(L10n.t(.cliSubBundles)): \(info.subBundles.count) \(L10n.t(.cliPlistKeys)) (\(ByteCountFormatter.string(fromByteCount: Int64(info.subBundlesTotalSize), countStyle: .file)))")
         for sub in info.subBundles.prefix(8) {
-            lines.append("  · [\(sub.kind.rawValue)] \(sub.relativePath) — \(sub.bundleIdentifier ?? "—") (\(sub.signatureState.rawValue))")
+            lines.append("  · [\(sub.kind.rawValue)] \(sub.relativePath) — \(sub.bundleIdentifier ?? "—") (\(sub.signatureState.localizedName))")
         }
         if info.subBundles.count > 8 {
-            lines.append("  ... 另外 \(info.subBundles.count - 8) 项")
+            lines.append("  ... \(L10n.t(.cliMore)) \(info.subBundles.count - 8) \(L10n.t(.cliPlistKeys))")
         }
-        lines.append("文件大小: \(info.formattedFileSize()) (\(info.fileSize) 字节)")
+        lines.append("\(L10n.t(.cliFileSize)): \(info.formattedFileSize()) (\(info.fileSize) \(L10n.t(.bytesUnit)))")
         return lines.joined(separator: "\n")
     }
 

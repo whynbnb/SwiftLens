@@ -46,63 +46,47 @@ struct HelpView: View {
 
     // MARK: - 签名 / 公证状态
     private var notarizationSection: some View {
-        helpSection(title: "签名状态 / 公证状态", icon: "checkmark.shield.fill") {
-            badgeRow(color: .green,  title: "已公证 (Notarized)",
-                     desc: "Developer ID 签名且通过 Gatekeeper 严格验证。Apple 已公证该应用，可安全运行。")
-            badgeRow(color: .orange, title: "Developer ID 签名",
-                     desc: "Developer ID 证书签名，但未通过严格验证（签名可能已损坏、资源缺失或被修改）。Gatekeeper 会拒绝运行。")
-            badgeRow(color: .blue,   title: "Mac App Store",
-                     desc: "通过 Mac App Store 分发的应用，使用 Apple Mac OS Application Signing 证书签名。")
-            badgeRow(color: .pink,   title: "iOS App Store",
-                     desc: "iOS 应用（在 Apple Silicon Mac 上运行），使用 Apple iPhone OS Application Signing 证书签名。天然沙盒。")
-            badgeRow(color: .teal,   title: "Apple 系统签名",
-                     desc: "macOS 系统自带应用，使用 macOS Software Signing 证书签名。无需公证。")
-            badgeRow(color: .gray,   title: "未公证",
-                     desc: "Ad-hoc 签名、未签名或其它无法判定公证状态的情况。Gatekeeper 默认拒绝。")
+        helpSection(title: L10n.t(.helpNotarizationTitle), icon: "checkmark.shield.fill") {
+            badgeRow(color: .green,  title: L10n.t(.helpNotarizedTitle), desc: L10n.t(.helpNotarizedDesc))
+            badgeRow(color: .orange, title: L10n.t(.helpDevIDTitle), desc: L10n.t(.helpDevIDDesc))
+            badgeRow(color: .blue,   title: L10n.t(.helpMASTitle), desc: L10n.t(.helpMASDesc))
+            badgeRow(color: .pink,   title: L10n.t(.helpIOSStoreTitle), desc: L10n.t(.helpIOSStoreDesc))
+            badgeRow(color: .teal,   title: L10n.t(.helpAppleSystemTitle), desc: L10n.t(.helpAppleSystemDesc))
+            badgeRow(color: .gray,   title: L10n.t(.helpNotNotarizedTitle), desc: L10n.t(.helpNotNotarizedDesc))
         }
     }
 
     // MARK: - 沙盒
     private var sandboxSection: some View {
-        helpSection(title: "沙盒状态", icon: "lock.shield.fill") {
-            badgeRow(color: .green,  title: "沙盒应用",
-                     desc: "Entitlements 中含 com.apple.security.app-sandbox，应用运行在 App Sandbox 沙盒内，文件和网络访问受限。")
-            badgeRow(color: .orange, title: "非沙盒",
-                     desc: "未启用 App Sandbox。应用可自由访问系统资源（受用户权限限制）。")
+        helpSection(title: L10n.t(.helpSandboxTitle), icon: "lock.shield.fill") {
+            badgeRow(color: .green,  title: L10n.t(.helpSandboxedTitle), desc: L10n.t(.helpSandboxedDesc))
+            badgeRow(color: .orange, title: L10n.t(.helpNoSandboxTitle), desc: L10n.t(.helpNoSandboxDesc))
         }
     }
 
     // MARK: - 隔离
     private var quarantineSection: some View {
-        helpSection(title: "Quarantine 隔离标记", icon: "xmark.shield.fill") {
-            badgeRow(color: .yellow, title: "已隔离",
-                     desc: "应用带 com.apple.quarantine 扩展属性，通常是从网络下载的。首次运行会触发 Gatekeeper 检查。")
-            badgeRow(color: .gray,   title: "无隔离",
-                     desc: "未检测到 quarantine 标记。可能来自可信来源（如 App Store）或已手动清除。")
+        helpSection(title: L10n.t(.helpQuarantineTitle), icon: "xmark.shield.fill") {
+            badgeRow(color: .yellow, title: L10n.t(.helpQuarantinedTitle), desc: L10n.t(.helpQuarantinedDesc))
+            badgeRow(color: .gray,   title: L10n.t(.helpNoQuarantineTitle), desc: L10n.t(.helpNoQuarantineDesc))
         }
     }
 
     // MARK: - 签名有效性
     private var signatureStateSection: some View {
-        helpSection(title: "签名有效性", icon: "signature") {
-            badgeRow(color: .green,  title: "基础有效 (Basic Valid)",
-                     desc: "SecStaticCodeCheckValidity 基础验证通过 (kSecCSBasicValidateOnly)。仅校验签名结构完整, 不等同于 Gatekeeper 完整验证或资源封印验证。完整可信度请参考「签名状态/公证状态」徽章。")
-            badgeRow(color: .red,    title: "无效 (Invalid)",
-                     desc: "基础验证失败。签名可能被篡改或损坏。")
-            badgeRow(color: .gray,   title: "未验证",
-                     desc: "未签名应用, 无法进行有效性验证。")
+        helpSection(title: L10n.t(.helpValidityTitle), icon: "signature") {
+            badgeRow(color: .green,  title: L10n.t(.helpBasicValidTitle), desc: L10n.t(.helpBasicValidDesc))
+            badgeRow(color: .red,    title: L10n.t(.helpInvalidTitle), desc: L10n.t(.helpInvalidDesc))
+            badgeRow(color: .gray,   title: L10n.t(.helpUntestedTitle), desc: L10n.t(.helpUntestedDesc))
         }
     }
 
     // MARK: - 其它徽章
     private var badgesSection: some View {
-        helpSection(title: "其它标识", icon: "tag.fill") {
-            badgeRow(color: .purple, title: "Agent App (无 Dock)",
-                     desc: "Info.plist 中 LSUIElement=true。无 Dock 图标、无主菜单栏，常用于后台工具或菜单栏应用。")
-            badgeRow(color: .indigo, title: "仅后台 (Background)",
-                     desc: "Info.plist 中 LSBackgroundOnly=true。纯后台运行，无 UI。")
-            badgeRow(color: .pink,   title: "iOS 移植包",
-                     desc: "Info.plist 中含 UI* 键（UIDeviceFamily / UILaunchStoryboardName 等），是 iOS 移植到 macOS 的应用。")
+        helpSection(title: L10n.t(.helpBadgesTitle), icon: "tag.fill") {
+            badgeRow(color: .purple, title: L10n.t(.helpAgentAppTitle), desc: L10n.t(.helpAgentAppDesc))
+            badgeRow(color: .indigo, title: L10n.t(.helpBackgroundTitle), desc: L10n.t(.helpBackgroundDesc))
+            badgeRow(color: .pink,   title: L10n.t(.helpIOSPortTitle), desc: L10n.t(.helpIOSPortDesc))
         }
     }
 

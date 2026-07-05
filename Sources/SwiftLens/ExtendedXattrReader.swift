@@ -39,12 +39,12 @@ enum ExtendedXattrReader {
 
     private static func readValue(path: String, name: UnsafePointer<CChar>) -> String {
         let len = getxattr(path, name, nil, 0, 0, 0)
-        if len <= 0 { return "<空>" }
+        if len <= 0 { return L10n.t(.emptyPlaceholder2) }
         var buf = [UInt8](repeating: 0, count: len + 1)
         let read = buf.withUnsafeMutableBytes { ptr -> Int in
             getxattr(path, name, ptr.baseAddress, len, 0, 0)
         }
-        guard read > 0 else { return "<无法读取>" }
+        guard read > 0 else { return L10n.t(.unreadablePlaceholder) }
         let data = Data(buf.prefix(read))
         // 尝试打印为 UTF-8 文本
         if let s = String(data: data, encoding: .utf8) {

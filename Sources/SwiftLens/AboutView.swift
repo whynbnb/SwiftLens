@@ -100,7 +100,7 @@ struct AboutView: View {
             .contentShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
-        .help("在浏览器中打开: \(url.absoluteString)")
+        .help(L10n.t(.openInBrowser) + url.absoluteString)
     }
 }
 

@@ -5,24 +5,51 @@ import Security
 
 struct CodeSignInfo {
     enum SignedState: String {
-        case signed       = "已签名 (Signed)"
-        case adhoc        = "Ad-hoc 签名"
-        case unsigned     = "未签名 (Not signed)"
-        case unknown      = "未知"
+        case signed       = "signed"
+        case adhoc        = "adhoc"
+        case unsigned     = "unsigned"
+        case unknown      = "unknown"
+        /// 本地化展示名 (走 L10n, 受当前语言影响)
+        var localizedName: String {
+            switch self {
+            case .signed:   return L10n.t(.ssSigned)
+            case .adhoc:     return L10n.t(.ssAdhoc)
+            case .unsigned:  return L10n.t(.ssUnsigned)
+            case .unknown:   return L10n.t(.ssUnknown)
+            }
+        }
     }
     enum Validity: String {
-        case valid    = "基础有效 (Basic Valid)"
-        case invalid  = "无效 (Invalid)"
-        case untested = "未验证"
+        case valid    = "valid"
+        case invalid  = "invalid"
+        case untested = "untested"
+        var localizedName: String {
+            switch self {
+            case .valid:    return L10n.t(.vValid)
+            case .invalid:  return L10n.t(.vInvalid)
+            case .untested: return L10n.t(.vUntested)
+            }
+        }
     }
     enum Notarization: String {
-        case notarized      = "已公证 (Notarized)"
-        case devID          = "Developer ID 签名"
-        case macAppStore    = "Mac App Store"
-        case iosAppStore    = "iOS App Store"
-        case appleSystem    = "Apple 系统签名"
-        case notNotarized   = "未公证"
-        case unknown        = "未知"
+        case notarized      = "notarized"
+        case devID          = "developer-id"
+        case macAppStore    = "mac-app-store"
+        case iosAppStore    = "ios-app-store"
+        case appleSystem    = "apple-system"
+        case notNotarized   = "not-notarized"
+        case unknown        = "unknown"
+        var localizedName: String {
+            switch self {
+            case .notarized:    return L10n.t(.nNotarized)
+            case .devID:        return L10n.t(.nDevID)
+            case .macAppStore:  return L10n.t(.nMAS)
+            case .iosAppStore:  return L10n.t(.nIOSStore)
+            case .appleSystem:  return L10n.t(.nAppleSystem)
+            case .notNotarized: return L10n.t(.nNotNotarized)
+            case .unknown:      return L10n.t(.nUnknown)
+            }
+        }
     }
 
     let state: SignedState
@@ -66,7 +93,7 @@ enum CodeSignReader {
             &staticCode
         )
         guard createStatus == errSecSuccess, let code = staticCode else {
-            return makeUnsigned(error: "SecStaticCodeCreateWithPath 失败: status=\(createStatus)")
+            return makeUnsigned(error: "\(L10n.t(.errSecStaticCode)): status=\(createStatus)")
         }
 
         // 2. 取签名信息字典 (kSecCSSigningInformation 即可, 已包含 entitlements-dict)
@@ -82,7 +109,7 @@ enum CodeSignReader {
                 return makeUnsigned(error: nil)
             }
             // 其它错误: 视作未签名
-            return makeUnsigned(error: "SecCodeCopySigningInformation 失败: status=\(signStatus)")
+            return makeUnsigned(error: "\(L10n.t(.errSecCodeCopySign)): status=\(signStatus)")
         }
 
         // 3. 提取字段 (dict 键名来自 SecCode.h, 部分常量未导出到 Swift)
@@ -131,7 +158,7 @@ enum CodeSignReader {
             if let summary = SecCertificateCopySubjectSummary(cert) {
                 return summary as String
             }
-            return "(未知证书)"
+            return L10n.t(.unknownCert)
         }
 
         // 6.5 Hash choices (digest-algorithms 数组 → sha256/sha1 字符串)
@@ -410,7 +437,7 @@ enum CodeSignReader {
             state: .unsigned,
             validity: .untested,
             notarization: .notNotarized,
-            detailRaw: "(未签名)\n\(error ?? "")",
+            detailRaw: "\(L10n.t(.unsignedDetail))\n\(error ?? "")",
             identifier: nil,
             teamIdentifier: nil,
             authorities: [],

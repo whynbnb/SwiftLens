@@ -22,23 +22,23 @@ struct DetailView: View {
         if info.architectures.isEmpty {
             Button {
                 withAnimation { proxy.scrollTo(DetailAnchor.architectures, anchor: .top) }
-            } label: { Badge(text: "未知架构", color: .blue) }
-                .buttonStyle(.plain).help("跳转到「架构」分区")
+            } label: { Badge(text: L10n.t(.unknownArch), color: .blue) }
+                .buttonStyle(.plain).help(L10n.t(.goArchSection))
         } else if info.architectures.count == 1 {
             Button {
                 withAnimation { proxy.scrollTo(DetailAnchor.architectures, anchor: .top) }
             } label: { Badge(text: info.architectures.first!.name, color: .blue) }
-                .buttonStyle(.plain).help("跳转到「架构」分区")
+                .buttonStyle(.plain).help(L10n.t(.goArchSection))
         } else {
             Button {
                 withAnimation { proxy.scrollTo(DetailAnchor.architectures, anchor: .top) }
             } label: { Badge(text: "Universal", color: .blue) }
-                .buttonStyle(.plain).help("跳转到「架构」分区")
+                .buttonStyle(.plain).help(L10n.t(.goArchSection))
             ForEach(Array(info.architectures.enumerated()), id: \.offset) { _, arch in
                 Button {
                     withAnimation { proxy.scrollTo(DetailAnchor.architectures, anchor: .top) }
                 } label: { Badge(text: arch.name, color: .blue.opacity(0.85)) }
-                    .buttonStyle(.plain).help("跳转到「架构」分区")
+                    .buttonStyle(.plain).help(L10n.t(.goArchSection))
             }
         }
     }
@@ -156,40 +156,40 @@ struct DetailView: View {
                 Button {
                     withAnimation { proxy.scrollTo(DetailAnchor.quarantine, anchor: .top) }
                 } label: {
-                    Badge(text: info.quarantine != nil ? "已隔离" : "无隔离",
+                    Badge(text: info.quarantine != nil ? L10n.t(.badgeIsolated) : L10n.t(.badgeNoQuarantine),
                           color: info.quarantine != nil ? .yellow : .gray)
                 }
                 .buttonStyle(.plain)
-                .help("跳转到「Quarantine」分区")
+                .help(L10n.t(.goQuarantineSection))
 
                 // 签名状态 + 有效性 + 公证，同一行，三个都跳转到代码签名分区
                 HStack(spacing: 6) {
                     Button {
                         withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
                     } label: {
-                        Badge(text: info.codeSign.state.rawValue,
+                        Badge(text: info.codeSign.state.localizedName,
                               color: badgeColor(for: info.codeSign.state))
                     }
                     .buttonStyle(.plain)
-                    .help("跳转到「代码签名」分区")
+                    .help(L10n.t(.goCodeSignSection))
 
                     Button {
                         withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
                     } label: {
-                        Badge(text: info.codeSign.validity.rawValue,
+                        Badge(text: info.codeSign.validity.localizedName,
                               color: validityColor(info.codeSign.validity))
                     }
                     .buttonStyle(.plain)
-                    .help("跳转到「代码签名」分区")
+                    .help(L10n.t(.goCodeSignSection))
 
                     Button {
                         withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
                     } label: {
-                        Badge(text: info.codeSign.notarization.rawValue,
+                        Badge(text: info.codeSign.notarization.localizedName,
                               color: notarizationColor(info.codeSign.notarization))
                     }
                     .buttonStyle(.plain)
-                    .help("跳转到「代码签名」分区")
+                    .help(L10n.t(.goCodeSignSection))
                 }
 
                 // 沙盒状态徽章 —— 跳转到 Entitlements 分区
@@ -200,7 +200,7 @@ struct DetailView: View {
                           color: info.isSandboxed ? .green : .orange)
                 }
                 .buttonStyle(.plain)
-                .help("跳转到「Entitlements」分区")
+                .help(L10n.t(.goEntitlementsSection))
             }
         }
         .padding(12)
@@ -329,7 +329,7 @@ struct DetailView: View {
                 RowView(key: "Imported UTIs", value: "\(info.importedTypeIdentifiers.count)")
             }
             if !info.services.isEmpty {
-                RowView(key: "NSServices", value: "\(info.services.count) 项")
+                RowView(key: "NSServices", value: "\(info.services.count) \(L10n.t(.entryUnit))")
             }
         }
     }
@@ -392,7 +392,7 @@ struct DetailView: View {
         let asar = info.electronAsarIntegrity
         return SectionView(
             L10n.t(.ats),
-            subtitle: (ats == nil && asar == nil) ? "无" :
+            subtitle: (ats == nil && asar == nil) ? L10n.t(.atsNone) :
                 [ats != nil ? "ATS" : nil, asar != nil ? "Asar" : nil]
                     .compactMap { $0 }.joined(separator: ", ")
         ) {
@@ -431,7 +431,7 @@ struct DetailView: View {
                 ForEach(info.extendedXattrs.names, id: \.self) { name in
                     RowView(
                         key: name,
-                        value: info.extendedXattrs.descriptions[name] ?? "<空>"
+                        value: info.extendedXattrs.descriptions[name] ?? L10n.t(.emptyDesc)
                     )
                 }
             }
@@ -484,9 +484,9 @@ struct DetailView: View {
     private var codeSignSection: some View {
         let cs = info.codeSign
         return SectionView(L10n.t(.codeSigning)) {
-            RowView(key: L10n.t(.signState), value: cs.state.rawValue)
-            RowView(key: L10n.t(.validity), value: cs.validity.rawValue)
-            RowView(key: L10n.t(.notarization), value: cs.notarization.rawValue)
+            RowView(key: L10n.t(.signState), value: cs.state.localizedName)
+            RowView(key: L10n.t(.validity), value: cs.validity.localizedName)
+            RowView(key: L10n.t(.notarization), value: cs.notarization.localizedName)
 
             // 手动验证命令 — 沙盒内无法调用 spctl/codesign, 提供复制命令让用户在终端运行
             HStack(spacing: 10) {
@@ -560,7 +560,7 @@ struct DetailView: View {
                            subtitle: cs.entitlements == nil ? "—" : "\(cs.entitlements!.count)") {
             // 顶部明确显示沙盒状态
             RowView(key: "App Sandbox",
-                    value: info.isSandboxed ? "✅ 已启用 (com.apple.security.app-sandbox)" : "❌ 未启用")
+                    value: info.isSandboxed ? L10n.t(.sandboxEnabled) : L10n.t(.sandboxDisabled))
             if let ent = cs.entitlements, !ent.isEmpty {
                 let rows = InfoPlistParser.flatten(ent).sorted { $0.0 < $1.0 }
                 let bodyContent = VStack(alignment: .leading, spacing: 8) {
@@ -579,7 +579,7 @@ struct DetailView: View {
                     bodyContent
                 }
             } else if let raw = cs.entitlementsRaw {
-                DisclosureGroup("原始 XML") {
+                DisclosureGroup(L10n.t(.discloseRawXml)) {
                     ScrollView(.horizontal) {
                         Text(raw)
                             .font(.system(.caption, design: .monospaced))
@@ -634,7 +634,7 @@ struct DetailView: View {
                                     }
                                 }
                                 Spacer()
-                                Badge(text: sub.signatureState.rawValue,
+                                Badge(text: sub.signatureState.localizedName,
                                       color: badgeColor(for: sub.signatureState))
                             }
                             if let ver = sub.bundleVersion {
@@ -673,7 +673,7 @@ struct DetailView: View {
     private var rawPlistSection: some View {
         SectionView(L10n.t(.rawPlist),
                     subtitle: "\(info.flatRows.count)") {
-            DisclosureGroup("展开 Info.plist 全部键值") {
+            DisclosureGroup(L10n.t(.disclosePlistAll)) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(info.flatRows, id: \.0) { row in
@@ -689,7 +689,7 @@ struct DetailView: View {
     // MARK: 签名详情 (合成)
     private var rawCodesignSection: some View {
         SectionView(L10n.t(.rawCodesign)) {
-            DisclosureGroup("展开签名详情 (Security 框架合成)") {
+            DisclosureGroup(L10n.t(.discloseCodesignDetail)) {
                 ScrollView {
                     Text(info.codeSign.detailRaw.isEmpty ? L10n.t(.emptyPlaceholder) : info.codeSign.detailRaw)
                         .font(.system(.caption, design: .monospaced))
@@ -714,7 +714,7 @@ struct DetailView: View {
                     if let v = sp.enableAutomaticChecks { RowView(key: "SUEnableAutomaticChecks", value: bool(v)) }
                     if let v = sp.scheduledCheckInterval {
                         RowView(key: "SUScheduledCheckInterval",
-                                value: "\(v) 秒 (\(Double(v)/86400) 天)")
+                                value: "\(v) \(L10n.t(.secUnit)) (\(Double(v)/86400) \(L10n.t(.dayUnit)))")
                     }
                     if let v = sp.allowsAutomaticUpdates { RowView(key: "SUAllowsAutomaticUpdates", value: bool(v)) }
                     if let v = sp.enableInstallerLauncherService { RowView(key: "SUEnableInstallerLauncherService", value: bool(v)) }
@@ -1047,50 +1047,50 @@ struct DetailView: View {
     private func summaryString() -> String {
         var lines: [String] = []
         lines.append("# \(info.displayName ?? info.bundleName ?? info.bundleURL.lastPathComponent)")
-        lines.append("路径: \(info.bundleURL.path)")
+        lines.append("\(L10n.t(.cliPath)): \(info.bundleURL.path)")
         lines.append("BundleID: \(info.bundleIdentifier ?? "—")")
-        lines.append("版本: \(info.bundleShortVersion ?? "—") (\(info.bundleVersion ?? "—"))")
-        lines.append("最低系统版本: \(info.minimumOSVersion ?? "—")")
+        lines.append("\(L10n.t(.cliVersion)): \(info.bundleShortVersion ?? "—") (\(info.bundleVersion ?? "—"))")
+        lines.append("\(L10n.t(.cliMinOS)): \(info.minimumOSVersion ?? "—")")
         let archs = info.architectures.map { $0.name }.joined(separator: ", ")
-        lines.append("架构: \(archs.isEmpty ? "—" : archs)")
+        lines.append("\(L10n.t(.cliArchs)): \(archs.isEmpty ? "—" : archs)")
         if !info.supportedPlatforms.isEmpty {
-            lines.append("支持平台: \(info.supportedPlatforms.joined(separator: ", "))")
+            lines.append("\(L10n.t(.cliPlatforms)): \(info.supportedPlatforms.joined(separator: ", "))")
         }
         if let v = info.principalClass { lines.append("NSPrincipalClass: \(v)") }
-        if let v = info.humanReadableCopyright { lines.append("版权: \(v)") }
+        if let v = info.humanReadableCopyright { lines.append("\(L10n.t(.cliCopyright)): \(v)") }
         let cs = info.codeSign
-        lines.append("签名: \(cs.state.rawValue) — \(cs.validity.rawValue) — \(cs.notarization.rawValue)")
+        lines.append("\(L10n.t(.cliSign)): \(cs.state.localizedName) — \(cs.validity.localizedName) — \(cs.notarization.localizedName)")
         if let v = cs.format { lines.append("Format: \(v)") }
         if let id = cs.identifier { lines.append("Identifier: \(id)") }
         if let team = cs.teamIdentifier { lines.append("TeamIdentifier: \(team)") }
         if let cdh = cs.cdHash { lines.append("CDHash: \(cdh)") }
-        if !cs.decodedFlags.isEmpty { lines.append("签名 flags: \(cs.decodedFlags.joined(separator: ", "))") }
+        if !cs.decodedFlags.isEmpty { lines.append("\(L10n.t(.cliSignFlags)): \(cs.decodedFlags.joined(separator: ", "))") }
         if let v = cs.runtimeVersion { lines.append("Runtime Version: \(v)") }
         if let v = cs.signingTime { lines.append("Signing Time: \(v)") }
         if !cs.authorities.isEmpty {
-            lines.append("Authority:")
+            lines.append("\(L10n.t(.cliAuthority)):")
             cs.authorities.forEach { lines.append("  - \($0)") }
         }
-        lines.append("隐私权限描述: \(info.privacyEntries.count) 项")
+        lines.append("\(L10n.t(.cliPrivacy)): \(info.privacyEntries.count) \(L10n.t(.cliPlistKeys))")
         if !info.privacyEntries.isEmpty {
             for e in info.privacyEntries.prefix(10) {
                 lines.append("  · \(e.displayTitle) [\(e.key)]: \(e.description)")
             }
             if info.privacyEntries.count > 10 {
-                lines.append("  ... 另外 \(info.privacyEntries.count - 10) 项")
+                lines.append("  ... \(L10n.t(.cliMore)) \(info.privacyEntries.count - 10) \(L10n.t(.cliPlistKeys))")
             }
         }
-        if info.appTransportSecurity != nil { lines.append("ATS: 已声明 NSAppTransportSecurity") }
-        if info.electronAsarIntegrity != nil { lines.append("Electron: 已声明 ElectronAsarIntegrity") }
-        if info.lsUIElement == true { lines.append("形态: Agent App (无 Dock 图标)") }
-        if info.lsBackgroundOnly == true { lines.append("形态: 仅后台运行") }
-        if info.isIOSPort { lines.append("形态: iOS 移植包") }
+        if info.appTransportSecurity != nil { lines.append("ATS: \(L10n.t(.cliATS))") }
+        if info.electronAsarIntegrity != nil { lines.append("Electron: \(L10n.t(.cliElectron))") }
+        if info.lsUIElement == true { lines.append(L10n.t(.cliFormAgent)) }
+        if info.lsBackgroundOnly == true { lines.append(L10n.t(.cliFormBackground)) }
+        if info.isIOSPort { lines.append(L10n.t(.cliFormIOSPort)) }
         let ex = info.extra
         if let sp = info.extra.sparkle {
-            lines.append("Sparkle:")
+            lines.append("\(L10n.t(.cliSparkle)):")
             if let v = sp.feedURL { lines.append("  SUFeedURL: \(v)") }
             if let v = sp.scheduledCheckInterval {
-                lines.append("  SUScheduledCheckInterval: \(v) 秒 (\(Double(v)/86400.0) 天)")
+                lines.append("  SUScheduledCheckInterval: \(v) \(L10n.t(.cliSeconds)) (\(Double(v)/86400.0) \(L10n.t(.cliDays)))")
             }
             if let v = sp.publicEDKey { lines.append("  SUPublicEDKey: \(v)") }
             if let v = sp.publicDSAKeyFile { lines.append("  SUPublicDSAKeyFile: \(v)") }
@@ -1108,7 +1108,7 @@ struct DetailView: View {
         if let v = ex.safariExtensionCorrespondingIOSApp {
             lines.append("SFSafariCorrespondingIOSAppBundleIdentifier: \(v)")
         }
-        if !ex.ubiquitousContainers.isEmpty { lines.append("iCloud Containers: \(ex.ubiquitousContainers.count) 项") }
+        if !ex.ubiquitousContainers.isEmpty { lines.append("iCloud Containers: \(ex.ubiquitousContainers.count) \(L10n.t(.cliPlistKeys))") }
         if let v = ex.userNotificationAlertStyle { lines.append("NSUserNotificationAlertStyle: \(v)") }
         if let v = ex.supportsSuddenTermination { lines.append("NSSupportsSuddenTermination: \(v)") }
         if let v = ex.supportsAutomaticTermination { lines.append("NSSupportsAutomaticTermination: \(v)") }
@@ -1140,21 +1140,21 @@ struct DetailView: View {
         if !ex.bonjourServices.isEmpty {
             lines.append("NSBonjourServices: \(ex.bonjourServices.joined(separator: ", "))")
         }
-        if let q = info.quarantine { lines.append("Quarantine: flags=\(q.flags) agent=\(q.agent) uuid=\(q.uuid) 时间=\(q.timestampString)") }
-        else { lines.append("Quarantine: 无") }
+        if let q = info.quarantine { lines.append("Quarantine: flags=\(q.flags) agent=\(q.agent) uuid=\(q.uuid) \(L10n.t(.cliQuarantine))=\(q.timestampString)") }
+        else { lines.append("Quarantine: \(L10n.t(.cliQuarantineNone))") }
         if !info.extendedXattrs.names.isEmpty {
-            lines.append("扩展属性: \(info.extendedXattrs.names.joined(separator: ", "))")
+            lines.append("\(L10n.t(.cliXattrs)): \(info.extendedXattrs.names.joined(separator: ", "))")
         }
-        lines.append("子 bundle: \(info.subBundles.count) 项 (\(formattedSize(info.subBundlesTotalSize)))")
+        lines.append("\(L10n.t(.cliSubBundles)): \(info.subBundles.count) \(L10n.t(.cliPlistKeys)) (\(formattedSize(info.subBundlesTotalSize)))")
         if !info.subBundles.isEmpty {
             for sub in info.subBundles.prefix(10) {
                 lines.append("  · [\(sub.kind.rawValue)] \(sub.relativePath) — \(sub.bundleIdentifier ?? "—")")
             }
             if info.subBundles.count > 10 {
-                lines.append("  ... 另外 \(info.subBundles.count - 10) 项")
+                lines.append("  ... \(L10n.t(.cliMore)) \(info.subBundles.count - 10) \(L10n.t(.cliPlistKeys))")
             }
         }
-        lines.append("文件大小: \(info.formattedFileSize()) (\(info.fileSize) 字节)")
+        lines.append("\(L10n.t(.cliFileSize)): \(info.formattedFileSize()) (\(info.fileSize) \(L10n.t(.bytesUnit)))")
         return lines.joined(separator: "\n")
     }
 }

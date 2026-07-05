@@ -13,79 +13,79 @@ struct PrivacyEntry: Identifiable {
 }
 
 enum PrivacyReader {
-    // 已知的隐私/权限键映射到 (中文标题, SF Symbol)
-    private static let descriptor: [String: (title: String, symbol: String)] = [
+    // 已知的隐私/权限键映射到 (L10n Key, SF Symbol)
+    private static let descriptor: [String: (key: L10n.Key, symbol: String)] = [
         // 通讯录 / 日历 / 提醒
-        "NSContactsUsageDescription":         ("通讯录", "person.crop.circle"),
-        "NSCalendarsUsageDescription":        ("日历", "calendar"),
-        "NSCalendarsFullAccessUsageDescription": ("日历完整访问", "calendar.badge.clock"),
-        "NSRemindersUsageDescription":        ("提醒事项", "list.bullet.rectangle"),
-        "NSRemindersFullAccessUsageDescription": ("提醒事项完整访问", "list.bullet.rectangle.portrait"),
+        "NSContactsUsageDescription":         (.pContacts, "person.crop.circle"),
+        "NSCalendarsUsageDescription":        (.pCalendars, "calendar"),
+        "NSCalendarsFullAccessUsageDescription": (.pCalendarsFull, "calendar.badge.clock"),
+        "NSRemindersUsageDescription":        (.pReminders, "list.bullet.rectangle"),
+        "NSRemindersFullAccessUsageDescription": (.pRemindersFull, "list.bullet.rectangle.portrait"),
         // 位置
-        "NSLocationUsageDescription":         ("位置", "location"),
-        "NSLocationAlwaysUsageDescription":    ("位置 (始终)", "location.fill"),
-        "NSLocationWhenInUseUsageDescription": ("位置 (使用时)", "location.viewfinder"),
-        "NSLocationAlwaysAndWhenInUseUsageDescription": ("位置 (始终+使用时)", "location.fill.viewfinder"),
-        "NSLocationDefaultAccuracyReduced":    ("位置精度 (降级)", "location.slash"),
+        "NSLocationUsageDescription":         (.pLocation, "location"),
+        "NSLocationAlwaysUsageDescription":    (.pLocationAlways, "location.fill"),
+        "NSLocationWhenInUseUsageDescription": (.pLocationWhenInUse, "location.viewfinder"),
+        "NSLocationAlwaysAndWhenInUseUsageDescription": (.pLocationBoth, "location.fill.viewfinder"),
+        "NSLocationDefaultAccuracyReduced":    (.pLocationDefaultReduced, "location.slash"),
         // 媒体捕获
-        "NSCameraUsageDescription":           ("相机", "camera"),
-        "NSMicrophoneUsageDescription":       ("麦克风", "mic"),
-        "NSAudioCaptureUsageDescription":     ("音频捕获", "waveform"),
+        "NSCameraUsageDescription":           (.pCamera, "camera"),
+        "NSMicrophoneUsageDescription":       (.pMicrophone, "mic"),
+        "NSAudioCaptureUsageDescription":     (.pAudioCapture, "waveform"),
         // 蓝牙
-        "NSBluetoothAlwaysUsageDescription":  ("蓝牙 (始终)", "antenna.radiowaves.left.and.right"),
-        "NSBluetoothPeripheralUsageDescription": ("蓝牙外设", "antenna.radiowaves.left.and.right"),
+        "NSBluetoothAlwaysUsageDescription":  (.pBluetoothAlways, "antenna.radiowaves.left.and.right"),
+        "NSBluetoothPeripheralUsageDescription": (.pBluetoothPeripheral, "antenna.radiowaves.left.and.right"),
         // 健康 / HomeKit / Motion
-        "NSHealthShareUsageDescription":      ("健康共享", "heart"),
-        "NSHealthClinicalHealthRecordsShareUsageDescription": ("健康临床记录", "heart.text.squarefill"),
-        "NSHealthUpdateUsageDescription":     ("健康更新", "heart.arrow.circlepath"),
-        "NSHomeKitUsageDescription":          ("HomeKit", "house"),
-        "NSMotionUsageDescription":           ("运动与健身", "figure.walk"),
-        "NSExtensionUsageDescription":        ("扩展 (Extensions)", "puzzlepiece.extension"),
+        "NSHealthShareUsageDescription":      (.pHealthShare, "heart"),
+        "NSHealthClinicalHealthRecordsShareUsageDescription": (.pHealthClinical, "heart.text.squarefill"),
+        "NSHealthUpdateUsageDescription":     (.pHealthUpdate, "heart.arrow.circlepath"),
+        "NSHomeKitUsageDescription":          (.pHomeKit, "house"),
+        "NSMotionUsageDescription":           (.pMotion, "figure.walk"),
+        "NSExtensionUsageDescription":        (.pExtension, "puzzlepiece.extension"),
         // 媒体库 / Photos
-        "NSAppleMusicUsageDescription":       ("Apple Music", "music.note"),
-        "NSPhotoLibraryUsageDescription":     ("照片库", "photo"),
-        "NSPhotoLibraryAddUsageDescription":  ("照片库 (添加)", "photo.badge.plus"),
-        "NSCameraReactionEffectGesturesEnabledDefault": ("相机反应手势", "camera.turn.left"),
+        "NSAppleMusicUsageDescription":       (.pAppleMusic, "music.note"),
+        "NSPhotoLibraryUsageDescription":     (.pPhotoLibrary, "photo"),
+        "NSPhotoLibraryAddUsageDescription":  (.pPhotoLibraryAdd, "photo.badge.plus"),
+        "NSCameraReactionEffectGesturesEnabledDefault": (.pCameraReaction, "camera.turn.left"),
         // 语音 / Siri
-        "NSSpeechRecognitionUsageDescription": ("语音识别", "waveform.badge.magnifyingglass"),
-        "NSSiriUsageDescription":             ("Siri", "siri"),
+        "NSSpeechRecognitionUsageDescription": (.pSpeechRecognition, "waveform.badge.magnifyingglass"),
+        "NSSiriUsageDescription":             (.pSiri, "siri"),
         // 网络卷 / 文件 / 文件夹
-        "NSFilesDownloadedUsageDescription":  ("下载文件夹", "arrow.down.circle"),
+        "NSFilesDownloadedUsageDescription":  (.pFilesDownloaded, "arrow.down.circle"),
         // Apple Events / Automation
-        "NSAppleEventsUsageDescription":      ("Apple 事件 (自动化)", "applescript"),
-        "NSSystemAdministrationUsageDescription": ("系统管理 (特权)", "lock.shield"),
+        "NSAppleEventsUsageDescription":      (.pAppleEvents, "applescript"),
+        "NSSystemAdministrationUsageDescription": (.pSystemAdministration, "lock.shield"),
         // 媒体的另外几类
-        "NSVideoSubscriberAccountUsageDescription": ("视频订阅账号", "tv"),
+        "NSVideoSubscriberAccountUsageDescription": (.pVideoAccount, "tv"),
         // AVP spatial
-        "NSCameraCaptureUsageDescription":    ("相机捕获", "camera.viewfinder"),
+        "NSCameraCaptureUsageDescription":    (.pCameraCapture, "camera.viewfinder"),
         // Face ID / Health extras (Motion 已在健康区中)
-        "NSFaceIDUsageDescription":           ("Face ID", "faceid"),
+        "NSFaceIDUsageDescription":           (.pFaceID, "faceid"),
         // 系统扩展 / 屏幕捕获
-        "NSSystemExtensionUsageDescription": ("系统扩展", "puzzlepiece.extension"),
-        "NSScreenCaptureUsageDescription":   ("屏幕捕获", "rectangle.dashed"),
+        "NSSystemExtensionUsageDescription": (.pSystemExtension, "puzzlepiece.extension"),
+        "NSScreenCaptureUsageDescription":   (.pScreenCapture, "rectangle.dashed"),
         // FileProvider / 通知
-        "NSFileProviderDomainUsageDescription": ("文件提供者域", "folder.fill.badge.plus"),
-        "NSUserNotificationsUsageDescription": ("用户通知", "bell"),
-        "NSLocalNotificationUsageDescription": ("本地通知", "bell.badge"),
-        "NSRemoteNotificationUsageDescription": ("远程通知", "bell.badge.wifi"),
+        "NSFileProviderDomainUsageDescription": (.pFileProvider, "folder.fill.badge.plus"),
+        "NSUserNotificationsUsageDescription": (.pUserNotifications, "bell"),
+        "NSLocalNotificationUsageDescription": (.pLocalNotifications, "bell.badge"),
+        "NSRemoteNotificationUsageDescription": (.pRemoteNotifications, "bell.badge.wifi"),
         // 自动填充 / 安全 / 升级
-        "NSAutoFillRequiresTextContentTypeForOneTimeCodeOnMac": ("自动填充 (验证码)", "text.badge.checkmark"),
-        "NSUpdateSecurityPolicy":            ("更新安全策略", "lock.shield"),
+        "NSAutoFillRequiresTextContentTypeForOneTimeCodeOnMac": (.pAutoFill, "text.badge.checkmark"),
+        "NSUpdateSecurityPolicy":            (.pUpdateSecurityPolicy, "lock.shield"),
         // 临时位置
-        "NSLocationTemporaryUsageDescriptionDictionary": ("位置临时使用 (字典)", "location.tor"),
+        "NSLocationTemporaryUsageDescriptionDictionary": (.pLocationTemporary, "location.tor"),
         // 共享/通讯组
-        "NSContactsAddUsageDescription":      ("通讯录 (添加)", "person.badge.plus"),
-        "NSContactsCardUsageDescription":     ("联系人卡片", "person.crop.rectangle"),
+        "NSContactsAddUsageDescription":      (.pContactsAdd, "person.badge.plus"),
+        "NSContactsCardUsageDescription":     (.pContactsCard, "person.crop.rectangle"),
         // Keyboard
-        "NSInputAssistantUsageDescription":   ("输入助手", "keyboard"),
+        "NSInputAssistantUsageDescription":   (.pInputAssistant, "keyboard"),
         // File access
-        "NSDesktopFolderUsageDescription":    ("桌面文件夹", "desktopcomputer"),
-        "NSDocumentsFolderUsageDescription":  ("文稿文件夹", "folder"),
-        "NSDownloadsFolderUsageDescription":  ("下载文件夹", "arrow.down.circle"),
-        "NSNetworkVolumesUsageDescription":   ("网络卷", "network"),
-        "NSRemovableVolumesUsageDescription": ("可移动卷", "externaldrive"),
+        "NSDesktopFolderUsageDescription":    (.pDesktop, "desktopcomputer"),
+        "NSDocumentsFolderUsageDescription":  (.pDocuments, "folder"),
+        "NSDownloadsFolderUsageDescription":  (.pDownloads, "arrow.down.circle"),
+        "NSNetworkVolumesUsageDescription":   (.pNetworkVolumes, "network"),
+        "NSRemovableVolumesUsageDescription": (.pRemovable, "externaldrive"),
         // Service
-        "NSServicesUsageDescription":         ("服务 (Services)", "wrench.adjustable"),
+        "NSServicesUsageDescription":         (.pServices, "wrench.adjustable"),
         // 通用键兜底 —— 任何 "NS<Name>UsageDescription" 但未在上述列表中的
         // 由 parse 时用 default fallback 处理
     ]
@@ -101,7 +101,7 @@ enum PrivacyReader {
             if let meta = descriptor[key] {
                 results.append(PrivacyEntry(
                     key: key,
-                    displayTitle: meta.title,
+                    displayTitle: L10n.t(meta.key),
                     systemImage: meta.symbol,
                     description: value
                 ))
@@ -110,8 +110,8 @@ enum PrivacyReader {
                 let title = key
                     .replacingOccurrences(of: "NS", with: "")
                     .replacingOccurrences(of: "UsageDescription", with: "")
-                    .replacingOccurrences(of: "Always", with: " (始终)")
-                    .replacingOccurrences(of: "WhenInUse", with: " (使用时)")
+                    .replacingOccurrences(of: "Always", with: L10n.t(.pAlways))
+                    .replacingOccurrences(of: "WhenInUse", with: L10n.t(.pWhenInUse))
                 results.append(PrivacyEntry(
                     key: key,
                     displayTitle: title.isEmpty ? key : title,
