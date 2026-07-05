@@ -132,7 +132,7 @@ struct ContentView: View {
         panel.canChooseFiles = true
         panel.canCreateDirectories = false
         panel.treatsFilePackagesAsDirectories = false
-        panel.title = "选择 .app bundle"
+        panel.title = L10n.t(.pickAppPanelTitle)
         if panel.runModal() == .OK, let url = panel.url {
             handle(url: url)
         }
@@ -140,11 +140,11 @@ struct ContentView: View {
 
     private func handle(url: URL) {
         guard url.pathExtension.lowercased() == "app" else {
-            lastError = "不是 .app bundle: \(url.lastPathComponent)"
+            lastError = L10n.t(.invalidApp) + ": \(url.lastPathComponent)"
             return
         }
         guard FileManager.default.fileExists(atPath: url.path) else {
-            lastError = "文件不存在: \(url.path)"
+            lastError = L10n.t(.fileMissing) + ": \(url.path)"
             return
         }
         lastError = nil

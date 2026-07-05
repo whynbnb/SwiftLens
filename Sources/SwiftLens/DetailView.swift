@@ -219,7 +219,7 @@ struct DetailView: View {
             if let v = info.getInfoString { RowView(key: "CFBundleGetInfoString", value: v) }
             if let v = info.bundleSignature { RowView(key: "CFBundleSignature", value: v) }
             RowView(key: "CFBundleExecutable", value: info.executableName ?? "—")
-            RowView(key: "可执行文件路径", value: info.executablePath ?? "—")
+            RowView(key: L10n.t(.execPath), value: info.executablePath ?? "—")
             RowView(key: "CFBundlePackageType", value: info.bundlePackageType ?? "—")
             RowView(key: "CFBundleInfoDictionaryVersion", value: info.infoDictionaryVersion ?? "—")
             RowView(key: "CFBundleDevelopmentRegion", value: info.developmentRegion ?? "—")
@@ -259,7 +259,7 @@ struct DetailView: View {
                 }
             }
             Divider().padding(.vertical, 2)
-            Text("构建工具链")
+            Text(L10n.t(.buildToolchain))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             RowView(key: "DTSDKName", value: info.sdkVersion ?? "—")
@@ -279,7 +279,7 @@ struct DetailView: View {
         SectionView(L10n.t(.architectures),
                     subtitle: "Universal slices") {
             if info.architectures.isEmpty {
-                PlaceholderRow(text: "未找到可执行文件或无法解析 Intel 切片")
+                PlaceholderRow(text: L10n.t(.noExecOrIntelSlice))
             } else {
                 ForEach(Array(info.architectures.enumerated()), id: \.offset) { _, arch in
                     VStack(alignment: .leading, spacing: 4) {
@@ -288,8 +288,8 @@ struct DetailView: View {
                             Text("· \(arch.cpuType) · \(arch.bits)-bit")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
-                        RowView(key: "切片大小", value: formattedSize(arch.fileSize))
-                        RowView(key: "在 Fat 中偏移", value: arch.offsetInFat == 0 ? "—(非 Fat)" : "0x\(String(arch.offsetInFat, radix: 16))")
+                        RowView(key: L10n.t(.sliceSize), value: formattedSize(arch.fileSize))
+                        RowView(key: L10n.t(.offsetInFat), value: arch.offsetInFat == 0 ? L10n.t(.nonFat) : "0x\(String(arch.offsetInFat, radix: 16))")
                     }
                     .padding(.vertical, 2)
                 }
@@ -338,7 +338,7 @@ struct DetailView: View {
     private var urlSchemesSection: some View {
         SectionView(L10n.t(.urlSchemes), subtitle: "\(info.urlSchemes.count)") {
             if info.urlSchemes.isEmpty {
-                PlaceholderRow(text: "未声明 URL Scheme")
+                PlaceholderRow(text: L10n.t(.noUrlScheme))
             } else {
                 ForEach(info.urlSchemes, id: \.self) { scheme in
                     RowView(key: scheme, value: "\(scheme)://")
@@ -354,7 +354,7 @@ struct DetailView: View {
             subtitle: "\(info.privacyEntries.count)"
         ) {
             if info.privacyEntries.isEmpty {
-                PlaceholderRow(text: "未声明任何 NS***UsageDescription 权限描述")
+                PlaceholderRow(text: L10n.t(.noUsageDescription))
             } else {
                 ForEach(info.privacyEntries) { e in
                     VStack(alignment: .leading, spacing: 4) {
@@ -414,7 +414,7 @@ struct DetailView: View {
                 }
             }
             if ats == nil && asar == nil {
-                PlaceholderRow(text: "未声明 NSAppTransportSecurity / ElectronAsarIntegrity")
+                PlaceholderRow(text: L10n.t(.noATS))
             }
         }
     }
@@ -446,15 +446,15 @@ struct DetailView: View {
             subtitle: q == nil ? "—" : L10n.t(.badgeIsolated)
         ) {
             if let q = q {
-                RowView(key: "原始值", value: q.raw)
+                RowView(key: L10n.t(.rawValue), value: q.raw)
                 RowView(key: "Flags", value: q.flags)
-                RowView(key: "下载 Agent", value: q.agent.isEmpty ? "—" : q.agent)
+                RowView(key: L10n.t(.downloadAgent), value: q.agent.isEmpty ? "—" : q.agent)
                 if !q.uuid.isEmpty {
-                    RowView(key: "下载 UUID", value: q.uuid)
+                    RowView(key: L10n.t(.downloadUUID), value: q.uuid)
                 }
-                RowView(key: "时间戳(十六进制)", value: q.timestampString)
+                RowView(key: L10n.t(.timestampHex), value: q.timestampString)
                 if let d = q.downloadDate {
-                    RowView(key: "下载时间", value: iso(d))
+                    RowView(key: L10n.t(.downloadTime), value: iso(d))
                 }
 
                 Divider().padding(.vertical, 4)
@@ -463,19 +463,19 @@ struct DetailView: View {
                     Button {
                         copyToPasteboard("xattr -d com.apple.quarantine \"\(info.bundleURL.path)\"")
                     } label: {
-                        Label("复制移除命令", systemImage: "doc.on.doc")
+                        Label(L10n.t(.copyRemoveCmd), systemImage: "doc.on.doc")
                     }
                     .buttonStyle(.borderedProminent)
 
                     Spacer()
 
-                    Text("在终端粘贴运行即可移除隔离标记")
+                    Text(L10n.t(.pasteToRemoveHint))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .frame(width: 360, alignment: .trailing)
                 }
             } else {
-                PlaceholderRow(text: "未检测到 com.apple.quarantine 扩展属性 (可信来源 / 已清隔离)")
+                PlaceholderRow(text: L10n.t(.noQuarantineHint))
             }
         }
     }
@@ -484,29 +484,29 @@ struct DetailView: View {
     private var codeSignSection: some View {
         let cs = info.codeSign
         return SectionView(L10n.t(.codeSigning)) {
-            RowView(key: "签名状态", value: cs.state.rawValue)
-            RowView(key: "有效性", value: cs.validity.rawValue)
-            RowView(key: "公证 (Notarization)", value: cs.notarization.rawValue)
+            RowView(key: L10n.t(.signState), value: cs.state.rawValue)
+            RowView(key: L10n.t(.validity), value: cs.validity.rawValue)
+            RowView(key: L10n.t(.notarization), value: cs.notarization.rawValue)
 
             // 手动验证命令 — 沙盒内无法调用 spctl/codesign, 提供复制命令让用户在终端运行
             HStack(spacing: 10) {
                 Button {
                     copyToPasteboard("codesign -dvvv --strict --deep \"\(info.bundleURL.path)\"")
                 } label: {
-                    Label("复制 codesign 命令", systemImage: "doc.on.doc")
+                    Label(L10n.t(.copyCodesignCmd), systemImage: "doc.on.doc")
                 }
                 .buttonStyle(.bordered)
 
                 Button {
                     copyToPasteboard("spctl --assess -vvv \"\(info.bundleURL.path)\"")
                 } label: {
-                    Label("复制 spctl 命令", systemImage: "doc.on.doc")
+                    Label(L10n.t(.copySpctlCmd), systemImage: "doc.on.doc")
                 }
                 .buttonStyle(.bordered)
 
                 Spacer()
 
-                Text("在终端粘贴运行即可手动验证签名 / 公证状态")
+                Text(L10n.t(.pasteToVerifyHint))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(width: 320, alignment: .trailing)
@@ -522,9 +522,9 @@ struct DetailView: View {
             if let v = cs.platformIdentifier { RowView(key: "Platform identifier", value: v) }
             if let v = cs.source { RowView(key: "Source", value: v) }
 
-            if let v = cs.flags { RowView(key: "flags (原始)", value: v) }
+            if let v = cs.flags { RowView(key: L10n.t(.flagsRaw), value: v) }
             if !cs.decodedFlags.isEmpty {
-                RowView(key: "flags (解码)", value: cs.decodedFlags.joined(separator: ", "))
+                RowView(key: L10n.t(.flagsDecoded), value: cs.decodedFlags.joined(separator: ", "))
             }
 
             if let v = cs.cdHash { RowView(key: "CDHash", value: v) }
@@ -539,7 +539,7 @@ struct DetailView: View {
             if !cs.authorities.isEmpty {
                 Divider().padding(.vertical, 4)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Authority 链")
+                    Text(L10n.t(.authorityChain))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     ForEach(cs.authorities, id: \.self) { a in
@@ -589,7 +589,7 @@ struct DetailView: View {
                     .frame(height: 220)
                 }
             } else {
-                PlaceholderRow(text: "无 entitlements (未签名 / 无沙盒)")
+                PlaceholderRow(text: L10n.t(.noEntitlements))
             }
         }
     }
@@ -597,11 +597,11 @@ struct DetailView: View {
     // MARK: 文件信息
     private var fileSection: some View {
         SectionView(L10n.t(.fileInfo)) {
-            RowView(key: "完整路径", value: info.bundleURL.path)
-            RowView(key: "总大小", value: "\(info.formattedFileSize()) (\(info.fileSize) 字节)")
-            RowView(key: "修改时间", value: info.modificationDate.map { iso($0) } ?? "—")
-            RowView(key: "创建时间", value: info.creationDate.map { iso($0) } ?? "—")
-            RowView(key: "权限 (octal)", value: info.permissions ?? "—")
+            RowView(key: L10n.t(.fullPath), value: info.bundleURL.path)
+            RowView(key: L10n.t(.totalSize), value: "\(info.formattedFileSize()) (\(info.fileSize) \(L10n.t(.bytesUnit)))")
+            RowView(key: L10n.t(.modifiedTime), value: info.modificationDate.map { iso($0) } ?? "—")
+            RowView(key: L10n.t(.createdTime), value: info.creationDate.map { iso($0) } ?? "—")
+            RowView(key: L10n.t(.permissionsOctal), value: info.permissions ?? "—")
         }
     }
 
@@ -638,7 +638,7 @@ struct DetailView: View {
                                       color: badgeColor(for: sub.signatureState))
                             }
                             if let ver = sub.bundleVersion {
-                                RowView(key: "版本", value: ver)
+                                RowView(key: L10n.t(.versionLabel), value: ver)
                             }
                             if let exec = sub.executableName {
                                 RowView(key: "CFBundleExecutable", value: exec)
@@ -691,7 +691,7 @@ struct DetailView: View {
         SectionView(L10n.t(.rawCodesign)) {
             DisclosureGroup("展开签名详情 (Security 框架合成)") {
                 ScrollView {
-                    Text(info.codeSign.detailRaw.isEmpty ? "(无)" : info.codeSign.detailRaw)
+                    Text(info.codeSign.detailRaw.isEmpty ? L10n.t(.emptyPlaceholder) : info.codeSign.detailRaw)
                         .font(.system(.caption, design: .monospaced))
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -743,7 +743,7 @@ struct DetailView: View {
             subtitle: siriApple ? nil : "—"
         ) {
             if !siriApple {
-                PlaceholderRow(text: "未声明 AppleScript / Siri 相关支持")
+                PlaceholderRow(text: L10n.t(.noAppleScript))
             } else {
                 if let v = ex.appleScriptEnabled { RowView(key: "NSAppleScriptEnabled", value: bool(v)) }
                 if let v = ex.scriptingDefinition { RowView(key: "OSAScriptingDefinition (.sdef)", value: v) }
@@ -779,7 +779,7 @@ struct DetailView: View {
         return SectionView(L10n.t(.icloud),
                            subtitle: ub.isEmpty ? "—" : "\(ub.count)") {
             if ub.isEmpty {
-                PlaceholderRow(text: "未声明 iCloud 容器")
+                PlaceholderRow(text: L10n.t(.noICloudContainer))
             } else {
                 ForEach(Array(ub.enumerated()), id: \.offset) { i, c in
                     VStack(alignment: .leading, spacing: 4) {
@@ -806,7 +806,7 @@ struct DetailView: View {
                    || ex.remoteNotificationUsageDescription != nil)
         return SectionView(L10n.t(.notifications), subtitle: any ? nil : "—") {
             if !any {
-                PlaceholderRow(text: "未声明通知相关键")
+                PlaceholderRow(text: L10n.t(.noNotificationKeys))
             } else {
                 if let v = ex.userNotificationAlertStyle {
                     RowView(key: "NSUserNotificationAlertStyle", value: v)
@@ -840,7 +840,7 @@ struct DetailView: View {
         return SectionView(L10n.t(.behaviors),
                            subtitle: any ? nil : "—") {
             if !any {
-                PlaceholderRow(text: "无相关开关")
+                PlaceholderRow(text: L10n.t(.noSwitches))
             } else {
                 if let v = ex.supportsSuddenTermination { RowView(key: "NSSupportsSuddenTermination", value: bool(v)) }
                 if let v = ex.supportsAutomaticTermination { RowView(key: "NSSupportsAutomaticTermination", value: bool(v)) }
@@ -868,7 +868,7 @@ struct DetailView: View {
         return SectionView(L10n.t(.localization),
                            subtitle: any ? nil : "—") {
             if !any {
-                PlaceholderRow(text: "未声明帮助/本地化/Accent/Spotlight 关键词")
+                PlaceholderRow(text: L10n.t(.noLocalizationKeys))
             } else {
                 if let v = ex.helpBookName { RowView(key: "CFBundleHelpBookName", value: v) }
                 if let v = ex.helpBookFolder { RowView(key: "CFBundleHelpBookFolder", value: v) }
@@ -896,7 +896,7 @@ struct DetailView: View {
         return SectionView(L10n.t(.iosPortFields),
                            subtitle: any ? (info.isIOSPort ? "iOS" : "partial") : "—") {
             if !any {
-                PlaceholderRow(text: "未声明 iOS 移植字段")
+                PlaceholderRow(text: L10n.t(.noIOSPortFields))
             } else {
                 if !ex.uIDeviceFamily.isEmpty {
                     let labels: [Int: String] = [1: "iPhone", 2: "iPad", 3: "Apple TV", 4: "Apple Watch"]
@@ -937,7 +937,7 @@ struct DetailView: View {
         return SectionView(L10n.t(.buildMetadata),
                            subtitle: any ? nil : "—") {
             if !any {
-                PlaceholderRow(text: "未声明 Electron/厂商/构建元数据")
+                PlaceholderRow(text: L10n.t(.noBuildMetadata))
             } else {
                 if let v = ex.electronTeamID { RowView(key: "ElectronTeamID", value: v) }
                 if let v = ex.sourceVersion { RowView(key: "SourceVersion", value: v) }
@@ -964,7 +964,7 @@ struct DetailView: View {
         return SectionView(L10n.t(.bonjour),
                            subtitle: ex.bonjourServices.isEmpty ? "—" : "\(ex.bonjourServices.count)") {
             if ex.bonjourServices.isEmpty {
-                PlaceholderRow(text: "未声明 NSBonjourServices")
+                PlaceholderRow(text: L10n.t(.noBonjour))
             } else {
                 ForEach(ex.bonjourServices, id: \.self) { s in
                     // NSBonjourServices 值已是完整服务类型 (如 _http._tcp), 不再追加后缀

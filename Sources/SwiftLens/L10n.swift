@@ -77,6 +77,67 @@ enum L10n {
         case invalidApp
         case fileMissing
         case analyzing
+        // RowView / 按钮通用
+        case copyValue
+        case copyKeyValue
+        // 基本信息区
+        case execPath
+        // 架构区
+        case buildToolchain
+        case noExecOrIntelSlice
+        case sliceSize
+        case offsetInFat
+        case nonFat
+        // URL Scheme
+        case noUrlScheme
+        // 隐私
+        case noUsageDescription
+        // ATS
+        case noATS
+        // Quarantine
+        case rawValue
+        case downloadAgent
+        case downloadUUID
+        case timestampHex
+        case downloadTime
+        case copyRemoveCmd
+        case pasteToRemoveHint
+        case noQuarantineHint
+        // 代码签名
+        case signState
+        case validity
+        case notarization
+        case copyCodesignCmd
+        case copySpctlCmd
+        case pasteToVerifyHint
+        case authorityChain
+        case noEntitlements
+        // 文件信息
+        case fullPath
+        case totalSize
+        case modifiedTime
+        case createdTime
+        case permissionsOctal
+        // 子 bundle 版本
+        case versionLabel
+        // 各区空状态
+        case noAppleScript
+        case noICloudContainer
+        case noNotificationKeys
+        case noSwitches
+        case noLocalizationKeys
+        case noIOSPortFields
+        case noBuildMetadata
+        // 打开面板
+        case pickAppPanelTitle
+        // 通用单位
+        case bytesUnit
+        // Bonjour
+        case noBonjour
+        // flags
+        case flagsRaw
+        case flagsDecoded
+        case emptyPlaceholder
     }
 
     /// 中文表
@@ -109,7 +170,47 @@ enum L10n {
         .extName: "扩展名", .prioLogo: "优先级", .utis: "UTIs", .prioKey: "优先级",
         .iconFile: "图标文件", .noneDocType: "未声明自定义文档类型",
         .noneXattrs: "无任何扩展属性", .invalidApp: "不是 .app bundle",
-        .fileMissing: "文件不存在", .analyzing: "正在分析 .app …"
+        .fileMissing: "文件不存在", .analyzing: "正在分析 .app …",
+        // RowView 通用
+        .copyValue: "复制值", .copyKeyValue: "复制键值",
+        // 基本信息
+        .execPath: "可执行文件路径",
+        // 架构
+        .buildToolchain: "构建工具链",
+        .noExecOrIntelSlice: "未找到可执行文件或无法解析 Intel 切片",
+        .sliceSize: "切片大小", .offsetInFat: "在 Fat 中偏移", .nonFat: "—(非 Fat)",
+        // URL Scheme
+        .noUrlScheme: "未声明 URL Scheme",
+        // 隐私
+        .noUsageDescription: "未声明任何 NS***UsageDescription 权限描述",
+        // ATS
+        .noATS: "未声明 NSAppTransportSecurity / ElectronAsarIntegrity",
+        // Quarantine
+        .rawValue: "原始值", .downloadAgent: "下载 Agent", .downloadUUID: "下载 UUID",
+        .timestampHex: "时间戳(十六进制)", .downloadTime: "下载时间",
+        .copyRemoveCmd: "复制移除命令", .pasteToRemoveHint: "在终端粘贴运行即可移除隔离标记",
+        .noQuarantineHint: "未检测到 com.apple.quarantine 扩展属性 (可信来源 / 已清隔离)",
+        // 代码签名
+        .signState: "签名状态", .validity: "有效性", .notarization: "公证 (Notarization)",
+        .copyCodesignCmd: "复制 codesign 命令", .copySpctlCmd: "复制 spctl 命令",
+        .pasteToVerifyHint: "在终端粘贴运行即可手动验证签名 / 公证状态",
+        .authorityChain: "Authority 链", .noEntitlements: "无 entitlements (未签名 / 无沙盒)",
+        // 文件信息
+        .fullPath: "完整路径", .totalSize: "总大小", .modifiedTime: "修改时间",
+        .createdTime: "创建时间", .permissionsOctal: "权限 (octal)",
+        // 子 bundle
+        .versionLabel: "版本",
+        // 空状态
+        .noAppleScript: "未声明 AppleScript / Siri 相关支持",
+        .noICloudContainer: "未声明 iCloud 容器", .noNotificationKeys: "未声明通知相关键",
+        .noSwitches: "无相关开关", .noLocalizationKeys: "未声明帮助/本地化/Accent/Spotlight 关键词",
+        .noIOSPortFields: "未声明 iOS 移植字段", .noBuildMetadata: "未声明 Electron/厂商/构建元数据",
+        // 打开面板
+        .pickAppPanelTitle: "选择 .app bundle",
+        .bytesUnit: "字节",
+        .noBonjour: "未声明 NSBonjourServices",
+        .flagsRaw: "flags (原始)", .flagsDecoded: "flags (解码)",
+        .emptyPlaceholder: "(无)"
     ]
 
     /// 英文表（缺失时回退到 zh key 字面名）
@@ -142,7 +243,47 @@ enum L10n {
         .extName: "Extensions", .prioLogo: "Rank", .utis: "UTIs", .prioKey: "Rank",
         .iconFile: "Icon file", .noneDocType: "No custom document type declared",
         .noneXattrs: "No extended attributes", .invalidApp: "Not an .app bundle",
-        .fileMissing: "File not found", .analyzing: "Analyzing .app …"
+        .fileMissing: "File not found", .analyzing: "Analyzing .app …",
+        // RowView 通用
+        .copyValue: "Copy Value", .copyKeyValue: "Copy Key:Value",
+        // 基本信息
+        .execPath: "Executable Path",
+        // 架构
+        .buildToolchain: "Build Toolchain",
+        .noExecOrIntelSlice: "No executable found, or Intel slice could not be parsed",
+        .sliceSize: "Slice Size", .offsetInFat: "Offset in Fat", .nonFat: "— (not fat)",
+        // URL Scheme
+        .noUrlScheme: "No URL Scheme declared",
+        // 隐私
+        .noUsageDescription: "No NS***UsageDescription declared",
+        // ATS
+        .noATS: "No NSAppTransportSecurity / ElectronAsarIntegrity declared",
+        // Quarantine
+        .rawValue: "Raw", .downloadAgent: "Download Agent", .downloadUUID: "Download UUID",
+        .timestampHex: "Timestamp (hex)", .downloadTime: "Download Time",
+        .copyRemoveCmd: "Copy Remove Command", .pasteToRemoveHint: "Paste in Terminal to remove quarantine flag",
+        .noQuarantineHint: "No com.apple.quarantine attribute (trusted source / already cleared)",
+        // 代码签名
+        .signState: "Signature State", .validity: "Validity", .notarization: "Notarization",
+        .copyCodesignCmd: "Copy codesign Command", .copySpctlCmd: "Copy spctl Command",
+        .pasteToVerifyHint: "Paste in Terminal to manually verify signature / notarization",
+        .authorityChain: "Authority Chain", .noEntitlements: "No entitlements (unsigned / no sandbox)",
+        // 文件信息
+        .fullPath: "Full Path", .totalSize: "Total Size", .modifiedTime: "Modification Time",
+        .createdTime: "Creation Time", .permissionsOctal: "Permissions (octal)",
+        // 子 bundle
+        .versionLabel: "Version",
+        // 空状态
+        .noAppleScript: "No AppleScript / Siri support declared",
+        .noICloudContainer: "No iCloud container declared", .noNotificationKeys: "No notification keys declared",
+        .noSwitches: "No switches declared", .noLocalizationKeys: "No Help/i10n/Accent/Spotlight keywords declared",
+        .noIOSPortFields: "No iOS port fields declared", .noBuildMetadata: "No Electron / vendor / build metadata declared",
+        // 打开面板
+        .pickAppPanelTitle: "Select .app bundle",
+        .bytesUnit: "bytes",
+        .noBonjour: "No NSBonjourServices declared",
+        .flagsRaw: "flags (raw)", .flagsDecoded: "flags (decoded)",
+        .emptyPlaceholder: "(empty)"
     ]
 
     /// 当前生效语言（system 时按系统首选判断）。

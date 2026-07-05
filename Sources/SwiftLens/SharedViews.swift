@@ -28,8 +28,8 @@ struct RowView: View {
                 .help(value.isEmpty ? "" : value)
         }
         .contextMenu {
-            Button("复制值") { copyToPasteboard(value) }
-            Button("复制键值") { copyToPasteboard("\(key): \(value)") }
+            Button(L10n.t(.copyValue)) { copyToPasteboard(value) }
+            Button(L10n.t(.copyKeyValue)) { copyToPasteboard("\(key): \(value)") }
         }
     }
 }
