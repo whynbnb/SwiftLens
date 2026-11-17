@@ -73,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         // 隐藏 CLI 模式：传入一个 .app 路径作为参数时，直接打印摘要并退出。
         let args = CommandLine.arguments
-        if args.count >= 2, args[1].hasSuffix(".app"),
+        if args.count >= 2, args[1].lowercased().hasSuffix(".app"),
            FileManager.default.fileExists(atPath: args[1]) {
             let info = AppInfoLoader.load(url: URL(fileURLWithPath: args[1]))
             print(summary(for: info))
