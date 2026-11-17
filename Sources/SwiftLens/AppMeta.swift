@@ -59,8 +59,8 @@ final class AppMeta {
 
     // MARK: 默认值
     private static let defaultAppName        = "SwiftLens"
-    private static let defaultVersion        = "1.1"
-    private static let defaultBuild          = "2"
+    private static let defaultVersion        = "1.2"
+    private static let defaultBuild          = "3"
     private static let defaultRepositoryURL  = URL(string: "https://github.com/whynbnb/SwiftLens")!
     private static let defaultLicenseURL     = URL(string: "https://github.com/whynbnb/SwiftLens/blob/main/LICENSE")!
     private static let defaultCopyright      = "Copyright © 2026 0x574859. MIT License."
