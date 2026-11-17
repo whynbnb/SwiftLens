@@ -96,14 +96,8 @@ struct DetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .navigationTitle(info.bundleURL.lastPathComponent)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        searchFocused = true
-                    } label: { Label(L10n.t(.search), systemImage: "magnifyingglass") }
-                        .keyboardShortcut("f", modifiers: .command)
-                        .help(L10n.t(.search))
-                }
+            .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
+                searchFocused = true
             }
         }
     }

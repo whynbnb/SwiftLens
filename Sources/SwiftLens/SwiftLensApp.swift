@@ -67,6 +67,7 @@ extension Notification.Name {
     static let openSettings = Notification.Name("SwiftLens.openSettings")
     static let openAbout    = Notification.Name("SwiftLens.openAbout")
     static let openHelp     = Notification.Name("SwiftLens.openHelp")
+    static let focusSearch  = Notification.Name("SwiftLens.focusSearch")
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {

@@ -59,6 +59,12 @@ struct ContentView: View {
                         } label: {
                             Label(L10n.t(.copyJSON), systemImage: "curlybraces")
                         }
+                        Button {
+                            NotificationCenter.default.post(name: .focusSearch, object: nil)
+                        } label: {
+                            Label(L10n.t(.search), systemImage: "magnifyingglass")
+                        }
+                        .keyboardShortcut("f", modifiers: .command)
                         Divider()
                         Button {
                             reset()
