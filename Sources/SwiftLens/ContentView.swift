@@ -167,8 +167,11 @@ struct ContentView: View {
     }
 
     private func reset() {
+        // 使在飞的加载任务失效, 否则清空后旧结果会把界面重新填上
+        loadID &+= 1
         info = nil
         lastError = nil
+        loading = false
     }
 }
 
