@@ -59,8 +59,8 @@ com.apple.security.files.user-selected.read-only = true
 
 ## 环境要求
 
-- macOS 12.0+
-- Xcode 26.x（用于附带的 Xcode 项目），或仅需 Swift 5.5+ 工具链（用于 SPM）
+- macOS 15.0+
+- Xcode 26.x（用于附带的 Xcode 项目），或仅需 Swift 6.0+ 工具链（用于 SPM）
 
 ## 构建与运行
 

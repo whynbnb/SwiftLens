@@ -31,7 +31,7 @@ enum QuarantineReader {
         let read = getxattr(path, name, &buffer, length, 0, 0)
         guard read > 0 else { return nil }
 
-        let raw = String(cString: buffer)
+        let raw = String(decoding: buffer.prefix(read).map { UInt8(bitPattern: $0) }, as: UTF8.self)
         let parts = raw.split(separator: ";", omittingEmptySubsequences: false).map(String.init)
         let flags = parts.count > 0 ? parts[0] : ""
         let ts    = parts.count > 1 ? parts[1] : ""

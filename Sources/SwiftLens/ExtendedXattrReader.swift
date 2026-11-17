@@ -25,7 +25,7 @@ enum ExtendedXattrReader {
         }
         // 原始 C 字符串里多个 name 以 NUL 分隔，末尾是双 NUL
         let bytes = buffer.prefix(used)
-        let raw = String(cString: Array(bytes) + [0])
+        let raw = String(decoding: bytes.map { UInt8(bitPattern: $0) }, as: UTF8.self)
         let names = raw.split(separator: "\0", omittingEmptySubsequences: true).map(String.init)
 
         var desc: [String: String] = [:]

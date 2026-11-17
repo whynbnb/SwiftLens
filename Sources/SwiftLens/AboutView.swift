@@ -108,6 +108,8 @@ struct AboutView: View {
 
 /// 应用元数据：从 Bundle.main 读取（Xcode 构建版本有 Info.plist），
 /// 取不到时回落到默认值（SPM `swift run` 没有 Info.plist 的场景）。
+/// 仅在主线程 UI 中使用（AboutView），标注 @MainActor 以满足 Swift 6 并发检查。
+@MainActor
 final class AppMeta {
     static let shared = AppMeta()
 

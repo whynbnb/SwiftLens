@@ -59,8 +59,8 @@ That means:
 
 ## Requirements
 
-- macOS 12.0+
-- Xcode 26.x (for the bundled Xcode project) or just the Swift 5.5+ toolchain (for SPM)
+- macOS 15.0+
+- Xcode 26.x (for the bundled Xcode project) or just the Swift 6.0+ toolchain (for SPM)
 
 ## Build & run
 

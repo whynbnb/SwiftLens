@@ -49,7 +49,7 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(maxWidth: 400)
-                .onChange(of: appState.theme) { _ in
+                .onChange(of: appState.theme) {
                     // 切换时直接给已经存在的窗口广播一个通知，确保色板立即生效
                     NotificationCenter.default.post(name: .themeDidChange, object: nil)
                 }
@@ -57,7 +57,7 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             // 占位提示
-            Text(verbatim: "SwiftLens 1.0")
+            Text(verbatim: "SwiftLens \(AppMeta.shared.versionString)")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
 

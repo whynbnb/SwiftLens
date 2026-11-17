@@ -2,14 +2,14 @@ name: SwiftLens
 options:
   bundleIdPrefix: me.whynbnb
   deploymentTarget:
-    macOS: "12.0"
+    macOS: "15.0"
   developmentLanguage: zh-Hans
   createIntermediateGroups: true
   groupSortPosition: top
 settings:
   base:
-    SWIFT_VERSION: "5.5"
-    MACOSX_DEPLOYMENT_TARGET: "12.0"
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
     PRODUCT_BUNDLE_IDENTIFIER: me.whynbnb.SwiftLens
     MARKETING_VERSION: "1.1"
     CURRENT_PROJECT_VERSION: "2"
@@ -41,7 +41,7 @@ targets:
         CFBundlePackageType: APPL
         CFBundleExecutable: SwiftLens
         CFBundleInfoDictionaryVersion: "6.0"
-        LSMinimumSystemVersion: "12.0"
+        LSMinimumSystemVersion: "15.0"
         LSUIElement: false
         NSHighResolutionCapable: true
         LSRequiresNativeExecution: true

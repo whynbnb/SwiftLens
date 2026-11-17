@@ -190,6 +190,7 @@ private struct DropZoneView: NSViewRepresentable {
     }
 }
 
+@MainActor
 private final class DropNSView: NSView {
     var onDrop: ((URL) -> Void)?
     var onHoverChange: ((Bool) -> Void)?
@@ -198,11 +199,6 @@ private final class DropNSView: NSView {
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        registerForDraggedTypes([.fileURL])
-    }
-
-    override func awakeFromNib() {
-        super.awakeFromNib()
         registerForDraggedTypes([.fileURL])
     }
 
