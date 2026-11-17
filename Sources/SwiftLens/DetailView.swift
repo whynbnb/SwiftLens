@@ -83,6 +83,7 @@ struct DetailView: View {
                         iosPortSection
                         buildMetadataSection
                         bonjourSection
+                        sizeBreakdownSection
                         fileSection
                         rawPlistSection
                         rawCodesignSection
@@ -967,6 +968,23 @@ struct DetailView: View {
                 }
             } else {
                 PlaceholderRow(text: L10n.t(.noEntitlements))
+            }
+        }
+    }
+
+    // MARK: 体积构成
+    private var sizeBreakdownSection: some View {
+        SectionView(L10n.t(.sizeBreakdown), subtitle: info.formattedFileSize()) {
+            if info.sizeBreakdown.isEmpty {
+                PlaceholderRow(text: "—")
+            } else {
+                ForEach(info.sizeBreakdown) { item in
+                    let pct = info.fileSize == 0
+                        ? 0
+                        : Double(item.size) / Double(info.fileSize) * 100
+                    RowView(key: item.name,
+                            value: "\(formattedSize(item.size)) (\(String(format: "%.1f", pct))%)")
+                }
             }
         }
     }

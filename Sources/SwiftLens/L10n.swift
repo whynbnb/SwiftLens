@@ -77,6 +77,7 @@ enum L10n {
         case buildMetadata
         case bonjour
         case fileInfo
+        case sizeBreakdown
         case rawPlist
         case rawCodesign
         // 文档类型 row inner
@@ -421,6 +422,7 @@ enum L10n {
         .iosPortFields: "iOS 移植包字段 (UI* 键)", .buildMetadata: "Electron / 构建元数据 / 厂商",
         .bonjour: "Bonjour 服务发现 (NSBonjourServices)",
         .fileInfo: "文件信息", .rawPlist: "Info.plist 完整内容", .rawCodesign: "codesign 原始输出",
+        .sizeBreakdown: "体积构成",
         .extName: "扩展名", .prioLogo: "优先级", .utis: "UTIs", .prioKey: "优先级",
         .iconFile: "图标文件", .noneDocType: "未声明自定义文档类型",
         .noneXattrs: "无任何扩展属性", .invalidApp: "不是 .app bundle",
@@ -645,6 +647,7 @@ enum L10n {
         .iosPortFields: "iOS port fields (UI* keys)", .buildMetadata: "Electron / Build metadata / Vendor",
         .bonjour: "Bonjour (NSBonjourServices)",
         .fileInfo: "File Info", .rawPlist: "Info.plist (raw)", .rawCodesign: "codesign (raw)",
+        .sizeBreakdown: "Size Breakdown",
         .extName: "Extensions", .prioLogo: "Rank", .utis: "UTIs", .prioKey: "Rank",
         .iconFile: "Icon file", .noneDocType: "No custom document type declared",
         .noneXattrs: "No extended attributes", .invalidApp: "Not an .app bundle",

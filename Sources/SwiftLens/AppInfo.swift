@@ -10,6 +10,13 @@ struct LaunchAgentItem: Identifiable {
     let label: String
 }
 
+/// 顶层目录体积构成（Contents/MacOS、Frameworks、Resources…）。
+struct SizeBreakdownItem: Identifiable {
+    var id: String { name }
+    let name: String
+    let size: UInt64
+}
+
 /// 收集一个 .app bundle 的完整信息。
 struct AppInfo {
     let bundleURL: URL
@@ -82,6 +89,7 @@ struct AppInfo {
 
     // 文件系统
     let fileSize: UInt64
+    let sizeBreakdown: [SizeBreakdownItem]
     let modificationDate: Date?
     let creationDate: Date?
     let permissions: String?
@@ -177,15 +185,32 @@ enum AppInfoLoader {
                 perms = String(format: "%o", posix.intValue)
             }
         }
-        // bundle 是目录，体积需递归累加
+        // bundle 是目录，体积需递归累加；同时按 Contents 下的一级目录统计构成
+        var breakdown: [String: UInt64] = [:]
+        let bundlePath = url.path
         if let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey], options: []) {
             for case let fileURL as URL in enumerator {
                 if let v = try? fileURL.resourceValues(forKeys: [.fileSizeKey]),
                    let s = v.fileSize {
                     fileSize += UInt64(s)
+                    let path = fileURL.path
+                    let rel = path.hasPrefix(bundlePath + "/")
+                        ? String(path.dropFirst(bundlePath.count + 1))
+                        : path
+                    let parts = rel.split(separator: "/")
+                    let key: String
+                    if parts.first == "Contents", parts.count > 1 {
+                        key = String(parts[1])
+                    } else {
+                        key = parts.first.map(String.init) ?? "—"
+                    }
+                    breakdown[key, default: 0] += UInt64(s)
                 }
             }
         }
+        let sizeBreakdown = breakdown
+            .map { SizeBreakdownItem(name: $0.key, size: $0.value) }
+            .sorted { $0.size > $1.size }
 
         // URL Schemes
         var schemes: [String] = []
@@ -338,6 +363,7 @@ enum AppInfoLoader {
             privacyEntries: privacyEntries,
             isIOSPort: isIOSPort,
             fileSize: fileSize,
+            sizeBreakdown: sizeBreakdown,
             modificationDate: modDate,
             creationDate: creationDate,
             permissions: perms,
@@ -724,6 +750,10 @@ extension AppInfo {
             }
         }
         lines.append("\(L10n.t(.cliFileSize)): \(formattedFileSize()) (\(fileSize) \(L10n.t(.bytesUnit)))")
+        if !sizeBreakdown.isEmpty {
+            let top = sizeBreakdown.prefix(6).map { "\($0.name) \(Self.formatBytes($0.size))" }
+            lines.append("\(L10n.t(.sizeBreakdown)): \(top.joined(separator: ", "))")
+        }
         lines.append("\(L10n.t(.masReceipt)): \(hasMASReceipt ? "YES" : "NO")")
 
         return lines.joined(separator: "\n")
@@ -750,6 +780,7 @@ extension AppInfo {
                 if let v = arch.sdkVersion { d["sdk"] = v }
                 return d
             },
+            "sizeBreakdown": sizeBreakdown.map { ["name": $0.name, "size": $0.size] },
             "signature": [
                 "state": cs.state.rawValue,
                 "validity": cs.validity.rawValue,
