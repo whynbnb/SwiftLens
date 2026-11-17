@@ -95,7 +95,7 @@ struct DetailView: View {
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .navigationTitle(info.bundleURL.lastPathComponent)
+            .navigationTitle(info.displayName ?? info.bundleName ?? info.bundleURL.lastPathComponent)
             .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
                 searchFocused = true
             }
@@ -268,6 +268,16 @@ struct DetailView: View {
                 .buttonStyle(.plain)
                 .help(L10n.t(.goCodeSignSection))
 
+                if info.codeSign.strictValidity == .invalid {
+                    Button {
+                        withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
+                    } label: {
+                        Badge(text: L10n.t(.badgeStrictFail), color: .orange)
+                    }
+                    .buttonStyle(.plain)
+                    .help(L10n.t(.goCodeSignSection))
+                }
+
                 Button {
                     withAnimation { proxy.scrollTo(DetailAnchor.codeSign, anchor: .top) }
                 } label: {
@@ -316,7 +326,9 @@ struct DetailView: View {
             RowView(key: "CFBundleVersion", value: info.bundleVersion ?? "—")
             if let v = info.longVersionString { RowView(key: "CFBundleLongVersionString", value: v) }
             if let v = info.getInfoString { RowView(key: "CFBundleGetInfoString", value: v) }
-            if let v = info.bundleSignature { RowView(key: "CFBundleSignature", value: v) }
+            if let v = info.bundleSignature, !v.isEmpty, v != "????" {
+                RowView(key: "CFBundleSignature", value: v)
+            }
             RowView(key: "CFBundleExecutable", value: info.executableName ?? "—")
             RowView(key: L10n.t(.execPath), value: info.executablePath ?? "—")
             RowView(key: "CFBundlePackageType", value: info.bundlePackageType ?? "—")
@@ -333,7 +345,9 @@ struct DetailView: View {
     // MARK: 运行时 / 部署
     private var runtimeSection: some View {
         SectionView(L10n.t(.runtime)) {
-            RowView(key: "LSMinimumSystemVersion", value: info.lsMinimumSystemVersion ?? "—")
+            if let v = info.lsMinimumSystemVersion {
+                RowView(key: "LSMinimumSystemVersion", value: v)
+            }
             if let v = info.minimumOSVersionIOS {
                 RowView(key: "MinimumOSVersion", value: v)
             }
@@ -341,6 +355,10 @@ struct DetailView: View {
             if info.lsMinimumSystemVersion == nil, info.minimumOSVersionIOS == nil,
                let v = info.machOMinimumOSVersion {
                 RowView(key: L10n.t(.machOMinOS), value: v)
+            }
+            if info.lsMinimumSystemVersion == nil, info.minimumOSVersionIOS == nil,
+               info.machOMinimumOSVersion == nil {
+                RowView(key: "LSMinimumSystemVersion", value: "—")
             }
             if !info.lsMinimumSystemVersionByArchitecture.isEmpty {
                 Divider().padding(.vertical, 2)
@@ -352,17 +370,19 @@ struct DetailView: View {
                             value: info.lsMinimumSystemVersionByArchitecture[arch] ?? "—")
                 }
             }
-            RowView(key: "LSApplicationCategoryType", value: info.applicationCategoryType ?? "—")
-            RowView(key: "LSRequiresAquaSystemAppearance", value: bool(info.requiresAquaSystemAppearance))
-            RowView(key: "NSHighResolutionCapable", value: bool(info.highResolutionCapable))
-            RowView(key: "NSSupportsHighResolutionDisplays", value: bool(info.supportsHighResolutionDisplays))
-            RowView(key: "NSCanAnimateAlpha", value: bool(info.canAnimateAlpha))
-            RowView(key: "NSSupportsAutomaticGraphicsSwitching", value: bool(info.supportsAutomaticGraphicsSwitching))
-            RowView(key: "NSQuitAlwaysKeepsWindows", value: bool(info.quitAlwaysKeepsWindows))
-            RowView(key: "NSPrefersDisplaySafeAreaCompatibilityMode", value: bool(info.prefersDisplaySafeAreaCompatibilityMode))
-            RowView(key: "LSBackgroundOnly", value: bool(info.lsBackgroundOnly))
-            RowView(key: "CSResourcesFileMapped", value: bool(info.csResourcesFileMapped))
-            RowView(key: "CFBundleUses24HourClock", value: bool(info.uses24HourClock))
+            if let v = info.applicationCategoryType {
+                RowView(key: "LSApplicationCategoryType", value: v)
+            }
+            optionalBoolRow("LSRequiresAquaSystemAppearance", info.requiresAquaSystemAppearance)
+            optionalBoolRow("NSHighResolutionCapable", info.highResolutionCapable)
+            optionalBoolRow("NSSupportsHighResolutionDisplays", info.supportsHighResolutionDisplays)
+            optionalBoolRow("NSCanAnimateAlpha", info.canAnimateAlpha)
+            optionalBoolRow("NSSupportsAutomaticGraphicsSwitching", info.supportsAutomaticGraphicsSwitching)
+            optionalBoolRow("NSQuitAlwaysKeepsWindows", info.quitAlwaysKeepsWindows)
+            optionalBoolRow("NSPrefersDisplaySafeAreaCompatibilityMode", info.prefersDisplaySafeAreaCompatibilityMode)
+            optionalBoolRow("LSBackgroundOnly", info.lsBackgroundOnly)
+            optionalBoolRow("CSResourcesFileMapped", info.csResourcesFileMapped)
+            optionalBoolRow("CFBundleUses24HourClock", info.uses24HourClock)
             if !info.lsEnvironment.isEmpty {
                 Divider().padding(.vertical, 2)
                 Text("LSEnvironment")
@@ -372,19 +392,27 @@ struct DetailView: View {
                     RowView(key: k, value: info.lsEnvironment[k] ?? "—")
                 }
             }
-            Divider().padding(.vertical, 2)
-            Text(L10n.t(.buildToolchain))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            RowView(key: "DTSDKName", value: info.sdkVersion ?? "—")
-            RowView(key: "DTPlatformName", value: info.platformName ?? "—")
-            RowView(key: "DTPlatformVersion", value: info.platformVersion ?? "—")
-            RowView(key: "DTSDKBuild", value: info.sdkBuild ?? "—")
-            RowView(key: "DTPlatformBuild", value: info.platformBuild ?? "—")
-            RowView(key: "DTXcode", value: info.xcodeVersion ?? "—")
-            RowView(key: "DTXcodeBuild", value: info.xcodeBuild ?? "—")
-            RowView(key: "DTCompiler", value: info.dtCompiler ?? "—")
-            RowView(key: "BuildMachineOSBuild", value: info.buildMachineOSBuild ?? "—")
+            let toolchain: [(String, String?)] = [
+                ("DTSDKName", info.sdkVersion),
+                ("DTPlatformName", info.platformName),
+                ("DTPlatformVersion", info.platformVersion),
+                ("DTSDKBuild", info.sdkBuild),
+                ("DTPlatformBuild", info.platformBuild),
+                ("DTXcode", info.xcodeVersion),
+                ("DTXcodeBuild", info.xcodeBuild),
+                ("DTCompiler", info.dtCompiler),
+                ("BuildMachineOSBuild", info.buildMachineOSBuild)
+            ]
+            let present = toolchain.filter { $0.1 != nil }
+            if !present.isEmpty {
+                Divider().padding(.vertical, 2)
+                Text(L10n.t(.buildToolchain))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ForEach(Array(present.enumerated()), id: \.offset) { _, item in
+                    RowView(key: item.0, value: item.1 ?? "—")
+                }
+            }
         }
     }
 
@@ -1438,6 +1466,13 @@ struct DetailView: View {
     }
 
     // MARK: helpers
+    @ViewBuilder
+    private func optionalBoolRow(_ key: String, _ value: Bool?) -> some View {
+        if let value {
+            RowView(key: key, value: value ? "YES" : "NO")
+        }
+    }
+
     private static let certDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"

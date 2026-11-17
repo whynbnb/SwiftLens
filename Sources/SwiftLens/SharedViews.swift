@@ -8,35 +8,63 @@ func copyToPasteboard(_ string: String) {
 }
 
 /// 单行 键 -> 值 展示，支持长按 / 右键复制。
+/// 超长键名改为「键在上、值在下」，避免在单词中间换行。
 struct RowView: View {
     let key: String
     let value: String
     var warning: String? = nil
 
+    private var isLongKey: Bool { key.count > 32 }
+
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(key)
-                .font(.system(.body, design: .default))
-                .foregroundStyle(.secondary)
-                .frame(width: 200, alignment: .leading)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .help(key)
-            Text(value.isEmpty ? "—" : value)
-                .font(.system(.body, design: .monospaced))
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .help(value.isEmpty ? "" : value)
-            if let warning {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                    .help(warning)
+        Group {
+            if isLongKey {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(key)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .help(key)
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        valueText
+                        warningIcon
+                    }
+                    .padding(.leading, 12)
+                }
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(key)
+                        .font(.system(.body, design: .default))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 240, alignment: .leading)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .help(key)
+                    valueText
+                    warningIcon
+                }
             }
         }
         .contextMenu {
             Button(L10n.t(.copyValue)) { copyToPasteboard(value) }
             Button(L10n.t(.copyKeyValue)) { copyToPasteboard("\(key): \(value)") }
+        }
+    }
+
+    private var valueText: some View {
+        Text(value.isEmpty ? "—" : value)
+            .font(.system(.body, design: .monospaced))
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .help(value.isEmpty ? "" : value)
+    }
+
+    @ViewBuilder
+    private var warningIcon: some View {
+        if let warning {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .help(warning)
         }
     }
 }

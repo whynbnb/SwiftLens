@@ -119,7 +119,8 @@ struct ContentView: View {
                 .help(L10n.t(.more))
             }
         }
-        .navigationTitle(info?.bundleURL.lastPathComponent ?? L10n.t(.appName))
+        .navigationTitle(info.map { $0.displayName ?? $0.bundleName ?? $0.bundleURL.lastPathComponent }
+            ?? L10n.t(.appName))
         // 设置 sheet 现在由 SwiftLensApp 统一管理，工具栏按钮只负责发通知
     }
 
