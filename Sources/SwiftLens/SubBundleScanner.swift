@@ -177,6 +177,11 @@ enum SubBundleScanner {
             if signStatus == errSecCSUnsigned { return (.unsigned, nil, nil) }
             return (.unknown, nil, nil)
         }
+        // 未签名代码对象可能仍返回成功, 但只有 main-executable 键, 无签名数据。
+        // 需以真实签名字段判定, 否则未签名子 bundle 会被误报为「已签名」。
+        guard dict["identifier"] != nil || dict["cdhashes"] != nil || dict["flags"] != nil else {
+            return (.unsigned, nil, nil)
+        }
         let flags = (dict["flags"] as? NSNumber)?.uint32Value ?? 0
         let isAdhoc = flags & 0x2 != 0   // CS_ADHOC
         let isRuntime = flags & 0x10000 != 0  // CS_RUNTIME

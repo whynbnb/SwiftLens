@@ -126,6 +126,17 @@ enum CodeSignReader {
         let cdHashFullData_sha1   = cdHashFullDict?[1] ?? cdHashFullDict?[NSNumber(value: 1)]
         let certs        = (dict["certificates"] as? [SecCertificate]) ?? []
 
+        // 未签名 bundle (尤其是非标准布局 / 目录) 有时 SecCodeCopySigningInformation
+        // 仍返回成功, 但字典里只有 "main-executable" 一个键, 没有任何签名数据。
+        // 若只看调用是否成功, 会把未签名应用误报成「已签名」。以真实签名字段判定。
+        let hasSignatureData = dict["identifier"] != nil
+            || dict["cdhashes"] != nil
+            || dict["flags"] != nil
+            || !certs.isEmpty
+        guard hasSignatureData else {
+            return makeUnsigned(error: nil)
+        }
+
         // 4. CDHash → hex
         // codesign 的 "CDHash=" 显示的是 sha256 truncated (前 20 字节),
         // 没有 sha256 时回退到 sha1, 再没有就用 cdhashes 数组最后一个
