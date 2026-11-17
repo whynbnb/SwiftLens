@@ -28,23 +28,23 @@
 - **中英双语界面** —— 实时切换 English / 简体中文（跟随系统 / 中文 / English），无需重启；GUI 与 CLI 摘要全部本地化。
 - **顶部 header 徽章** —— 点击任意徽章跳转到对应分区：架构 / Agent-or-Background / iOS 移植 / 签名状态 / 有效性 / 公证 / 沙盒 / 隔离；应用名旁还带版本徽章。
 - **基本身份** —— `CFBundleIdentifier`、`CFBundleShortVersionString` / `CFBundleVersion`、`CFBundleExecutable`、PackageType、开发语言、`NSPrincipalClass`、版权、版本变体、支持平台。
-- **运行环境 & 部署** —— `LSMinimumSystemVersion` **及** `MinimumOSVersion`（iOS / Catalyst 移植包不再漏读）、`LSApplicationCategoryType`、高分辨率 / 图形切换 / 安全区 / 突然终止等开关，以及完整构建工具链（`DTSDKName`、`DTPlatformVersion`、`DTXcode`、`BuildMachineOSBuild`、`DTCompiler`）。
-- **架构 (Mach-O)** —— 直接解析 fat / universal 头，列出每个切片（`arm64`、`arm64e` 标注 PAC、`x86_64`、`i386`、`ppc`…），含位数、切片大小和 fat 偏移。通用二进制在 header 拆成独立的 `Universal · arm64 · x86_64` tag。
+- **运行环境 & 部署** —— `LSMinimumSystemVersion` **及** `MinimumOSVersion`（iOS / Catalyst 移植包不再漏读；两者都缺失时回退到主可执行文件的 `LC_BUILD_VERSION` / `LC_VERSION_MIN_*` 最低系统版本）、`LSApplicationCategoryType`、高分辨率 / 图形切换 / 安全区 / 突然终止等开关，以及完整构建工具链（`DTSDKName`、`DTPlatformVersion`、`DTXcode`、`BuildMachineOSBuild`、`DTCompiler`）。
+- **架构 (Mach-O)** —— 直接解析 fat / universal 头，列出每个切片（`arm64`、`arm64e` / `arm64e.x1` 标注 PAC、`x86_64`、`i386`、`ppc`…），含位数、切片大小、fat 偏移、切片声明的 `minos` 与构建 SDK。通用二进制在 header 拆成独立的 `Universal · arm64 · x86_64` tag。
 - **文档类型** —— `CFBundleDocumentTypes` 卡片列表（角色 badge、扩展名、UTIs、handler rank、图标文件），超过 6 项时启用内嵌滚动。
 - **URL Schemes**、**Exported / Imported UTIs**、**NSServices**。
 - **隐私权限描述 (TCC)** —— 所有 `NS***UsageDescription` 键映射到友好标题 + SF Symbol，未知键有兜底解析。
 - **网络安全 / Electron** —— `NSAppTransportSecurity` 例外域、`ElectronAsarIntegrity` 哈希。
 - **Quarantine 隔离** —— 通过 `getxattr` 读取 `com.apple.quarantine`，解码 flags / agent / **下载事件 UUID** / 十六进制时间戳为日期，并提供 **复制移除命令** 按钮 —— `xattr -d com.apple.quarantine ...` 写入剪贴板，自己在终端粘贴运行（应用保持沙盒，不动他 app）。
 - **扩展属性全列表** —— `listxattr` 枚举所有 xattrs；二进制值（如 `com.apple.macl`）以十六进制展示。
-- **代码签名（无 `codesign` / `spctl` 子进程）** —— 全部来自 `SecStaticCodeCheckValidity`（**`kSecCSStrictValidate | kSecCSCheckAllArchitectures`**，对所有 fat 切片校验）+ `SecCodeCopySigningInformation`。报告：状态、有效性、**公证**（6 级：已公证 / Developer ID / Mac App Store / iOS App Store / Apple 系统签名 / 未公证）、`Format`、`Identifier`、`TeamIdentifier`、`CDHash` / `CandidateCDHashFull`（sha256 截断，与 `codesign` 一致）、哈希类型 / choices、签名大小、解码后的 flags（`adhoc`、`runtime`、`library-validation`、`restrict`、`kill`、`linker-signed`…）、`Runtime Version`、签名时间、total / chosen signature、Info.plist entries、平台标识、source、Authority 链，并合成 `codesign -dvvv` 风格的原始视图。两个 **复制命令** 按钮把 `codesign -dvvv --strict --deep` 和 `spctl --assess -vvv` 写入剪贴板，方便在终端手动验证。
+- **代码签名（无 `codesign` / `spctl` 子进程）** —— 全部来自 `SecStaticCodeCheckValidity` 与 `SecCodeCopySigningInformation`。同时报告 **基础验证**（`kSecCSBasicValidateOnly`）与 **严格验证**（`kSecCSStrictValidate`，额外校验资源封印与嵌套代码），均附加 `kSecCSCheckAllArchitectures` 覆盖所有 fat 切片；并列出状态、**公证**（6 级：已公证 / Developer ID / Mac App Store / iOS App Store / Apple 系统签名 / 未公证）、`Format`、`Identifier`、`TeamIdentifier`、`CDHash` / `CandidateCDHashFull`（sha256 截断，与 `codesign` 一致）、哈希类型 / choices、签名大小、解码后的 flags（`adhoc`、`runtime`、`library-validation`、`restrict`、`kill`、`linker-signed`…）、`Runtime Version`、签名时间、total / chosen signature、Info.plist entries、平台标识、source、Authority 链，并合成 `codesign -dvvv` 风格的原始视图。两个 **复制命令** 按钮把 `codesign -dvvv --strict --deep` 和 `spctl --assess -vvv` 写入剪贴板，方便在终端手动验证。
 - **Entitlements** —— 解析后的键值列表 + 原始 XML plist；顶部一行单独高亮 `com.apple.security.app-sandbox` 状态。
-- **内嵌子 bundle** —— 扫描 `Frameworks/`、`EmbeddedFrameworks/`、`PlugIns/`、`XPCServices/`、`Helpers/`、`Extensions/`、`Library/LoginItems/`、`Library/SystemExtensions/`、`Library/LaunchServices/`，支持 framework 的 `Versions/A/Resources/Info.plist` 布局；每个条目报告 BundleID / 版本 / 签名状态 / Runtime Version。
+- **内嵌子 bundle** —— 扫描 `Frameworks/`、`EmbeddedFrameworks/`、`SharedFrameworks/`、`SystemFrameworks/`、`PlugIns/`、`XPCServices/`、`Helpers/`、`Extensions/`、`Library/LoginItems/`、`Library/SystemExtensions/`、`Library/LaunchServices/`、`Library/Spotlight/`、`Library/QuickLook/`、`Library/Automator/`，支持 framework 的 `Versions/A/Resources/Info.plist` 布局；每个条目报告 BundleID / 版本 / 签名状态 / Runtime Version。
 - **Sparkle 自动更新** —— `SUFeedURL`、`SUPublicEDKey`、`SUPublicDSAKeyFile`，以及所有 `SUEnable*` / `SUScheduled*` 开关（秒 ↔ 天自动换算）。
 - **AppleScript / Siri / Intents** —— `NSAppleScriptEnabled`、`OSAScriptingDefinition`、`NSUserActivityTypes`、`INIntentsSupported`、`SFSafariCorrespondingIOSAppBundleIdentifier`。
 - **iCloud** —— `NSUbiquitousContainers` 按容器完整展开（每个容器 ID 作为小节标题，多容器应用不再被合并成 1 项）。
 - **通知** —— `NSUserNotificationAlertStyle` 与三种 UsageDescription。
 - **杂项开关** —— 突然 / 自动终止、`LSRequiresCarbon`、`LSRequiresNativeExecution`、`LSMultipleInstancesProhibited`、`LSFileQuarantineEnabled`、`GPUEjectPolicy` / `GPUSelectionPolicy`、`ITSAppUsesNonExemptEncryption`。
-- **帮助 / 本地化 / Accent / Spotlight** —— `CFBundleHelpBookName` / `Folder`、`CFBundleLocalizations`、`NSAccentColorName`、`MDItemKeywords`。
+- **帮助 / 本地化 / Accent / Spotlight** —— `CFBundleHelpBookName` / `Folder`、`CFBundleLocalizations` 并与实际 `Contents/Resources/*.lproj` 目录扫描合并（多数应用不写该 plist 键）、`NSAccentColorName`、`MDItemKeywords`。
 - **iOS 移植包字段** —— `UIDeviceFamily`、`UILaunchStoryboardName`、`UIRequiresFullScreen`、`UISupportedInterfaceOrientations`、`UIStatusBarStyle`、`UIBackgroundModes`、`ASWebAuthenticationSession…`。`Wrapper/<name>.app/` 布局的 iOS 移植包能正确解析。
 - **Electron / 构建元数据 / 厂商** —— `ElectronTeamID`、`SourceVersion`、`requiredBuildHash`、`SCMRevision`、`AppIdentifierPrefix`、`CFBundleSpokenName`、`VendorCode`、`OrganizationIdentifier`、`CTFontSuppressAutoDownload`。
 - **Bonjour** —— `NSBonjourServices` 原样显示，不再追加 `_…._tcp` 后缀造成重复拼接。
