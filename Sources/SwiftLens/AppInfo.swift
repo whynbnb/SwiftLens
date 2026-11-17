@@ -103,6 +103,10 @@ struct AppInfo {
     // 其它高价值键 (Sparkle / AppleScript / iCloud / Notifications / 开关)
     let extra: ExtraInfo
 
+    // 隐私清单 / App Store 收据
+    let privacyManifests: [PrivacyManifest]
+    let hasMASReceipt: Bool
+
     // 图标
     let icon: NSImage?
 }
@@ -196,6 +200,10 @@ enum AppInfoLoader {
 
         // 子 bundle 扫描
         let subResult = SubBundleScanner.scan(parent: url)
+
+        // 隐私清单 / App Store 收据
+        let privacyManifests = PrivacyManifestReader.read(bundleURL: url, subBundles: subResult.subBundles)
+        let hasMASReceipt = PrivacyManifestReader.hasMASReceipt(bundleURL: url)
 
         // 隐私权限条目
         let privacyEntries = PrivacyReader.parse(from: rawPlist)
@@ -332,6 +340,8 @@ enum AppInfoLoader {
             subBundles: subResult.subBundles,
             subBundlesTotalSize: subResult.totalSize,
             extra: ExtraInfoReader.read(from: rawPlist, bundleURL: url),
+            privacyManifests: privacyManifests,
+            hasMASReceipt: hasMASReceipt,
             icon: icon
         )
     }
@@ -522,6 +532,21 @@ extension AppInfo {
             lines.append("  ... \(L10n.t(.cliMore)) \(privacyEntries.count - 8) \(L10n.t(.cliPlistKeys))")
         }
 
+        if !privacyManifests.isEmpty {
+            lines.append("\(L10n.t(.privacyManifests)): \(privacyManifests.count)")
+            for m in privacyManifests.prefix(8) {
+                var line = "  · \(m.path)"
+                if let t = m.tracking {
+                    line += " (\(L10n.t(.privacyTracking))=\(t ? "YES" : "NO"))"
+                }
+                line += " — \(m.accessedAPIs.count) APIs, \(m.collectedData.count) data types"
+                lines.append(line)
+            }
+            if privacyManifests.count > 8 {
+                lines.append("  ... \(L10n.t(.cliMore)) \(privacyManifests.count - 8)")
+            }
+        }
+
         if appTransportSecurity != nil { lines.append("ATS: \(L10n.t(.cliATS))") }
         if electronAsarIntegrity != nil { lines.append("Electron: \(L10n.t(.cliElectron))") }
         if lsUIElement == true { lines.append(L10n.t(.cliFormAgent)) }
@@ -655,6 +680,7 @@ extension AppInfo {
             lines.append("  ... \(L10n.t(.cliMore)) \(subBundles.count - 8) \(L10n.t(.cliPlistKeys))")
         }
         lines.append("\(L10n.t(.cliFileSize)): \(formattedFileSize()) (\(fileSize) \(L10n.t(.bytesUnit)))")
+        lines.append("\(L10n.t(.masReceipt)): \(hasMASReceipt ? "YES" : "NO")")
 
         return lines.joined(separator: "\n")
     }

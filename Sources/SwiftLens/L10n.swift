@@ -46,6 +46,14 @@ enum L10n {
         case documentTypes
         case urlSchemes
         case privacy
+        case privacyManifests
+        case privacyTracking
+        case privacyAccessedAPIs
+        case privacyReasons
+        case privacyCollectedData
+        case privacyTrackingDomains
+        case noPrivacyManifest
+        case masReceipt
         case ats
         case quarantine
         case xattrs
@@ -387,6 +395,11 @@ enum L10n {
         .basicInfo: "基本信息", .runtime: "运行环境 & 部署",
         .architectures: "架构 (Mach-O)", .documentTypes: "文档类型 (CFBundleDocumentTypes)",
         .urlSchemes: "URL Schemes", .privacy: "隐私权限描述 (TCC Usage Descriptions)",
+        .privacyManifests: "隐私清单 (PrivacyInfo.xcprivacy)",
+        .privacyTracking: "跟踪", .privacyAccessedAPIs: "访问的 API",
+        .privacyReasons: "原因", .privacyCollectedData: "收集的数据类型",
+        .privacyTrackingDomains: "跟踪域名", .noPrivacyManifest: "未发现 PrivacyInfo.xcprivacy",
+        .masReceipt: "App Store 收据",
         .ats: "网络安全 / ATS · Electron", .quarantine: "Quarantine 隔离标记",
         .xattrs: "扩展属性 (xattrs)", .codeSigning: "代码签名 (Code Signing)",
         .entitlements: "Entitlements 权限", .subBundles: "内嵌子 bundle",
@@ -602,6 +615,11 @@ enum L10n {
         .basicInfo: "Basic", .runtime: "Runtime & Deployment",
         .architectures: "Architectures (Mach-O)", .documentTypes: "Document Types (CFBundleDocumentTypes)",
         .urlSchemes: "URL Schemes", .privacy: "Privacy (TCC Usage Descriptions)",
+        .privacyManifests: "Privacy Manifests (PrivacyInfo.xcprivacy)",
+        .privacyTracking: "Tracking", .privacyAccessedAPIs: "Accessed APIs",
+        .privacyReasons: "Reasons", .privacyCollectedData: "Collected Data Types",
+        .privacyTrackingDomains: "Tracking Domains", .noPrivacyManifest: "No PrivacyInfo.xcprivacy found",
+        .masReceipt: "App Store Receipt",
         .ats: "Network Security / ATS · Electron", .quarantine: "Quarantine Flag",
         .xattrs: "Extended Attributes (xattrs)", .codeSigning: "Code Signing",
         .entitlements: "Entitlements", .subBundles: "Embedded Sub Bundles",

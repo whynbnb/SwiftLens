@@ -57,6 +57,7 @@ struct DetailView: View {
                     urlSchemesSection
                     privacySection
                         .id(DetailAnchor.privacy)
+                    privacyManifestsSection
                     atsSection
                         .id(DetailAnchor.ats)
                     quarantineSection
@@ -503,6 +504,62 @@ struct DetailView: View {
         }
     }
 
+    // MARK: 隐私清单
+    private var privacyManifestsSection: some View {
+        SectionView(L10n.t(.privacyManifests),
+                    subtitle: "\(info.privacyManifests.count)") {
+            if info.privacyManifests.isEmpty {
+                PlaceholderRow(text: L10n.t(.noPrivacyManifest))
+            } else {
+                ForEach(info.privacyManifests) { manifest in
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack(spacing: 8) {
+                            Text(manifest.path)
+                                .font(.system(.caption, design: .monospaced).bold())
+                            if let tracking = manifest.tracking {
+                                Badge(text: "\(L10n.t(.privacyTracking)): \(tracking ? "YES" : "NO")",
+                                      color: tracking ? .red : .gray)
+                            }
+                            Spacer()
+                        }
+                        if !manifest.accessedAPIs.isEmpty {
+                            Text(L10n.t(.privacyAccessedAPIs))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            ForEach(manifest.accessedAPIs) { api in
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(api.type)
+                                        .font(.system(.caption2, design: .monospaced))
+                                    if !api.reasons.isEmpty {
+                                        Text("\(L10n.t(.privacyReasons)): \(api.reasons.joined(separator: ", "))")
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .padding(.leading, 12)
+                            }
+                        }
+                        if !manifest.collectedData.isEmpty {
+                            RowView(key: L10n.t(.privacyCollectedData),
+                                    value: manifest.collectedData.joined(separator: ", "))
+                        }
+                        if !manifest.trackingDomains.isEmpty {
+                            RowView(key: L10n.t(.privacyTrackingDomains),
+                                    value: manifest.trackingDomains.joined(separator: ", "))
+                        }
+                        if manifest.isEmpty {
+                            Text("—")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(8)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.3)))
+                }
+            }
+        }
+    }
+
     // MARK: 网络安全 ATS · Electron
     private var atsSection: some View {
         let ats = info.appTransportSecurity
@@ -800,6 +857,7 @@ struct DetailView: View {
             RowView(key: L10n.t(.modifiedTime), value: info.modificationDate.map { iso($0) } ?? "—")
             RowView(key: L10n.t(.createdTime), value: info.creationDate.map { iso($0) } ?? "—")
             RowView(key: L10n.t(.permissionsOctal), value: info.permissions ?? "—")
+            RowView(key: L10n.t(.masReceipt), value: info.hasMASReceipt ? "YES" : "NO")
         }
     }
 
