@@ -12,6 +12,7 @@ enum L10n {
         case settings
         case about
         case help
+        case more
         case language
         case theme
         case langSystem
@@ -399,7 +400,7 @@ enum L10n {
 
     /// 中文表
     private static let zh: [Key: String] = [
-        .settings: "设置", .about: "关于 SwiftLens", .help: "帮助", .language: "语言", .theme: "主题",
+        .settings: "设置", .about: "关于 SwiftLens", .help: "帮助", .more: "更多", .language: "语言", .theme: "主题",
         .langSystem: "跟随系统", .langZh: "中文", .langEn: "English",
         .themeSystem: "跟随系统", .themeLight: "浅色", .themeDark: "深色",
         .close: "关闭",
@@ -631,7 +632,7 @@ enum L10n {
 
     /// 英文表（缺失时回退到 zh key 字面名）
     private static let en: [Key: String] = [
-        .settings: "Settings", .about: "About SwiftLens", .help: "Help", .language: "Language", .theme: "Theme",
+        .settings: "Settings", .about: "About SwiftLens", .help: "Help", .more: "More", .language: "Language", .theme: "Theme",
         .langSystem: "Follow System", .langZh: "中文", .langEn: "English",
         .themeSystem: "Follow System", .themeLight: "Light", .themeDark: "Dark",
         .close: "Close",

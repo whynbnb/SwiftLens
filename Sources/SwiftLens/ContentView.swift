@@ -35,25 +35,52 @@ struct ContentView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         )
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
+            ToolbarItem(placement: .primaryAction) {
                 Button { openPanel() } label: {
                     Label(L10n.t(.openApp), systemImage: "folder.badge.plus")
                 }
-                if info != nil {
-                    Button { reset() } label: {
-                        Label(L10n.t(.clear), systemImage: "arrow.uturn.backward")
+                .help(L10n.t(.openApp))
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    if let info {
+                        Button {
+                            NSWorkspace.shared.activateFileViewerSelecting([info.bundleURL])
+                        } label: {
+                            Label(L10n.t(.revealInFinder), systemImage: "folder")
+                        }
+                        Button {
+                            copyToPasteboard(info.summaryText)
+                        } label: {
+                            Label(L10n.t(.copySummary), systemImage: "doc.on.doc")
+                        }
+                        Button {
+                            copyToPasteboard(info.jsonSummary)
+                        } label: {
+                            Label(L10n.t(.copyJSON), systemImage: "curlybraces")
+                        }
+                        Divider()
+                        Button {
+                            reset()
+                        } label: {
+                            Label(L10n.t(.clear), systemImage: "arrow.uturn.backward")
+                        }
+                        Divider()
                     }
-                }
-                Button {
-                    NotificationCenter.default.post(name: .openSettings, object: nil)
+                    Button {
+                        NotificationCenter.default.post(name: .openSettings, object: nil)
+                    } label: {
+                        Label(L10n.t(.settings), systemImage: "gearshape")
+                    }
+                    Button {
+                        NotificationCenter.default.post(name: .openHelp, object: nil)
+                    } label: {
+                        Label(L10n.t(.help), systemImage: "questionmark.circle")
+                    }
                 } label: {
-                    Label(L10n.t(.settings), systemImage: "gearshape")
+                    Label(L10n.t(.more), systemImage: "ellipsis.circle")
                 }
-                Button {
-                    NotificationCenter.default.post(name: .openHelp, object: nil)
-                } label: {
-                    Label(L10n.t(.help), systemImage: "questionmark.circle")
-                }
+                .help(L10n.t(.more))
             }
         }
         .navigationTitle(info?.bundleURL.lastPathComponent ?? L10n.t(.appName))

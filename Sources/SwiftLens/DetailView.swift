@@ -99,24 +99,10 @@ struct DetailView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        NSWorkspace.shared.activateFileViewerSelecting([info.bundleURL])
-                    } label: { Label(L10n.t(.revealInFinder), systemImage: "folder") }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        copyToPasteboard(summaryString())
-                    } label: { Label(L10n.t(.copySummary), systemImage: "doc.on.doc") }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        copyToPasteboard(info.jsonSummary)
-                    } label: { Label(L10n.t(.copyJSON), systemImage: "curlybraces") }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
                         searchFocused = true
                     } label: { Label(L10n.t(.search), systemImage: "magnifyingglass") }
                         .keyboardShortcut("f", modifiers: .command)
+                        .help(L10n.t(.search))
                 }
             }
         }
@@ -1526,8 +1512,6 @@ struct DetailView: View {
         case .other:     return "shippingbox.fill"
         }
     }
-
-    private func summaryString() -> String { info.summaryText }
 }
 
 // MARK: - Badge
