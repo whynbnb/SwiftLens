@@ -626,10 +626,17 @@ struct DetailView: View {
             RowView(key: "App Sandbox",
                     value: info.isSandboxed ? L10n.t(.sandboxEnabled) : L10n.t(.sandboxDisabled))
             if let ent = cs.entitlements, !ent.isEmpty {
+                let risky = EntitlementAudit.riskyKeys(in: ent)
+                if !risky.isEmpty {
+                    Label("\(L10n.t(.riskCount)): \(risky.count)", systemImage: "exclamationmark.triangle.fill")
+                        .font(.callout)
+                        .foregroundStyle(.orange)
+                }
                 let rows = InfoPlistParser.flatten(ent).sorted { $0.0 < $1.0 }
                 let bodyContent = VStack(alignment: .leading, spacing: 8) {
                     ForEach(rows, id: \.0) { row in
-                        RowView(key: row.0, value: row.1)
+                        RowView(key: row.0, value: row.1,
+                                warning: EntitlementAudit.warning(for: row.0))
                     }
                 }
 

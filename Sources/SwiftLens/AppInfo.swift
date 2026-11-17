@@ -465,6 +465,12 @@ extension AppInfo {
         } else {
             lines.append("  Entitlements: \(L10n.t(.cliEntitlementsNone))")
         }
+        let riskyEntitlements = EntitlementAudit.riskyKeys(in: cs.entitlements)
+        if !riskyEntitlements.isEmpty {
+            let shown = riskyEntitlements.prefix(6).joined(separator: ", ")
+            let suffix = riskyEntitlements.count > 6 ? ", … (+\(riskyEntitlements.count - 6))" : ""
+            lines.append("  ⚠︎ \(L10n.t(.riskCount)): \(shown)\(suffix)")
+        }
 
         // 隐私
         lines.append("\(L10n.t(.cliPrivacy)): \(privacyEntries.count) \(L10n.t(.cliPlistKeys))")
@@ -610,5 +616,42 @@ extension AppInfo {
         lines.append("\(L10n.t(.cliFileSize)): \(formattedFileSize()) (\(fileSize) \(L10n.t(.bytesUnit)))")
 
         return lines.joined(separator: "\n")
+    }
+}
+
+// MARK: - 高风险 Entitlements
+
+/// 常见高风险 entitlement 的审计映射。返回本地化说明；nil 表示未命中。
+enum EntitlementAudit {
+    static func warning(for key: String) -> String? {
+        if key.hasPrefix("com.apple.security.temporary-exception.") {
+            return L10n.t(.riskTempException)
+        }
+        switch key {
+        case "com.apple.security.cs.disable-library-validation":
+            return L10n.t(.riskDisableLibraryValidation)
+        case "com.apple.security.cs.allow-unsigned-executable-memory":
+            return L10n.t(.riskUnsignedExecMemory)
+        case "com.apple.security.cs.allow-dyld-environment-variables":
+            return L10n.t(.riskDyldEnv)
+        case "com.apple.security.get-task-allow":
+            return L10n.t(.riskGetTaskAllow)
+        case "com.apple.security.cs.debugger":
+            return L10n.t(.riskDebugger)
+        case "com.apple.security.cs.allow-jit":
+            return L10n.t(.riskAllowJIT)
+        case "com.apple.security.cs.disable-executable-page-protection":
+            return L10n.t(.riskDisableExecPageProtection)
+        default:
+            return nil
+        }
+    }
+
+    /// 返回所有命中风险的 entitlement 键（扁平化后）。
+    static func riskyKeys(in entitlements: [String: Any]?) -> [String] {
+        guard let entitlements else { return [] }
+        return InfoPlistParser.flatten(entitlements)
+            .map(\.0)
+            .filter { warning(for: $0) != nil }
     }
 }

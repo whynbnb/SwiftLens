@@ -120,6 +120,15 @@ enum L10n {
         case certExpired
         case certExpiringSoon
         case noEntitlements
+        case riskCount
+        case riskDisableLibraryValidation
+        case riskUnsignedExecMemory
+        case riskDyldEnv
+        case riskGetTaskAllow
+        case riskDebugger
+        case riskAllowJIT
+        case riskDisableExecPageProtection
+        case riskTempException
         // 文件信息
         case fullPath
         case totalSize
@@ -397,6 +406,15 @@ enum L10n {
         .authorityChain: "Authority 链", .noEntitlements: "无 entitlements (未签名 / 无沙盒)",
         .certDetails: "证书详情", .certIssuer: "签发者", .certValidity: "有效期",
         .certFingerprint: "SHA-256 指纹", .certExpired: "已过期", .certExpiringSoon: "即将过期",
+        .riskCount: "高风险 entitlements",
+        .riskDisableLibraryValidation: "关闭库验证：可加载未签名/第三方 dylib",
+        .riskUnsignedExecMemory: "允许未签名可执行内存（常见于 JIT / 注入）",
+        .riskDyldEnv: "允许 DYLD_* 环境变量影响加载",
+        .riskGetTaskAllow: "允许调试器附加 (get-task-allow，通常为 Debug 签名)",
+        .riskDebugger: "允许以调试器身份运行 (cs.debugger)",
+        .riskAllowJIT: "允许 JIT 可执行内存",
+        .riskDisableExecPageProtection: "关闭可执行页保护 (危险)",
+        .riskTempException: "使用临时例外 entitlement (通常仅限 App Store)",
         // 文件信息
         .fullPath: "完整路径", .totalSize: "总大小", .modifiedTime: "修改时间",
         .createdTime: "创建时间", .permissionsOctal: "权限 (octal)",
@@ -587,6 +605,15 @@ enum L10n {
         .authorityChain: "Authority Chain", .noEntitlements: "No entitlements (unsigned / no sandbox)",
         .certDetails: "Certificate Details", .certIssuer: "Issuer", .certValidity: "Validity",
         .certFingerprint: "SHA-256 Fingerprint", .certExpired: "Expired", .certExpiringSoon: "Expiring soon",
+        .riskCount: "High-risk entitlements",
+        .riskDisableLibraryValidation: "Library validation disabled: unsigned/third-party dylibs may load",
+        .riskUnsignedExecMemory: "Unsigned executable memory allowed (JIT / injection)",
+        .riskDyldEnv: "DYLD_* environment variables can affect loading",
+        .riskGetTaskAllow: "Debugger attach allowed (get-task-allow, usually debug signing)",
+        .riskDebugger: "Runs with debugger entitlement (cs.debugger)",
+        .riskAllowJIT: "JIT executable memory allowed",
+        .riskDisableExecPageProtection: "Executable page protection disabled (dangerous)",
+        .riskTempException: "Uses temporary-exception entitlement (normally App Store only)",
         // 文件信息
         .fullPath: "Full Path", .totalSize: "Total Size", .modifiedTime: "Modification Time",
         .createdTime: "Creation Time", .permissionsOctal: "Permissions (octal)",

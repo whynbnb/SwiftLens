@@ -11,6 +11,7 @@ func copyToPasteboard(_ string: String) {
 struct RowView: View {
     let key: String
     let value: String
+    var warning: String? = nil
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -26,6 +27,12 @@ struct RowView: View {
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .help(value.isEmpty ? "" : value)
+            if let warning {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .help(warning)
+            }
         }
         .contextMenu {
             Button(L10n.t(.copyValue)) { copyToPasteboard(value) }
