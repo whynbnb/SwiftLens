@@ -322,7 +322,7 @@ enum AppInfoLoader {
             architectures: architectures,
             subBundles: subResult.subBundles,
             subBundlesTotalSize: subResult.totalSize,
-            extra: ExtraInfoReader.read(from: rawPlist),
+            extra: ExtraInfoReader.read(from: rawPlist, bundleURL: url),
             icon: icon
         )
     }

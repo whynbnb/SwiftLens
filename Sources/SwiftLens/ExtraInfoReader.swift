@@ -97,7 +97,7 @@ struct ExtraInfo {
 }
 
 enum ExtraInfoReader {
-    static func read(from plist: [String: Any]) -> ExtraInfo {
+    static func read(from plist: [String: Any], bundleURL: URL? = nil) -> ExtraInfo {
         func str(_ key: String) -> String? {
             if let s = plist[key] as? String { return s }
             return plist[key].map { InfoPlistParser.describe($0) }
@@ -156,6 +156,15 @@ enum ExtraInfoReader {
             bundleName: str("SUBundleName")
         )
 
+        // 本地化语言: Info.plist 的 CFBundleLocalizations 通常缺失,
+        // 因此额外扫描 Contents/Resources/*.lproj (及 iOS Wrapper 布局) 汇总实际语言。
+        var localizations = arr("CFBundleLocalizations")
+        if let bundleURL {
+            for code in scanLocalizations(at: bundleURL) where !localizations.contains(code) {
+                localizations.append(code)
+            }
+        }
+
         return ExtraInfo(
             sparkle: sp.isEmpty ? nil : sp,
             appleScriptEnabled: bool("NSAppleScriptEnabled"),
@@ -181,7 +190,7 @@ enum ExtraInfoReader {
             // F. 帮助 / 本地化 / Accent / Spotlight
             helpBookName: str("CFBundleHelpBookName"),
             helpBookFolder: str("CFBundleHelpBookFolder"),
-            bundleLocalizations: arr("CFBundleLocalizations"),
+            bundleLocalizations: localizations,
             allowMixedLocalizations: bool("CFBundleAllowMixedLocalizations"),
             accentColorName: str("NSAccentColorName"),
             mdItemKeywords: str("MDItemKeywords"),
@@ -207,5 +216,26 @@ enum ExtraInfoReader {
             // I. Bonjour
             bonjourServices: arr("NSBonjourServices")
         )
+    }
+
+    /// 扫描实际本地化目录: Contents/Resources/*.lproj (iOS Wrapper 布局扫描 app 根目录)。
+    /// 排除 Base.lproj (开发基准语言, 不是用户可见的本地化)。
+    private static func scanLocalizations(at bundleURL: URL) -> [String] {
+        var roots = [bundleURL.appendingPathComponent("Contents/Resources")]
+        let wrapper = bundleURL.appendingPathComponent("Wrapper")
+        if let entries = try? FileManager.default.contentsOfDirectory(atPath: wrapper.path) {
+            for name in entries where name.hasSuffix(".app") {
+                roots.append(wrapper.appendingPathComponent(name))
+            }
+        }
+        var codes = Set<String>()
+        for root in roots {
+            guard let entries = try? FileManager.default.contentsOfDirectory(atPath: root.path) else { continue }
+            for name in entries where name.hasSuffix(".lproj") {
+                let code = String(name.dropLast(".lproj".count))
+                if !code.isEmpty, code != "Base" { codes.insert(code) }
+            }
+        }
+        return codes.sorted()
     }
 }
