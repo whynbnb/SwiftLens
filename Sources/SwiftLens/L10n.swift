@@ -106,6 +106,7 @@ enum L10n {
         // 代码签名
         case signState
         case validity
+        case strictValidation
         case notarization
         case copyCodesignCmd
         case copySpctlCmd
@@ -182,6 +183,8 @@ enum L10n {
         case helpInvalidDesc
         case helpUntestedTitle
         case helpUntestedDesc
+        case helpStrictValidTitle
+        case helpStrictValidDesc
         // 帮助页 - 其它标识
         case helpAgentAppTitle
         case helpAgentAppDesc
@@ -246,6 +249,9 @@ enum L10n {
         case vValid
         case vInvalid
         case vUntested
+        case strictPass
+        case strictFail
+        case strictUntested
         // Notarization
         case nNotarized
         case nDevID
@@ -369,7 +375,8 @@ enum L10n {
         .copyRemoveCmd: "复制移除命令", .pasteToRemoveHint: "在终端粘贴运行即可移除隔离标记",
         .noQuarantineHint: "未检测到 com.apple.quarantine 扩展属性 (可信来源 / 已清隔离)",
         // 代码签名
-        .signState: "签名状态", .validity: "有效性", .notarization: "公证 (Notarization)",
+        .signState: "签名状态", .validity: "有效性", .strictValidation: "严格验证 (Strict)",
+        .notarization: "公证 (Notarization)",
         .copyCodesignCmd: "复制 codesign 命令", .copySpctlCmd: "复制 spctl 命令",
         .pasteToVerifyHint: "在终端粘贴运行即可手动验证签名 / 公证状态",
         .authorityChain: "Authority 链", .noEntitlements: "无 entitlements (未签名 / 无沙盒)",
@@ -431,6 +438,8 @@ enum L10n {
         .helpInvalidDesc: "基础验证失败。签名可能被篡改或损坏。",
         .helpUntestedTitle: "未验证",
         .helpUntestedDesc: "未签名应用, 无法进行有效性验证。",
+        .helpStrictValidTitle: "严格验证 (Strict)",
+        .helpStrictValidDesc: "在基础验证之上额外校验资源封印 (CodeResources)、嵌套代码与所有架构切片；资源被篡改或缺失时会失败。",
         // 其它标识
         .helpAgentAppTitle: "Agent App (无 Dock)",
         .helpAgentAppDesc: "Info.plist 中 LSUIElement=true。无 Dock 图标、无主菜单栏，常用于后台工具或菜单栏应用。",
@@ -463,6 +472,7 @@ enum L10n {
         .ssSigned: "已签名 (Signed)", .ssAdhoc: "Ad-hoc 签名", .ssUnsigned: "未签名 (Not signed)", .ssUnknown: "未知",
         // Validity
         .vValid: "基础有效 (Basic Valid)", .vInvalid: "无效 (Invalid)", .vUntested: "未验证",
+        .strictPass: "通过", .strictFail: "未通过", .strictUntested: "—",
         // Notarization
         .nNotarized: "已公证 (Notarized)", .nDevID: "Developer ID 签名", .nMAS: "Mac App Store",
         .nIOSStore: "iOS App Store", .nAppleSystem: "Apple 系统签名", .nNotNotarized: "未公证",         .nUnknown: "未知",
@@ -546,7 +556,8 @@ enum L10n {
         .copyRemoveCmd: "Copy Remove Command", .pasteToRemoveHint: "Paste in Terminal to remove quarantine flag",
         .noQuarantineHint: "No com.apple.quarantine attribute (trusted source / already cleared)",
         // 代码签名
-        .signState: "Signature State", .validity: "Validity", .notarization: "Notarization",
+        .signState: "Signature State", .validity: "Validity", .strictValidation: "Strict Validation",
+        .notarization: "Notarization",
         .copyCodesignCmd: "Copy codesign Command", .copySpctlCmd: "Copy spctl Command",
         .pasteToVerifyHint: "Paste in Terminal to manually verify signature / notarization",
         .authorityChain: "Authority Chain", .noEntitlements: "No entitlements (unsigned / no sandbox)",
@@ -608,6 +619,8 @@ enum L10n {
         .helpInvalidDesc: "Basic validation failed. The signature may be tampered or corrupted.",
         .helpUntestedTitle: "Untested",
         .helpUntestedDesc: "The app is unsigned; validity could not be checked.",
+        .helpStrictValidTitle: "Strict Validation",
+        .helpStrictValidDesc: "In addition to basic validation, verifies the sealed resources (CodeResources), nested code, and every architecture slice; fails if resources were modified or are missing.",
         // 其它标识
         .helpAgentAppTitle: "Agent App (no Dock)",
         .helpAgentAppDesc: "Info.plist has LSUIElement=true. No Dock icon and no main menu bar; commonly used for background tools or menu-bar apps.",
@@ -642,6 +655,7 @@ enum L10n {
         .ssSigned: "Signed", .ssAdhoc: "Ad-hoc signed", .ssUnsigned: "Not signed", .ssUnknown: "Unknown",
         // Validity
         .vValid: "Basic Valid", .vInvalid: "Invalid", .vUntested: "Untested",
+        .strictPass: "Pass", .strictFail: "Fail", .strictUntested: "—",
         // Notarization
         .nNotarized: "Notarized", .nDevID: "Developer ID", .nMAS: "Mac App Store",
         .nIOSStore: "iOS App Store", .nAppleSystem: "Apple System Signed", .nNotNotarized: "Not Notarized",         .nUnknown: "Unknown",

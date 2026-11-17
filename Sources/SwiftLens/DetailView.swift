@@ -490,6 +490,7 @@ struct DetailView: View {
         return SectionView(L10n.t(.codeSigning)) {
             RowView(key: L10n.t(.signState), value: cs.state.localizedName)
             RowView(key: L10n.t(.validity), value: cs.validity.localizedName)
+            RowView(key: L10n.t(.strictValidation), value: cs.strictValidity.strictName)
             RowView(key: L10n.t(.notarization), value: cs.notarization.localizedName)
 
             // 手动验证命令 — 沙盒内无法调用 spctl/codesign, 提供复制命令让用户在终端运行

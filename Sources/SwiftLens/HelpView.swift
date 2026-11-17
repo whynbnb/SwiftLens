@@ -76,6 +76,7 @@ struct HelpView: View {
     private var signatureStateSection: some View {
         helpSection(title: L10n.t(.helpValidityTitle), icon: "signature") {
             badgeRow(color: .green,  title: L10n.t(.helpBasicValidTitle), desc: L10n.t(.helpBasicValidDesc))
+            badgeRow(color: .green,  title: L10n.t(.helpStrictValidTitle), desc: L10n.t(.helpStrictValidDesc))
             badgeRow(color: .red,    title: L10n.t(.helpInvalidTitle), desc: L10n.t(.helpInvalidDesc))
             badgeRow(color: .gray,   title: L10n.t(.helpUntestedTitle), desc: L10n.t(.helpUntestedDesc))
         }

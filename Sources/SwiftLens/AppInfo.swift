@@ -392,6 +392,7 @@ extension AppInfo {
 
         // 签名
         lines.append("\(L10n.t(.cliSign)): \(cs.state.localizedName) — \(cs.validity.localizedName) — \(cs.notarization.localizedName)")
+        lines.append("  \(L10n.t(.strictValidation)): \(cs.strictValidity.strictName)")
         lines.append("\(L10n.t(.cliSandbox)): \(isSandboxed ? L10n.t(.cliSandboxYes) : L10n.t(.cliSandboxNo))")
         if let v = cs.format { lines.append("  Format: \(v)") }
         if let v = cs.identifier { lines.append("  Identifier: \(v)") }

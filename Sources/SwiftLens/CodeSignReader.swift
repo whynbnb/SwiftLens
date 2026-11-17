@@ -30,6 +30,14 @@ struct CodeSignInfo {
             case .untested: return L10n.t(.vUntested)
             }
         }
+        /// 严格验证 (kSecCSStrictValidate) 结果的展示名, 与基础验证区分。
+        var strictName: String {
+            switch self {
+            case .valid:    return L10n.t(.strictPass)
+            case .invalid:  return L10n.t(.strictFail)
+            case .untested: return L10n.t(.strictUntested)
+            }
+        }
     }
     enum Notarization: String {
         case notarized      = "notarized"
@@ -54,6 +62,9 @@ struct CodeSignInfo {
 
     let state: SignedState
     let validity: Validity
+    /// 严格验证结果：在基础验证之上额外校验资源封印 (CodeResources) 与嵌套代码。
+    /// 未签名 / 非 code 对象时为 .untested。
+    let strictValidity: Validity
     let notarization: Notarization
 
     /// 合成的签名详情文本（替代旧版 codesign -dvvv 输出）
@@ -239,14 +250,22 @@ enum CodeSignReader {
 
         // 10. 有效性验证
         let validity = checkValidity(code: code)
+        // 10.1 严格验证 (资源封印 / 嵌套代码); 未签名时无从校验
+        let computedStrictValidity: CodeSignInfo.Validity =
+            (state == .signed || state == .adhoc)
+                ? checkStrictValidity(code: code)
+                : .untested
 
         // 11. 公证/分发渠道检测 (沙盒下用 Security 框架 strict 验证替代 spctl)
         let notarization = checkNotarization(
-            code: code,
             state: state,
-            validity: validity,
+            strictValidity: computedStrictValidity,
             authorities: authorities
         )
+        // iOS App Store 应用通常是 Wrapper/<x>.app 包装布局, 不是标准 macOS bundle,
+        // strict 验证会因旧式资源封装 (obsolete envelope) 报错, 不代表签名损坏。
+        let strictValidity: CodeSignInfo.Validity =
+            notarization == .iosAppStore ? .untested : computedStrictValidity
 
         // 12. 补充字段: 签名时间 / 总签名数 / 选中签名 / 已签 Info.plist 项数
         let signingTime: String? = {
@@ -306,6 +325,7 @@ enum CodeSignReader {
         return CodeSignInfo(
             state: state,
             validity: validity,
+            strictValidity: strictValidity,
             notarization: notarization,
             detailRaw: detailRaw,
             identifier: identifier,
@@ -397,6 +417,14 @@ enum CodeSignReader {
         return status == errSecSuccess ? .valid : .invalid
     }
 
+    /// 严格验证: 在基础验证之上校验资源封印 (CodeResources)、嵌套代码等。
+    /// 资源被篡改/缺失时会失败 (基础验证仍可能通过)。
+    private static func checkStrictValidity(code: SecStaticCode) -> CodeSignInfo.Validity {
+        let flags = SecCSFlags(rawValue: kSecCSStrictValidate | kSecCSCheckAllArchitectures)
+        let status = SecStaticCodeCheckValidity(code, flags, nil)
+        return status == errSecSuccess ? .valid : .invalid
+    }
+
     /// 公证/分发渠道检测 (沙盒下启发式):
     /// - macOS Software Signing 证书 → Apple 系统签名 (系统自带应用)
     /// - Apple Mac OS Application Signing 证书 → Mac App Store 分发
@@ -405,9 +433,8 @@ enum CodeSignReader {
     /// - Developer ID Application 证书 + strict 验证失败 → Developer ID 签名 (签名可能有损)
     /// - 其它 → 未公证
     private static func checkNotarization(
-        code: SecStaticCode,
         state: CodeSignInfo.SignedState,
-        validity: CodeSignInfo.Validity,
+        strictValidity: CodeSignInfo.Validity,
         authorities: [String]
     ) -> CodeSignInfo.Notarization {
         switch state {
@@ -431,11 +458,7 @@ enum CodeSignReader {
             if hasDevID {
                 // strict 验证会检查 sealed resources / bundle format 等,
                 // basic 验证只检查签名结构, 可能放过签名损坏的应用
-                // 附加 kSecCSCheckAllArchitectures, 对所有架构切片做 strict 校验
-                let strictStatus = SecStaticCodeCheckValidity(
-                    code, SecCSFlags(rawValue: kSecCSStrictValidate | kSecCSCheckAllArchitectures), nil
-                )
-                return strictStatus == errSecSuccess ? .notarized : .devID
+                return strictValidity == .valid ? .notarized : .devID
             }
             // 其它 → 未公证
             return .notNotarized
@@ -447,6 +470,7 @@ enum CodeSignReader {
         return CodeSignInfo(
             state: .unsigned,
             validity: .untested,
+            strictValidity: .untested,
             notarization: .notNotarized,
             detailRaw: "\(L10n.t(.unsignedDetail))\n\(error ?? "")",
             identifier: nil,
