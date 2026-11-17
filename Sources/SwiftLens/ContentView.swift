@@ -12,15 +12,18 @@ struct ContentView: View {
     @State private var lastError: String?
     @State private var spinnerSpin: Bool = false   // 持续旋转的触发开关
     @State private var loadID: UInt = 0            // 加载请求 token, 防止旧任务覆盖新结果
+    @State private var pendingTitle: String?       // 加载中显示的目标 app 名
 
     var body: some View {
         Group {
-            if let info = info {
+            if loading {
+                // 加载期间不渲染旧 DetailView，避免它继续控制窗口标题
+                Color.clear
+            } else if let info = info {
                 DetailView(info: info)
                     .id("\(appState.language.rawValue)-\(info.bundleURL.path)")
             } else {
                 placeholder
-                    .opacity(loading ? 0 : 1)      // 加载时隐藏占位避免与 ProgressView 重叠
                     .id(appState.language.rawValue)
             }
         }
@@ -119,9 +122,18 @@ struct ContentView: View {
                 .help(L10n.t(.more))
             }
         }
-        .navigationTitle(info.map { $0.displayName ?? $0.bundleName ?? $0.bundleURL.lastPathComponent }
-            ?? L10n.t(.appName))
+        .navigationTitle(windowTitle)
         // 设置 sheet 现在由 SwiftLensApp 统一管理，工具栏按钮只负责发通知
+    }
+
+    private var windowTitle: String {
+        if loading, let pendingTitle, !pendingTitle.isEmpty {
+            return pendingTitle
+        }
+        if let info {
+            return info.displayName ?? info.bundleName ?? info.bundleURL.lastPathComponent
+        }
+        return L10n.t(.appName)
     }
 
     private var placeholder: some View {
@@ -218,6 +230,7 @@ struct ContentView: View {
             return
         }
         lastError = nil
+        pendingTitle = url.deletingPathExtension().lastPathComponent
         loading = true
         loadID &+= 1
         let currentID = loadID
@@ -234,6 +247,7 @@ struct ContentView: View {
             DispatchQueue.main.async {
                 // 只接受最新一次请求的结果, 丢弃过期任务
                 guard currentID == loadID else { return }
+                self.pendingTitle = nil
                 self.info = result
                 self.loading = false
                 self.appState.recordRecentApp(
@@ -261,6 +275,7 @@ struct ContentView: View {
         loadID &+= 1
         info = nil
         lastError = nil
+        pendingTitle = nil
         loading = false
     }
 }
