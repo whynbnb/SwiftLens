@@ -347,6 +347,30 @@ extension AppInfo {
         ArchitectureReader.maxMinOSVersion(architectures)
     }
 
+    /// 子 bundle 审计：签名有效性 / TeamID / 架构与主应用是否一致。
+    /// 返回首个问题的本地化描述，全部正常时返回 nil。
+    func subBundleIssue(_ sub: SubBundle) -> String? {
+        if sub.validity == .invalid { return L10n.t(.warnSubInvalid) }
+        if sub.strictValidity == .invalid { return L10n.t(.warnSubStrict) }
+        if let mainTeam = codeSign.teamIdentifier, !mainTeam.isEmpty,
+           let subTeam = sub.teamIdentifier, !subTeam.isEmpty,
+           mainTeam != subTeam {
+            return L10n.t(.warnTeamMismatch)
+        }
+        let mainArchs = Set(architectures.map { Self.normalizedArch($0.name) })
+        let subArchs = Set(sub.architectures.map { Self.normalizedArch($0) })
+        if !mainArchs.isEmpty, !subArchs.isEmpty, !mainArchs.isSubset(of: subArchs) {
+            return L10n.t(.warnArchMismatch)
+        }
+        return nil
+    }
+
+    private static func normalizedArch(_ name: String) -> String {
+        if name.hasPrefix("arm64") { return "arm64" }
+        if name.hasPrefix("x86_64") { return "x86_64" }
+        return name
+    }
+
     /// 是否启用了 App Sandbox：
     /// - entitlements 中含 `com.apple.security.app-sandbox = true`
     /// - 或为 iOS 应用 (通过 iPhone OS Application Signing 证书判定, iOS 应用天然沙盒)
@@ -562,7 +586,13 @@ extension AppInfo {
         }
         lines.append("\(L10n.t(.cliSubBundles)): \(subBundles.count) \(L10n.t(.cliPlistKeys)) (\(Self.formatBytes(subBundlesTotalSize)))")
         for sub in subBundles.prefix(8) {
-            lines.append("  · [\(sub.kind.rawValue)] \(sub.relativePath) — \(sub.bundleIdentifier ?? "—") (\(sub.signatureState.localizedName))")
+            var line = "  · [\(sub.kind.rawValue)] \(sub.relativePath) — \(sub.bundleIdentifier ?? "—") (\(sub.signatureState.localizedName)"
+            if sub.validity == .invalid { line += " · \(sub.validity.localizedName)" }
+            if sub.strictValidity == .invalid { line += " · \(L10n.t(.strictValidation)): \(sub.strictValidity.strictName)" }
+            if !sub.architectures.isEmpty { line += " · \(sub.architectures.joined(separator: ","))" }
+            if subBundleIssue(sub) != nil { line += " · ⚠" }
+            line += ")"
+            lines.append(line)
         }
         if subBundles.count > 8 {
             lines.append("  ... \(L10n.t(.cliMore)) \(subBundles.count - 8) \(L10n.t(.cliPlistKeys))")

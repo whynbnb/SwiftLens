@@ -14,6 +14,13 @@ struct SubBundle: Identifiable {
     let signatureState: CodeSignInfo.SignedState
     let signatureType: String?       // "adhoc" / "valid" 等
     let runtimeVersion: String?
+    let teamIdentifier: String?
+    /// 基础验证（签名结构）
+    let validity: CodeSignInfo.Validity
+    /// 严格验证（资源封印 / 嵌套代码）
+    let strictValidity: CodeSignInfo.Validity
+    /// 该子 bundle 主可执行文件包含的架构（如 ["arm64", "x86_64"]）
+    let architectures: [String]
     let note: String?                // 比如签名失败原因
 
     enum Kind: String {
@@ -144,8 +151,10 @@ enum SubBundleScanner {
         let ver  = pull("CFBundleShortVersionString") ?? pull("CFBundleVersion")
         let exec = pull("CFBundleExecutable")
 
-        // 轻量签名检查 —— 使用 Security 框架 (沙盒兼容)
-        let (state, sigType, runtime) = quickSign(at: url)
+        // 轻量签名 + 架构审计 —— 使用 Security 框架与 Mach-O 头解析 (沙盒兼容)
+        let sign = quickSign(at: url)
+        let archs = executablePath(at: url, plist: plist)
+            .map { ArchitectureReader.archNames(at: $0) } ?? []
 
         return SubBundle(
             kind: kind,
@@ -153,15 +162,64 @@ enum SubBundleScanner {
             bundleIdentifier: bid,
             bundleVersion: ver,
             executableName: exec,
-            signatureState: state,
-            signatureType: sigType,
-            runtimeVersion: runtime,
+            signatureState: sign.state,
+            signatureType: sign.signatureType,
+            runtimeVersion: sign.runtimeVersion,
+            teamIdentifier: sign.teamIdentifier,
+            validity: sign.validity,
+            strictValidity: sign.strictValidity,
+            architectures: archs,
             note: nil
         )
     }
 
+    /// 定位子 bundle 的主可执行文件（framework 使用 Versions/<v>/<exec> 布局）。
+    private static func executablePath(at url: URL, plist: [String: Any]) -> URL? {
+        let rawName = (plist["CFBundleExecutable"] as? String)?.trimmingCharacters(in: .whitespaces)
+        let execName = (rawName?.isEmpty == false) ? rawName!
+            : url.deletingPathExtension().lastPathComponent
+        var candidates: [URL] = [
+            url.appendingPathComponent("Contents/MacOS/\(execName)"),
+            url.appendingPathComponent("Versions/Current/\(execName)"),
+            url.appendingPathComponent(execName)
+        ]
+        let versions = url.appendingPathComponent("Versions")
+        if let entries = try? FileManager.default.contentsOfDirectory(atPath: versions.path) {
+            for v in entries.sorted() where v != "Current" {
+                candidates.append(versions.appendingPathComponent("\(v)/\(execName)"))
+            }
+        }
+        for c in candidates {
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: c.path, isDirectory: &isDir), !isDir.boolValue {
+                return c
+            }
+        }
+        // 回退: Contents/MacOS 下第一个非目录文件
+        let macos = url.appendingPathComponent("Contents/MacOS")
+        if let entries = try? FileManager.default.contentsOfDirectory(atPath: macos.path) {
+            for name in entries.sorted() {
+                var isDir: ObjCBool = false
+                let p = macos.appendingPathComponent(name)
+                if FileManager.default.fileExists(atPath: p.path, isDirectory: &isDir), !isDir.boolValue {
+                    return p
+                }
+            }
+        }
+        return nil
+    }
+
+    private struct SignResult {
+        let state: CodeSignInfo.SignedState
+        let signatureType: String?
+        let runtimeVersion: String?
+        let teamIdentifier: String?
+        let validity: CodeSignInfo.Validity
+        let strictValidity: CodeSignInfo.Validity
+    }
+
     /// 沙盒兼容的轻量签名检查: SecStaticCode + SecCodeCopySigningInformation
-    private static func quickSign(at url: URL) -> (CodeSignInfo.SignedState, String?, String?) {
+    private static func quickSign(at url: URL) -> SignResult {
         var staticCode: SecStaticCode?
         let createStatus = SecStaticCodeCreateWithPath(
             url as CFURL,
@@ -169,7 +227,8 @@ enum SubBundleScanner {
             &staticCode
         )
         guard createStatus == errSecSuccess, let code = staticCode else {
-            return (.unknown, nil, nil)
+            return SignResult(state: .unknown, signatureType: nil, runtimeVersion: nil,
+                              teamIdentifier: nil, validity: .untested, strictValidity: .untested)
         }
         var infoDict: CFDictionary?
         // 仅 kSecCSSigningInformation; 附加 kSecCSEntitlements 会导致调用失败
@@ -179,13 +238,18 @@ enum SubBundleScanner {
             &infoDict
         )
         guard signStatus == errSecSuccess, let dict = infoDict as? [String: Any] else {
-            if signStatus == errSecCSUnsigned { return (.unsigned, nil, nil) }
-            return (.unknown, nil, nil)
+            if signStatus == errSecCSUnsigned {
+                return SignResult(state: .unsigned, signatureType: nil, runtimeVersion: nil,
+                                  teamIdentifier: nil, validity: .untested, strictValidity: .untested)
+            }
+            return SignResult(state: .unknown, signatureType: nil, runtimeVersion: nil,
+                              teamIdentifier: nil, validity: .untested, strictValidity: .untested)
         }
         // 未签名代码对象可能仍返回成功, 但只有 main-executable 键, 无签名数据。
         // 需以真实签名字段判定, 否则未签名子 bundle 会被误报为「已签名」。
         guard dict["identifier"] != nil || dict["cdhashes"] != nil || dict["flags"] != nil else {
-            return (.unsigned, nil, nil)
+            return SignResult(state: .unsigned, signatureType: nil, runtimeVersion: nil,
+                              teamIdentifier: nil, validity: .untested, strictValidity: .untested)
         }
         let flags = (dict["flags"] as? NSNumber)?.uint32Value ?? 0
         let isAdhoc = flags & 0x2 != 0   // CS_ADHOC
@@ -193,7 +257,16 @@ enum SubBundleScanner {
         let state: CodeSignInfo.SignedState = isAdhoc ? .adhoc : .signed
         let sigType: String? = isAdhoc ? "adhoc" : "signed"
         let runtime: String? = isRuntime ? "Hardened Runtime" : nil
-        return (state, sigType, runtime)
+        let team = dict["teamid"] as? String
+
+        let basicFlags = SecCSFlags(rawValue: kSecCSBasicValidateOnly | kSecCSCheckAllArchitectures)
+        let validity: CodeSignInfo.Validity =
+            SecStaticCodeCheckValidity(code, basicFlags, nil) == errSecSuccess ? .valid : .invalid
+        let strictFlags = SecCSFlags(rawValue: kSecCSStrictValidate | kSecCSCheckAllArchitectures)
+        let strictValidity: CodeSignInfo.Validity =
+            SecStaticCodeCheckValidity(code, strictFlags, nil) == errSecSuccess ? .valid : .invalid
+        return SignResult(state: state, signatureType: sigType, runtimeVersion: runtime,
+                          teamIdentifier: team, validity: validity, strictValidity: strictValidity)
     }
 
     private static func directorySize(at url: URL) -> UInt64 {

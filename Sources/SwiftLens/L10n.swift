@@ -122,6 +122,11 @@ enum L10n {
         case permissionsOctal
         // 子 bundle 版本
         case versionLabel
+        case archShort
+        case warnSubInvalid
+        case warnSubStrict
+        case warnTeamMismatch
+        case warnArchMismatch
         // 各区空状态
         case noAppleScript
         case noICloudContainer
@@ -389,6 +394,11 @@ enum L10n {
         .createdTime: "创建时间", .permissionsOctal: "权限 (octal)",
         // 子 bundle
         .versionLabel: "版本",
+        .archShort: "架构",
+        .warnSubInvalid: "签名验证未通过",
+        .warnSubStrict: "严格验证未通过 (资源可能被修改)",
+        .warnTeamMismatch: "Team ID 与主应用不一致",
+        .warnArchMismatch: "架构少于主应用 (可能在部分 Mac 上无法加载)",
         // 空状态
         .noAppleScript: "未声明 AppleScript / Siri 相关支持",
         .noICloudContainer: "未声明 iCloud 容器", .noNotificationKeys: "未声明通知相关键",
@@ -572,6 +582,11 @@ enum L10n {
         .createdTime: "Creation Time", .permissionsOctal: "Permissions (octal)",
         // 子 bundle
         .versionLabel: "Version",
+        .archShort: "Architectures",
+        .warnSubInvalid: "Signature validation failed",
+        .warnSubStrict: "Strict validation failed (resources may be modified)",
+        .warnTeamMismatch: "Team ID differs from the main app",
+        .warnArchMismatch: "Fewer architectures than the main app (may fail on some Macs)",
         // 空状态
         .noAppleScript: "No AppleScript / Siri support declared",
         .noICloudContainer: "No iCloud container declared", .noNotificationKeys: "No notification keys declared",

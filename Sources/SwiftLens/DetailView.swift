@@ -622,9 +622,11 @@ struct DetailView: View {
     private static let subBundlesCollapsableThreshold = 4
 
     private var subBundlesSection: some View {
-        SectionView(
+        let issueCount = info.subBundles.filter { info.subBundleIssue($0) != nil }.count
+        return SectionView(
             L10n.t(.subBundles),
             subtitle: "\(info.subBundles.count) · \(formattedSize(info.subBundlesTotalSize))"
+                + (issueCount > 0 ? " · ⚠︎ \(issueCount)" : "")
         ) {
             if info.subBundles.isEmpty {
                 PlaceholderRow(text: "—")
@@ -647,7 +649,9 @@ struct DetailView: View {
                                 }
                                 Spacer()
                                 Badge(text: sub.signatureState.localizedName,
-                                      color: badgeColor(for: sub.signatureState))
+                                      color: sub.validity == .invalid
+                                        ? .red
+                                        : badgeColor(for: sub.signatureState))
                             }
                             if let ver = sub.bundleVersion {
                                 RowView(key: L10n.t(.versionLabel), value: ver)
@@ -658,8 +662,27 @@ struct DetailView: View {
                             if let sig = sub.signatureType {
                                 RowView(key: "Signature", value: sig)
                             }
+                            if sub.validity != .untested {
+                                RowView(key: L10n.t(.validity), value: sub.validity.localizedName)
+                            }
+                            if sub.strictValidity != .untested {
+                                RowView(key: L10n.t(.strictValidation), value: sub.strictValidity.strictName)
+                            }
+                            if let team = sub.teamIdentifier {
+                                RowView(key: "TeamIdentifier", value: team)
+                            }
+                            if !sub.architectures.isEmpty {
+                                RowView(key: L10n.t(.archShort),
+                                        value: sub.architectures.joined(separator: ", "))
+                            }
                             if let runtime = sub.runtimeVersion {
                                 RowView(key: "Runtime Version", value: runtime)
+                            }
+                            if let issue = info.subBundleIssue(sub) {
+                                Label(issue, systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(.orange)
+                                    .padding(.leading, 28)
                             }
                         }
                         .padding(8)

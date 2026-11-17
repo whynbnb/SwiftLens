@@ -55,6 +55,12 @@ enum ArchitectureReader {
         return []
     }
 
+    /// 仅解析可执行文件头，返回架构名（用于子 bundle 审计，避免整体读取大文件）。
+    static func archNames(at url: URL) -> [String] {
+        guard let data = try? Data(contentsOf: url, options: .alwaysMapped) else { return [] }
+        return parseMachO(data: data, execPath: url).map(\.name)
+    }
+
     /// 从 Contents/MacOS 目录下找到主可执行文件并解析架构
     private static func readExec(at bundleURL: URL, execDir: URL) -> [ArchInfo] {
         let execName: String?
