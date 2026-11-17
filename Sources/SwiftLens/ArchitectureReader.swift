@@ -40,13 +40,15 @@ enum ArchitectureReader {
     /// 从 Contents/MacOS 目录下找到主可执行文件并解析架构
     private static func readExec(at bundleURL: URL, execDir: URL) -> [ArchInfo] {
         let execName: String?
+        // 注意: 部分应用的 CFBundleExecutable 为空字符串 (如 DB Browser for SQLite),
+        // 需按缺失处理, 否则会把 Contents/MacOS 目录本身当作可执行文件。
         if let plist = InfoPlistParser.parse(at: bundleURL),
-           let name = plist["CFBundleExecutable"] as? String {
+           let name = plist["CFBundleExecutable"] as? String,
+           !name.trimmingCharacters(in: .whitespaces).isEmpty {
             execName = name
         } else {
-            execName = try? FileManager.default
-                .contentsOfDirectory(atPath: execDir.path)
-                .first(where: { !isDirectory(at: execDir.appendingPathComponent($0)) })
+            let entries = (try? FileManager.default.contentsOfDirectory(atPath: execDir.path)) ?? []
+            execName = entries.sorted().first { !isDirectory(at: execDir.appendingPathComponent($0)) }
         }
         guard let name = execName else { return [] }
         let execPath = execDir.appendingPathComponent(name)

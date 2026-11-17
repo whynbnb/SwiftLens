@@ -118,7 +118,9 @@ enum AppInfoLoader {
             (rawPlist[key] as? [[String: Any]]) ?? (rawPlist[key] as? [String: Any]).map { [$0] } ?? []
         }
 
-        let execName = str("CFBundleExecutable")
+        let execName = str("CFBundleExecutable").flatMap {
+            $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0
+        }
         let execPath: String? = {
             if let name = execName {
                 // 标准 macOS: Contents/MacOS/<exec>
@@ -130,6 +132,18 @@ enum AppInfoLoader {
                     for appDir in entries where appDir.hasSuffix(".app") {
                         let iosPath = wrapperDir.appendingPathComponent("\(appDir)/\(name)").path
                         if FileManager.default.fileExists(atPath: iosPath) { return iosPath }
+                    }
+                }
+            }
+            // 部分应用 (如 DB Browser for SQLite) 的 CFBundleExecutable 为空,
+            // 回退到 Contents/MacOS 下第一个非目录文件。
+            let macosDir = url.appendingPathComponent("Contents/MacOS")
+            if let entries = try? FileManager.default.contentsOfDirectory(atPath: macosDir.path) {
+                for name in entries.sorted() {
+                    var isDir: ObjCBool = false
+                    let p = macosDir.appendingPathComponent(name).path
+                    if FileManager.default.fileExists(atPath: p, isDirectory: &isDir), !isDir.boolValue {
+                        return p
                     }
                 }
             }
