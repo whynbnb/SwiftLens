@@ -1,5 +1,6 @@
 import Foundation
 import Security
+import CryptoKit
 
 // MARK: - 代码签名信息
 
@@ -67,11 +68,33 @@ struct CodeSignInfo {
     let strictValidity: Validity
     let notarization: Notarization
 
+    /// 证书链详情（subject / issuer / 有效期 / SHA-256 指纹）
+    struct CertificateInfo: Identifiable {
+        var id: String { sha256 ?? summary }
+        let summary: String
+        let issuer: String?
+        let notBefore: Date?
+        let notAfter: Date?
+        let sha256: String?
+
+        var isExpired: Bool {
+            guard let notAfter else { return false }
+            return notAfter < Date()
+        }
+
+        /// 30 天内过期
+        var isExpiringSoon: Bool {
+            guard let notAfter, !isExpired else { return false }
+            return notAfter.timeIntervalSinceNow < 30 * 24 * 3600
+        }
+    }
+
     /// 合成的签名详情文本（替代旧版 codesign -dvvv 输出）
     let detailRaw: String
     let identifier: String?
     let teamIdentifier: String?        // nil 时 UI 显示 "not set"
     let authorities: [String]        // 证书链 subject 列表
+    let certificates: [CertificateInfo]
     let cdHash: String?              // 十六进制字符串 (20 bytes, truncated)
     let candidateCDHashFull: String? // 十六进制字符串 (32 bytes, full sha256)
     let hashType: String?            // sha256 / sha1
@@ -175,13 +198,9 @@ enum CodeSignReader {
         let flagsHex = flagsValue.map { String(format: "0x%x", $0) }
         let decodedFlags = decodeFlags(flagsValue ?? 0)
 
-        // 6. 证书链 → authorities
-        let authorities = certs.map { cert -> String in
-            if let summary = SecCertificateCopySubjectSummary(cert) {
-                return summary as String
-            }
-            return L10n.t(.unknownCert)
-        }
+        // 6. 证书链 → 详情 + authorities
+        let certificates = certs.map { buildCertificateInfo($0) }
+        let authorities = certificates.map(\.summary)
 
         // 6.5 Hash choices (digest-algorithms 数组 → sha256/sha1 字符串)
         let hashChoices: String? = {
@@ -331,6 +350,7 @@ enum CodeSignReader {
             identifier: identifier,
             teamIdentifier: teamIdentifier,
             authorities: authorities,
+            certificates: certificates,
             cdHash: cdHash,
             candidateCDHashFull: candidateCDHashFull,
             hashType: hashType,
@@ -356,6 +376,53 @@ enum CodeSignReader {
     // MARK: - Helpers
 
     private static let CS_ADHOC: UInt32 = 0x00000002
+
+    /// 读取单张证书的 subject / issuer / 有效期 / SHA-256 指纹。
+    private static func buildCertificateInfo(_ cert: SecCertificate) -> CodeSignInfo.CertificateInfo {
+        let summary: String
+        if let s = SecCertificateCopySubjectSummary(cert) {
+            summary = s as String
+        } else {
+            summary = L10n.t(.unknownCert)
+        }
+
+        let oids: [CFString] = [
+            kSecOIDX509V1ValidityNotBefore,
+            kSecOIDX509V1ValidityNotAfter,
+            kSecOIDX509V1IssuerName
+        ]
+        let values = SecCertificateCopyValues(cert, oids as CFArray, nil) as? [String: Any]
+
+        func dateValue(_ oid: CFString) -> Date? {
+            guard let entry = values?[oid as String] as? [String: Any],
+                  let number = entry[kSecPropertyKeyValue as String] as? NSNumber else { return nil }
+            // CFAbsoluteTime: 自 2001-01-01 起的秒数
+            return Date(timeIntervalSinceReferenceDate: number.doubleValue)
+        }
+
+        func issuerName() -> String? {
+            guard let issuer = values?[kSecOIDX509V1IssuerName as String] as? [String: Any],
+                  let items = issuer[kSecPropertyKeyValue as String] as? [[String: Any]] else { return nil }
+            func component(_ oid: String) -> String? {
+                items.first { ($0[kSecPropertyKeyLabel as String] as? String) == oid }?[kSecPropertyKeyValue as String] as? String
+            }
+            let cn = component("2.5.4.3")
+            let org = component("2.5.4.10")
+            if let cn, let org { return "\(cn) (\(org))" }
+            return cn ?? org
+        }
+
+        let digest = SHA256.hash(data: SecCertificateCopyData(cert) as Data)
+        let fingerprint = digest.map { String(format: "%02x", $0) }.joined()
+
+        return CodeSignInfo.CertificateInfo(
+            summary: summary,
+            issuer: issuerName(),
+            notBefore: dateValue(kSecOIDX509V1ValidityNotBefore),
+            notAfter: dateValue(kSecOIDX509V1ValidityNotAfter),
+            sha256: fingerprint
+        )
+    }
 
     /// 算法编号 → 名称 (来自 SecCode.h kSecCodeInfoDigestAlgorithm)
     private static func algoName(_ n: Int32) -> String {
@@ -476,6 +543,7 @@ enum CodeSignReader {
             identifier: nil,
             teamIdentifier: nil,
             authorities: [],
+            certificates: [],
             cdHash: nil,
             candidateCDHashFull: nil,
             hashType: nil,

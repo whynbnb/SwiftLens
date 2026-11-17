@@ -444,7 +444,17 @@ extension AppInfo {
         if let v = cs.infoPlistEntries { lines.append("  Info.plist entries: \(v)") }
         if !cs.decodedFlags.isEmpty { lines.append("  \(L10n.t(.cliFlagsDecoded)): \(cs.decodedFlags.joined(separator: ", "))") }
         if let v = cs.flags { lines.append("  \(L10n.t(.cliFlagsRaw)): \(v)") }
-        if !cs.authorities.isEmpty {
+        if !cs.certificates.isEmpty {
+            lines.append("  \(L10n.t(.cliAuthority)):")
+            for c in cs.certificates {
+                var line = "    - \(c.summary)"
+                if let na = c.notAfter {
+                    line += " (\(L10n.t(.certValidity)): \(Self.isoFormatter.string(from: na)))"
+                }
+                if c.isExpired { line += " ⚠︎ \(L10n.t(.certExpired))" }
+                lines.append(line)
+            }
+        } else if !cs.authorities.isEmpty {
             lines.append("  \(L10n.t(.cliAuthority)):")
             cs.authorities.forEach { lines.append("    - \($0)") }
         }

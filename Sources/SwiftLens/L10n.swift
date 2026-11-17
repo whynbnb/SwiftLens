@@ -113,6 +113,12 @@ enum L10n {
         case copySpctlCmd
         case pasteToVerifyHint
         case authorityChain
+        case certDetails
+        case certIssuer
+        case certValidity
+        case certFingerprint
+        case certExpired
+        case certExpiringSoon
         case noEntitlements
         // 文件信息
         case fullPath
@@ -389,6 +395,8 @@ enum L10n {
         .copyCodesignCmd: "复制 codesign 命令", .copySpctlCmd: "复制 spctl 命令",
         .pasteToVerifyHint: "在终端粘贴运行即可手动验证签名 / 公证状态",
         .authorityChain: "Authority 链", .noEntitlements: "无 entitlements (未签名 / 无沙盒)",
+        .certDetails: "证书详情", .certIssuer: "签发者", .certValidity: "有效期",
+        .certFingerprint: "SHA-256 指纹", .certExpired: "已过期", .certExpiringSoon: "即将过期",
         // 文件信息
         .fullPath: "完整路径", .totalSize: "总大小", .modifiedTime: "修改时间",
         .createdTime: "创建时间", .permissionsOctal: "权限 (octal)",
@@ -577,6 +585,8 @@ enum L10n {
         .copyCodesignCmd: "Copy codesign Command", .copySpctlCmd: "Copy spctl Command",
         .pasteToVerifyHint: "Paste in Terminal to manually verify signature / notarization",
         .authorityChain: "Authority Chain", .noEntitlements: "No entitlements (unsigned / no sandbox)",
+        .certDetails: "Certificate Details", .certIssuer: "Issuer", .certValidity: "Validity",
+        .certFingerprint: "SHA-256 Fingerprint", .certExpired: "Expired", .certExpiringSoon: "Expiring soon",
         // 文件信息
         .fullPath: "Full Path", .totalSize: "Total Size", .modifiedTime: "Modification Time",
         .createdTime: "Creation Time", .permissionsOctal: "Permissions (octal)",

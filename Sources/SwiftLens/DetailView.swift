@@ -559,6 +559,58 @@ struct DetailView: View {
                     }
                 }
             }
+
+            if !cs.certificates.isEmpty {
+                Divider().padding(.vertical, 4)
+                DisclosureGroup(L10n.t(.certDetails)) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(cs.certificates) { cert in
+                            certificateRow(cert)
+                        }
+                    }
+                    .padding(.top, 4)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func certificateRow(_ cert: CodeSignInfo.CertificateInfo) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                Text(cert.summary)
+                    .font(.system(.caption, design: .monospaced).bold())
+                if cert.isExpired {
+                    Badge(text: L10n.t(.certExpired), color: .red)
+                } else if cert.isExpiringSoon {
+                    Badge(text: L10n.t(.certExpiringSoon), color: .orange)
+                }
+                Spacer()
+            }
+            if let issuer = cert.issuer {
+                certLine(L10n.t(.certIssuer), issuer)
+            }
+            if let nb = cert.notBefore, let na = cert.notAfter {
+                certLine(L10n.t(.certValidity),
+                         "\(Self.certDateFormatter.string(from: nb)) → \(Self.certDateFormatter.string(from: na))")
+            }
+            if let fp = cert.sha256 {
+                certLine(L10n.t(.certFingerprint), fp)
+            }
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.3)))
+    }
+
+    private func certLine(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(.caption2, design: .monospaced))
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -1010,6 +1062,13 @@ struct DetailView: View {
     }
 
     // MARK: helpers
+    private static let certDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+
     private func bool(_ v: Bool?) -> String {
         switch v {
         case .some(true): return "YES"
