@@ -46,13 +46,18 @@ enum SubBundleScanner {
         let directories: [(URL, SubBundle.Kind)] = [
             (contents.appendingPathComponent("Frameworks"), .framework),
             (contents.appendingPathComponent("EmbeddedFrameworks"), .framework),
+            (contents.appendingPathComponent("SharedFrameworks"), .framework),
+            (contents.appendingPathComponent("SystemFrameworks"), .framework),
             (contents.appendingPathComponent("PlugIns"), .plugin),
             (contents.appendingPathComponent("XPCServices"), .xpc),
             (contents.appendingPathComponent("Helpers"), .app),
             (contents.appendingPathComponent("Extensions"), .plugin),
             (library.appendingPathComponent("LoginItems"), .loginItem),
             (library.appendingPathComponent("SystemExtensions"), .plugin),
-            (library.appendingPathComponent("LaunchServices"), .app)
+            (library.appendingPathComponent("LaunchServices"), .app),
+            (library.appendingPathComponent("Spotlight"), .plugin),
+            (library.appendingPathComponent("QuickLook"), .plugin),
+            (library.appendingPathComponent("Automator"), .plugin)
         ]
 
         var out: [SubBundle] = []
