@@ -13,6 +13,24 @@ enum ArchitectureReader {
         let bits: Int            // 32 / 64
         let fileSize: UInt64
         let offsetInFat: UInt64  // 在 fat 二进制中的偏移；非 fat 则为 0
+        /// 该切片声明的最低系统版本 (LC_BUILD_VERSION.minos / LC_VERSION_MIN_*)
+        let minOSVersion: String?
+        /// 该切片编译所用 SDK 版本
+        let sdkVersion: String?
+    }
+
+    /// 所有切片中的最高最低系统要求。Info.plist 未声明 min OS 时的兜底。
+    static func maxMinOSVersion(_ archs: [ArchInfo]) -> String? {
+        let versions = archs.compactMap { $0.minOSVersion }
+        guard !versions.isEmpty else { return nil }
+        return versions.max { versionTuple($0) < versionTuple($1) }
+    }
+
+    private static func versionTuple(_ s: String) -> (Int, Int, Int) {
+        let parts = s.split(separator: ".").compactMap { Int($0) }
+        return (parts.count > 0 ? parts[0] : 0,
+                parts.count > 1 ? parts[1] : 0,
+                parts.count > 2 ? parts[2] : 0)
     }
 
     static func read(for bundleURL: URL) -> [ArchInfo] {
@@ -100,12 +118,15 @@ enum ArchitectureReader {
                 thingSize   = UInt64(data.readUInt32BE(at: off + 12))
             }
             let (name, cpuName, bits) = describeCpu(cpuType, subtype: cpuSub)
+            let build = buildInfo(in: data, at: Int(thingOffset))
             archs.append(ArchInfo(
                 name: name,
                 cpuType: cpuName,
                 bits: bits,
                 fileSize: thingSize,
-                offsetInFat: thingOffset
+                offsetInFat: thingOffset,
+                minOSVersion: build.minOS,
+                sdkVersion: build.sdk
             ))
             off += archSize
         }
@@ -144,7 +165,74 @@ enum ArchitectureReader {
         let cpusubtype = Int32(bitPattern: subRaw)
         let size = fileSize(of: execPath)
         let (name, cpuName, bits) = describeCpu(cputype, subtype: cpusubtype)
-        return ArchInfo(name: name, cpuType: cpuName, bits: bits, fileSize: size, offsetInFat: fatOffset)
+        let build = buildInfo(in: data, at: Int(fatOffset))
+        return ArchInfo(
+            name: name,
+            cpuType: cpuName,
+            bits: bits,
+            fileSize: size,
+            offsetInFat: fatOffset,
+            minOSVersion: build.minOS,
+            sdkVersion: build.sdk
+        )
+    }
+
+    /// 读取 Mach-O 切片的 LC_BUILD_VERSION / LC_VERSION_MIN_* 载入命令。
+    /// 返回该切片声明的最低系统版本与 SDK 版本。
+    private static func buildInfo(in data: Data, at offset: Int) -> (minOS: String?, sdk: String?) {
+        guard offset >= 0, offset + 28 <= data.count else { return (nil, nil) }
+        let magBE = data.readUInt32BE(at: offset)
+        let is64: Bool
+        let bigEndian: Bool
+        switch magBE {
+        case UInt32(MH_MAGIC):     is64 = false; bigEndian = true
+        case UInt32(MH_MAGIC_64):  is64 = true;  bigEndian = true
+        case UInt32(MH_CIGAM):     is64 = false; bigEndian = false
+        case UInt32(MH_CIGAM_64):  is64 = true;  bigEndian = false
+        default: return (nil, nil)
+        }
+        func read32(_ o: Int) -> UInt32 {
+            bigEndian ? data.readUInt32BE(at: o) : data.readUInt32LE(at: o)
+        }
+        let headerSize = is64 ? 32 : 28
+        guard offset + headerSize <= data.count else { return (nil, nil) }
+        let ncmds = Int(read32(offset + 16))
+        let sizeofcmds = Int(read32(offset + 20))
+        let end = min(offset + headerSize + sizeofcmds, data.count)
+        var legacy: (String?, String?) = (nil, nil)
+        var p = offset + headerSize
+
+        for _ in 0..<ncmds {
+            guard p + 8 <= end else { break }
+            let cmd = read32(p)
+            let cmdsize = Int(read32(p + 4))
+            guard cmdsize >= 8, p + cmdsize <= end else { break }
+            switch cmd {
+            case 0x32: // LC_BUILD_VERSION
+                if cmdsize >= 24 {
+                    let minos = read32(p + 12)
+                    let sdk = read32(p + 16)
+                    return (formatVersion(minos), formatVersion(sdk))
+                }
+            case 0x24, 0x25: // LC_VERSION_MIN_MACOSX / LC_VERSION_MIN_IPHONEOS
+                if cmdsize >= 16, legacy.0 == nil {
+                    legacy = (formatVersion(read32(p + 8)), formatVersion(read32(p + 12)))
+                }
+            default:
+                break
+            }
+            p += cmdsize
+        }
+        return legacy
+    }
+
+    /// 版本号编码为 xxxx.yy.zz 的 32 位值。
+    private static func formatVersion(_ v: UInt32) -> String? {
+        guard v != 0 else { return nil }
+        let major = Int((v >> 16) & 0xFFFF)
+        let minor = Int((v >> 8) & 0xFF)
+        let patch = Int(v & 0xFF)
+        return patch == 0 ? "\(major).\(minor)" : "\(major).\(minor).\(patch)"
     }
 
     private static func describeCpu(_ cputype: Int32, subtype: Int32) -> (name: String, cpuType: String, bits: Int) {
@@ -154,6 +242,7 @@ enum ArchitectureReader {
             // mach_header 中 cpusubtype 高位常被设为库授权位 (0x80000000)，需要屏蔽。
             let sub = UInt32(bitPattern: subtype) & 0x00FFFFFF
             if sub == 2 { return ("arm64e", "ARM 64-bit (arm64e, PAC)", 64) }
+            if sub == 12 { return ("arm64e.x1", "ARM 64-bit (arm64e.x1, PAC)", 64) }
             if sub == 0 { return ("arm64", "ARM 64-bit", 64) }
             return ("arm64(sub=\(sub))", "ARM 64-bit", 64)
         case CPU_TYPE_ARM:

@@ -242,6 +242,11 @@ struct DetailView: View {
             if let v = info.minimumOSVersionIOS {
                 RowView(key: "MinimumOSVersion", value: v)
             }
+            // Info.plist 两个键都缺失时, 用 Mach-O 切片声明的最低系统版本兜底
+            if info.lsMinimumSystemVersion == nil, info.minimumOSVersionIOS == nil,
+               let v = info.machOMinimumOSVersion {
+                RowView(key: L10n.t(.machOMinOS), value: v)
+            }
             RowView(key: "LSApplicationCategoryType", value: info.applicationCategoryType ?? "—")
             RowView(key: "LSRequiresAquaSystemAppearance", value: bool(info.requiresAquaSystemAppearance))
             RowView(key: "NSHighResolutionCapable", value: bool(info.highResolutionCapable))
@@ -294,6 +299,8 @@ struct DetailView: View {
                         }
                         RowView(key: L10n.t(.sliceSize), value: formattedSize(arch.fileSize))
                         RowView(key: L10n.t(.offsetInFat), value: arch.offsetInFat == 0 ? L10n.t(.nonFat) : "0x\(String(arch.offsetInFat, radix: 16))")
+                        if let v = arch.minOSVersion { RowView(key: "minos", value: v) }
+                        if let v = arch.sdkVersion { RowView(key: "SDK", value: v) }
                     }
                     .padding(.vertical, 2)
                 }

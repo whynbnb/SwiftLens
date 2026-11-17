@@ -88,6 +88,7 @@ enum L10n {
         case sliceSize
         case offsetInFat
         case nonFat
+        case machOMinOS
         // URL Scheme
         case noUrlScheme
         // 隐私
@@ -363,6 +364,7 @@ enum L10n {
         .buildToolchain: "构建工具链",
         .noExecOrIntelSlice: "未找到可执行文件或无法解析 Intel 切片",
         .sliceSize: "切片大小", .offsetInFat: "在 Fat 中偏移", .nonFat: "—(非 Fat)",
+        .machOMinOS: "Mach-O 最低系统 (minos)",
         // URL Scheme
         .noUrlScheme: "未声明 URL Scheme",
         // 隐私
@@ -544,6 +546,7 @@ enum L10n {
         .buildToolchain: "Build Toolchain",
         .noExecOrIntelSlice: "No executable found, or Intel slice could not be parsed",
         .sliceSize: "Slice Size", .offsetInFat: "Offset in Fat", .nonFat: "— (not fat)",
+        .machOMinOS: "Mach-O minos",
         // URL Scheme
         .noUrlScheme: "No URL Scheme declared",
         // 隐私

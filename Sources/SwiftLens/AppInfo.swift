@@ -255,6 +255,8 @@ enum AppInfoLoader {
             icon = NSWorkspace.shared.icon(forFile: url.path)
         }
 
+        let architectures = ArchitectureReader.read(for: url)
+
         return AppInfo(
             bundleURL: url,
             displayName: str("CFBundleDisplayName"),
@@ -267,7 +269,8 @@ enum AppInfoLoader {
             bundlePackageType: str("CFBundlePackageType"),
             infoDictionaryVersion: str("CFBundleInfoDictionaryVersion"),
             developmentRegion: str("CFBundleDevelopmentRegion"),
-            minimumOSVersion: str("LSMinimumSystemVersion") ?? str("MinimumOSVersion"),
+            minimumOSVersion: str("LSMinimumSystemVersion") ?? str("MinimumOSVersion")
+                ?? ArchitectureReader.maxMinOSVersion(architectures),
             lsMinimumSystemVersion: str("LSMinimumSystemVersion"),
             minimumOSVersionIOS: str("MinimumOSVersion"),
             applicationCategoryType: str("LSApplicationCategoryType"),
@@ -316,7 +319,7 @@ enum AppInfoLoader {
             quarantine: QuarantineReader.read(for: url),
             extendedXattrs: extendedXattrs,
             codeSign: CodeSignReader.read(for: url),
-            architectures: ArchitectureReader.read(for: url),
+            architectures: architectures,
             subBundles: subResult.subBundles,
             subBundlesTotalSize: subResult.totalSize,
             extra: ExtraInfoReader.read(from: rawPlist),
@@ -337,6 +340,11 @@ extension AppInfo {
 
     func formattedFileSize() -> String {
         Self.byteFormatter.string(fromByteCount: Int64(fileSize))
+    }
+
+    /// 仅来自 Mach-O 切片的最低系统版本 (Info.plist 未声明时的兜底/交叉校验)。
+    var machOMinimumOSVersion: String? {
+        ArchitectureReader.maxMinOSVersion(architectures)
     }
 
     /// 是否启用了 App Sandbox：
