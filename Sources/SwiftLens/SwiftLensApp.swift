@@ -72,11 +72,13 @@ extension Notification.Name {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         // 隐藏 CLI 模式：传入一个 .app 路径作为参数时，直接打印摘要并退出。
+        // 可选 --json 输出结构化 JSON。
         let args = CommandLine.arguments
-        if args.count >= 2, args[1].lowercased().hasSuffix(".app"),
-           FileManager.default.fileExists(atPath: args[1]) {
-            let info = AppInfoLoader.load(url: URL(fileURLWithPath: args[1]))
-            print(summary(for: info))
+        let wantJSON = args.contains("--json")
+        if let appArg = args.dropFirst().first(where: { $0.lowercased().hasSuffix(".app") }),
+           FileManager.default.fileExists(atPath: appArg) {
+            let info = AppInfoLoader.load(url: URL(fileURLWithPath: appArg))
+            print(wantJSON ? info.jsonSummary : info.summaryText)
             exit(0)
         }
 
@@ -91,8 +93,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 应用启动完成后主动激活为前台应用，确保窗口立即获得焦点。
         NSApp.activate(ignoringOtherApps: true)
     }
-
-    private func summary(for info: AppInfo) -> String { info.summaryText }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 }

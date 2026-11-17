@@ -27,6 +27,12 @@ enum L10n {
         case clear
         case revealInFinder
         case copySummary
+        case copyJSON
+        case copyEntitlementsXML
+        case search
+        case searchPlaceholder
+        case searchResults
+        case noSearchResults
         case placeholderOpen
         case placeholderDrop
         case placeholderRelease
@@ -387,6 +393,9 @@ enum L10n {
         .close: "关闭",
         .appName: "SwiftLens", .openApp: "打开 .app", .clear: "清空",
         .revealInFinder: "在访达中显示", .copySummary: "复制摘要",
+        .copyJSON: "复制 JSON", .copyEntitlementsXML: "复制 Entitlements XML",
+        .search: "搜索", .searchPlaceholder: "搜索 Info.plist、entitlements、子 bundle、依赖…",
+        .searchResults: "搜索结果", .noSearchResults: "没有匹配结果",
         .placeholderOpen: "拖入 .app 到此处", .placeholderDrop: "拖入 .app 到此处",
         .placeholderRelease: "松开以加载", .placeholderPick: "或点击右上角 “打开 .app” 选择",
         .badgeIsolated: "已隔离", .badgeNoQuarantine: "无隔离",
@@ -608,6 +617,9 @@ enum L10n {
         .close: "Close",
         .appName: "SwiftLens", .openApp: "Open .app", .clear: "Clear",
         .revealInFinder: "Reveal in Finder", .copySummary: "Copy Summary",
+        .copyJSON: "Copy JSON", .copyEntitlementsXML: "Copy Entitlements XML",
+        .search: "Search", .searchPlaceholder: "Search Info.plist, entitlements, sub-bundles, dependencies…",
+        .searchResults: "Search Results", .noSearchResults: "No matches",
         .placeholderOpen: "Drop .app here", .placeholderDrop: "Drop .app here",
         .placeholderRelease: "Release to load", .placeholderPick: "or click “Open .app” at top right",
         .badgeIsolated: "Quarantined", .badgeNoQuarantine: "No Quarantine",

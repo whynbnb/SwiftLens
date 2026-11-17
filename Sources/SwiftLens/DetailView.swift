@@ -4,6 +4,8 @@ import AppKit
 /// 详情面板：以分区形式展示 .app 信息。
 struct DetailView: View {
     let info: AppInfo
+    @State private var searchText: String = ""
+    @FocusState private var searchFocused: Bool
 
     /// 顶部状态对应的目标位置锚点。
     enum DetailAnchor: Hashable {
@@ -48,40 +50,45 @@ struct DetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     headerSection(proxy: proxy)
-                    basicSection
-                    runtimeSection
-                    architecturesSection
-                        .id(DetailAnchor.architectures)
-                    dependenciesSection
-                    documentTypesSection
-                    urlSchemesSection
-                    privacySection
-                        .id(DetailAnchor.privacy)
-                    privacyManifestsSection
-                    atsSection
-                        .id(DetailAnchor.ats)
-                    quarantineSection
-                        .id(DetailAnchor.quarantine)
-                    xattrsSection
-                    codeSignSection
-                        .id(DetailAnchor.codeSign)
-                    entitlementsSection
-                        .id(DetailAnchor.entitlements)
-                    subBundlesSection
-                        .id(DetailAnchor.subBundles)
-                    launchItemsSection
-                    sparkleSection
-                    appleScriptSiriSection
-                    iCloudSection
-                    notificationsSection
-                    behaviorsSection
-                    localizationSection
-                    iosPortSection
-                    buildMetadataSection
-                    bonjourSection
-                    fileSection
-                    rawPlistSection
-                    rawCodesignSection
+                    searchBar
+                    if searchQuery.isEmpty {
+                        basicSection
+                        runtimeSection
+                        architecturesSection
+                            .id(DetailAnchor.architectures)
+                        dependenciesSection
+                        documentTypesSection
+                        urlSchemesSection
+                        privacySection
+                            .id(DetailAnchor.privacy)
+                        privacyManifestsSection
+                        atsSection
+                            .id(DetailAnchor.ats)
+                        quarantineSection
+                            .id(DetailAnchor.quarantine)
+                        xattrsSection
+                        codeSignSection
+                            .id(DetailAnchor.codeSign)
+                        entitlementsSection
+                            .id(DetailAnchor.entitlements)
+                        subBundlesSection
+                            .id(DetailAnchor.subBundles)
+                        launchItemsSection
+                        sparkleSection
+                        appleScriptSiriSection
+                        iCloudSection
+                        notificationsSection
+                        behaviorsSection
+                        localizationSection
+                        iosPortSection
+                        buildMetadataSection
+                        bonjourSection
+                        fileSection
+                        rawPlistSection
+                        rawCodesignSection
+                    } else {
+                        searchResultsSection
+                    }
                 }
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -98,6 +105,109 @@ struct DetailView: View {
                         copyToPasteboard(summaryString())
                     } label: { Label(L10n.t(.copySummary), systemImage: "doc.on.doc") }
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        copyToPasteboard(info.jsonSummary)
+                    } label: { Label(L10n.t(.copyJSON), systemImage: "curlybraces") }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        searchFocused = true
+                    } label: { Label(L10n.t(.search), systemImage: "magnifyingglass") }
+                        .keyboardShortcut("f", modifiers: .command)
+                }
+            }
+        }
+    }
+
+    // MARK: 搜索
+    private struct SearchEntry {
+        let group: String
+        let key: String
+        let value: String
+    }
+
+    private var searchQuery: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField(L10n.t(.searchPlaceholder), text: $searchText)
+                .textFieldStyle(.plain)
+                .focused($searchFocused)
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help(L10n.t(.clear))
+            }
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(.quaternary.opacity(0.3)))
+    }
+
+    private var searchResults: [SearchEntry] {
+        let query = searchQuery.lowercased()
+        guard !query.isEmpty else { return [] }
+        var out: [SearchEntry] = []
+        func add(_ group: String, _ key: String, _ value: String) {
+            guard out.count < 300 else { return }
+            if key.lowercased().contains(query) || value.lowercased().contains(query) {
+                out.append(SearchEntry(group: group, key: key, value: value))
+            }
+        }
+        for row in info.flatRows {
+            add(L10n.t(.rawPlist), row.0, row.1)
+        }
+        if let ent = info.codeSign.entitlements {
+            for row in InfoPlistParser.flatten(ent) {
+                add(L10n.t(.entitlements), row.0, row.1)
+            }
+        }
+        for sub in info.subBundles {
+            add(L10n.t(.subBundles), sub.relativePath, sub.bundleIdentifier ?? "")
+        }
+        for manifest in info.privacyManifests {
+            add(L10n.t(.privacyManifests), manifest.path,
+                manifest.accessedAPIs.map(\.type).joined(separator: ", "))
+        }
+        if let deps = info.dependencies {
+            for entry in deps.entries {
+                add(L10n.t(.dependencies), entry.path, entry.resolvedPath ?? "")
+            }
+        }
+        for item in info.launchAgents {
+            add(L10n.t(.launchAgents), item.label, item.relativePath)
+        }
+        return out
+    }
+
+    private var searchResultsSection: some View {
+        let results = searchResults
+        return SectionView(L10n.t(.searchResults), subtitle: "\(results.count)") {
+            if results.isEmpty {
+                PlaceholderRow(text: L10n.t(.noSearchResults))
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 6) {
+                        ForEach(Array(results.enumerated()), id: \.offset) { _, entry in
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(entry.group)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                RowView(key: entry.key, value: entry.value)
+                            }
+                        }
+                    }
+                }
+                .frame(maxHeight: 520)
             }
         }
     }
@@ -810,6 +920,17 @@ struct DetailView: View {
             // 顶部明确显示沙盒状态
             RowView(key: "App Sandbox",
                     value: info.isSandboxed ? L10n.t(.sandboxEnabled) : L10n.t(.sandboxDisabled))
+            if let raw = cs.entitlementsRaw, !raw.isEmpty {
+                HStack {
+                    Button {
+                        copyToPasteboard(raw)
+                    } label: {
+                        Label(L10n.t(.copyEntitlementsXML), systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                }
+            }
             if let ent = cs.entitlements, !ent.isEmpty {
                 let risky = EntitlementAudit.riskyKeys(in: ent)
                 if !risky.isEmpty {

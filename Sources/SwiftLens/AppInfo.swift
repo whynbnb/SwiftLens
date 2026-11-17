@@ -728,6 +728,126 @@ extension AppInfo {
 
         return lines.joined(separator: "\n")
     }
+
+    /// 结构化 JSON 摘要（复制到剪贴板，供脚本/问题报告使用）。
+    var jsonSummary: String {
+        let cs = codeSign
+        let dict: [String: Any] = [
+            "name": displayName ?? bundleName ?? bundleURL.lastPathComponent,
+            "path": bundleURL.path,
+            "bundleIdentifier": bundleIdentifier ?? "",
+            "version": bundleShortVersion ?? "",
+            "build": bundleVersion ?? "",
+            "minimumOSVersion": minimumOSVersion ?? "",
+            "architectures": architectures.map { arch -> [String: Any] in
+                var d: [String: Any] = [
+                    "name": arch.name,
+                    "bits": arch.bits,
+                    "cpuType": arch.cpuType,
+                    "size": arch.fileSize
+                ]
+                if let v = arch.minOSVersion { d["minos"] = v }
+                if let v = arch.sdkVersion { d["sdk"] = v }
+                return d
+            },
+            "signature": [
+                "state": cs.state.rawValue,
+                "validity": cs.validity.rawValue,
+                "strictValidity": cs.strictValidity.rawValue,
+                "notarization": cs.notarization.rawValue,
+                "identifier": cs.identifier ?? "",
+                "teamIdentifier": cs.teamIdentifier ?? "",
+                "cdHash": cs.cdHash ?? "",
+                "candidateCDHashFull": cs.candidateCDHashFull ?? "",
+                "flags": cs.flags ?? "",
+                "decodedFlags": cs.decodedFlags,
+                "runtimeVersion": cs.runtimeVersion ?? "",
+                "signingTime": cs.signingTime ?? "",
+                "hardenedRuntime": cs.hasHardenedRuntime,
+                "libraryValidation": cs.hasLibraryValidation,
+                "authorities": cs.authorities,
+                "certificates": cs.certificates.map { cert -> [String: Any] in
+                    var d: [String: Any] = [
+                        "summary": cert.summary,
+                        "sha256": cert.sha256 ?? ""
+                    ]
+                    if let v = cert.issuer { d["issuer"] = v }
+                    if let v = cert.notBefore { d["notBefore"] = Self.isoFormatter.string(from: v) }
+                    if let v = cert.notAfter { d["notAfter"] = Self.isoFormatter.string(from: v) }
+                    return d
+                }
+            ],
+            "sandboxed": isSandboxed,
+            "entitlements": Self.jsonSafe(cs.entitlements ?? [:]),
+            "quarantine": quarantine.map { q -> [String: Any] in
+                var d: [String: Any] = [
+                    "raw": q.raw,
+                    "flags": q.flags,
+                    "agent": q.agent,
+                    "uuid": q.uuid,
+                    "timestamp": q.timestampString
+                ]
+                if let v = q.downloadDate { d["date"] = Self.isoFormatter.string(from: v) }
+                return d
+            } ?? NSNull(),
+            "subBundles": subBundles.map { sub -> [String: Any] in
+                var d: [String: Any] = [
+                    "kind": sub.kind.rawValue,
+                    "path": sub.relativePath,
+                    "bundleIdentifier": sub.bundleIdentifier ?? "",
+                    "version": sub.bundleVersion ?? "",
+                    "signatureState": sub.signatureState.rawValue,
+                    "validity": sub.validity.rawValue,
+                    "strictValidity": sub.strictValidity.rawValue,
+                    "teamIdentifier": sub.teamIdentifier ?? "",
+                    "architectures": sub.architectures
+                ]
+                if let v = sub.extensionPoint { d["extensionPoint"] = v }
+                if let v = sub.xpcServiceType { d["xpcServiceType"] = v }
+                return d
+            },
+            "dependencies": dependencies.map { dep -> [String: Any] in
+                [
+                    "total": dep.total,
+                    "system": dep.systemCount,
+                    "missing": dep.missing.count,
+                    "weak": dep.weak.count,
+                    "archMismatch": dep.archMismatches.count,
+                    "rpaths": dep.rpaths
+                ]
+            } ?? NSNull(),
+            "privacyManifests": privacyManifests.map { m -> [String: Any] in
+                var d: [String: Any] = [
+                    "path": m.path,
+                    "accessedAPIs": m.accessedAPIs.map { ["type": $0.type, "reasons": $0.reasons] },
+                    "collectedData": m.collectedData,
+                    "trackingDomains": m.trackingDomains
+                ]
+                if let v = m.tracking { d["tracking"] = v }
+                return d
+            },
+            "launchAgents": launchAgents.map { ["label": $0.label, "path": $0.relativePath] },
+            "masReceipt": hasMASReceipt
+        ]
+        let data = try? JSONSerialization.data(
+            withJSONObject: dict,
+            options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        )
+        return data.flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+    }
+
+    private static func jsonSafe(_ value: Any) -> Any {
+        if let v = value as? [String: Any] { return v.mapValues(jsonSafe) }
+        if let v = value as? [Any] { return v.map(jsonSafe) }
+        if let v = value as? String { return v }
+        if let v = value as? NSNumber {
+            if CFGetTypeID(v) == CFBooleanGetTypeID() { return v.boolValue }
+            return v
+        }
+        if let v = value as? Data { return "Data(\(v.count) bytes)" }
+        if let v = value as? Date { return isoFormatter.string(from: v) }
+        return String(describing: value)
+    }
 }
 
 // MARK: - 高风险 Entitlements
