@@ -89,6 +89,18 @@ enum L10n {
         case offsetInFat
         case nonFat
         case machOMinOS
+        case dependencies
+        case depTotal
+        case depSystem
+        case depMissing
+        case depWeak
+        case depArchMismatch
+        case depOk
+        case depRPaths
+        case showAllDeps
+        case warnDepsMissing
+        case warnDepsArch
+        case noDependencies
         // URL Scheme
         case noUrlScheme
         // 隐私
@@ -398,6 +410,12 @@ enum L10n {
         .noExecOrIntelSlice: "未找到可执行文件或无法解析 Intel 切片",
         .sliceSize: "切片大小", .offsetInFat: "在 Fat 中偏移", .nonFat: "—(非 Fat)",
         .machOMinOS: "Mach-O 最低系统 (minos)",
+        .dependencies: "依赖库 (Mach-O)", .depTotal: "依赖总数", .depSystem: "系统库",
+        .depMissing: "缺失", .depWeak: "弱链接", .depArchMismatch: "架构不匹配",
+        .depOk: "可解析", .depRPaths: "RPaths", .showAllDeps: "显示全部依赖",
+        .warnDepsMissing: "有依赖无法解析，应用可能无法启动",
+        .warnDepsArch: "部分依赖缺少主程序所需架构",
+        .noDependencies: "无主可执行文件或依赖无法解析",
         // URL Scheme
         .noUrlScheme: "未声明 URL Scheme",
         // 隐私
@@ -607,6 +625,12 @@ enum L10n {
         .noExecOrIntelSlice: "No executable found, or Intel slice could not be parsed",
         .sliceSize: "Slice Size", .offsetInFat: "Offset in Fat", .nonFat: "— (not fat)",
         .machOMinOS: "Mach-O minos",
+        .dependencies: "Dependencies (Mach-O)", .depTotal: "Total", .depSystem: "System",
+        .depMissing: "Missing", .depWeak: "Weak", .depArchMismatch: "Arch mismatch",
+        .depOk: "Resolved", .depRPaths: "RPaths", .showAllDeps: "Show all dependencies",
+        .warnDepsMissing: "Some dependencies cannot be resolved; the app may fail to launch",
+        .warnDepsArch: "Some dependencies lack architectures required by the app",
+        .noDependencies: "No main executable, or dependencies could not be parsed",
         // URL Scheme
         .noUrlScheme: "No URL Scheme declared",
         // 隐私

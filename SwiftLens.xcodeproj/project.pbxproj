@@ -23,6 +23,7 @@
 		C2F231C9C978638C05D23E79 /* SubBundleScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C46223D5510A6F3D23A95FB8 /* SubBundleScanner.swift */; };
 		C69D032D84BD60CA0E4946BF /* ArchitectureReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312272AC65AD4042BC50775A /* ArchitectureReader.swift */; };
 		C8A558CE16D3FC89251F2168 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D75198F55662D1DF7CC70A /* AppState.swift */; };
+		D93FBF08C1DE9897709C2071 /* MachODependencyReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721350B973F0F0D2602AA76C /* MachODependencyReader.swift */; };
 		F69D1B62FB8F63FA4E797C4B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F89D7B19C67A6CC0E2288052 /* ContentView.swift */; };
 		F7F1ABB3BE7716A0859A7E24 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407C136457DAE38D97BD9569 /* SettingsView.swift */; };
 		F85E9AC53704B2FB0232A554 /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F40FCCD35CE21ABC430456D /* SharedViews.swift */; };
@@ -41,6 +42,7 @@
 		64B1C09A3AEFCD012CD65858 /* PrivacyReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyReader.swift; sourceTree = "<group>"; };
 		6D48270FDBB594931899D963 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		704B61365126BC67978333B2 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
+		721350B973F0F0D2602AA76C /* MachODependencyReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachODependencyReader.swift; sourceTree = "<group>"; };
 		9F40FCCD35CE21ABC430456D /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
 		B8F4FC2179C1929ECFB2F76B /* QuarantineReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuarantineReader.swift; sourceTree = "<group>"; };
 		C37D255005297A2E3CAA6D7E /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
@@ -75,6 +77,7 @@
 				704B61365126BC67978333B2 /* HelpView.swift */,
 				477E6AE75CCDD0E66CDC0B63 /* InfoPlistParser.swift */,
 				5E8A33852E2CCDA0DEF418B8 /* L10n.swift */,
+				721350B973F0F0D2602AA76C /* MachODependencyReader.swift */,
 				64B1C09A3AEFCD012CD65858 /* PrivacyReader.swift */,
 				B8F4FC2179C1929ECFB2F76B /* QuarantineReader.swift */,
 				407C136457DAE38D97BD9569 /* SettingsView.swift */,
@@ -193,6 +196,7 @@
 				6A1B304AEA06001F9FBE5ABC /* HelpView.swift in Sources */,
 				90FAE49826412170FBE4EC18 /* InfoPlistParser.swift in Sources */,
 				2D1D30BE9D26A6D592696032 /* L10n.swift in Sources */,
+				D93FBF08C1DE9897709C2071 /* MachODependencyReader.swift in Sources */,
 				BE899970B1B9CEFEE5E2341D /* PrivacyReader.swift in Sources */,
 				63446124D8536F3C0F7DA22F /* QuarantineReader.swift in Sources */,
 				F7F1ABB3BE7716A0859A7E24 /* SettingsView.swift in Sources */,

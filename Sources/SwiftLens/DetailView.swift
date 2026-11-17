@@ -52,6 +52,7 @@ struct DetailView: View {
                     runtimeSection
                     architecturesSection
                         .id(DetailAnchor.architectures)
+                    dependenciesSection
                     documentTypesSection
                     urlSchemesSection
                     privacySection
@@ -308,8 +309,113 @@ struct DetailView: View {
         }
     }
 
-    // MARK: 文档类型
-    /// 数量超过该阈值时启用固定高度内嵌滚动，避免单一分区把整页拉得太长。
+    // MARK: 依赖库
+    private var dependenciesSection: some View {
+        let dep = info.dependencies
+        return SectionView(L10n.t(.dependencies), subtitle: dep.map { "\($0.total)" } ?? "—") {
+            if let dep {
+                RowView(key: L10n.t(.depTotal), value: "\(dep.total)")
+                RowView(key: L10n.t(.depSystem), value: "\(dep.systemCount)")
+                RowView(key: L10n.t(.depMissing), value: "\(dep.missing.count)",
+                        warning: dep.missing.isEmpty ? nil : L10n.t(.warnDepsMissing))
+                RowView(key: L10n.t(.depWeak), value: "\(dep.weak.count)")
+                RowView(key: L10n.t(.depArchMismatch), value: "\(dep.archMismatches.count)",
+                        warning: dep.archMismatches.isEmpty ? nil : L10n.t(.warnDepsArch))
+                RowView(key: L10n.t(.depRPaths), value: "\(dep.rpaths.count)")
+
+                if !dep.rpaths.isEmpty {
+                    DisclosureGroup(L10n.t(.depRPaths)) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(dep.rpaths, id: \.self) { p in
+                                Text(p)
+                                    .font(.system(.caption2, design: .monospaced))
+                                    .textSelection(.enabled)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+
+                if !dep.entries.isEmpty {
+                    Divider().padding(.vertical, 2)
+                    DisclosureGroup("\(L10n.t(.showAllDeps)) (\(dep.total))") {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(sortedDependencies(dep)) { entry in
+                                    dependencyRow(entry)
+                                }
+                            }
+                        }
+                        .frame(maxHeight: 320)
+                    }
+                }
+            } else {
+                PlaceholderRow(text: L10n.t(.noDependencies))
+            }
+        }
+    }
+
+    private func sortedDependencies(_ dep: DependencyInfo) -> [DependencyInfo.Entry] {
+        dep.entries.sorted {
+            let a = dependencyRank($0), b = dependencyRank($1)
+            return a == b ? $0.path < $1.path : a < b
+        }
+    }
+
+    private func dependencyRank(_ entry: DependencyInfo.Entry) -> Int {
+        switch entry.status {
+        case .missing:      return 0
+        case .archMismatch: return 1
+        case .ok:           return 2
+        case .system:       return 3
+        }
+    }
+
+    private func dependencyStatusText(_ entry: DependencyInfo.Entry) -> String {
+        switch entry.status {
+        case .missing:      return L10n.t(.depMissing)
+        case .archMismatch: return L10n.t(.depArchMismatch)
+        case .ok:           return L10n.t(.depOk)
+        case .system:       return L10n.t(.depSystem)
+        }
+    }
+
+    private func dependencyColor(_ entry: DependencyInfo.Entry) -> Color {
+        switch entry.status {
+        case .missing:      return .red
+        case .archMismatch: return .orange
+        case .ok:           return .green
+        case .system:       return .gray
+        }
+    }
+
+    private func dependencyIcon(_ entry: DependencyInfo.Entry) -> String {
+        switch entry.status {
+        case .missing:      return "xmark.octagon.fill"
+        case .archMismatch: return "exclamationmark.triangle.fill"
+        case .ok:           return "checkmark.circle"
+        case .system:       return "shippingbox"
+        }
+    }
+
+    private func dependencyRow(_ entry: DependencyInfo.Entry) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: dependencyIcon(entry))
+                .font(.caption)
+                .foregroundStyle(dependencyColor(entry))
+                .frame(width: 16)
+            Text(entry.path)
+                .font(.system(.caption2, design: .monospaced))
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .textSelection(.enabled)
+                .help(entry.resolvedPath ?? entry.path)
+            Spacer()
+            Badge(text: dependencyStatusText(entry), color: dependencyColor(entry))
+        }
+    }
+
+    // MARK: 文档类型    /// 数量超过该阈值时启用固定高度内嵌滚动，避免单一分区把整页拉得太长。
     private static let documentTypesCollapsableThreshold = 6
 
     private var documentTypesSection: some View {

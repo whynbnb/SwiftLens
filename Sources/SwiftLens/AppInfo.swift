@@ -93,6 +93,9 @@ struct AppInfo {
     // 架构
     let architectures: [ArchitectureReader.ArchInfo]
 
+    // Mach-O 依赖（LC_LOAD_DYLIB / LC_RPATH 诊断）
+    let dependencies: DependencyInfo?
+
     // 子 bundle
     let subBundles: [SubBundle]
     let subBundlesTotalSize: UInt64
@@ -256,6 +259,11 @@ enum AppInfoLoader {
         }
 
         let architectures = ArchitectureReader.read(for: url)
+        let dependencies = MachODependencyReader.read(
+            executablePath: execPath,
+            bundleURL: url,
+            mainArchs: architectures.map(\.name)
+        )
 
         return AppInfo(
             bundleURL: url,
@@ -320,6 +328,7 @@ enum AppInfoLoader {
             extendedXattrs: extendedXattrs,
             codeSign: CodeSignReader.read(for: url),
             architectures: architectures,
+            dependencies: dependencies,
             subBundles: subResult.subBundles,
             subBundlesTotalSize: subResult.totalSize,
             extra: ExtraInfoReader.read(from: rawPlist, bundleURL: url),
@@ -429,6 +438,15 @@ extension AppInfo {
         lines.append("\(L10n.t(.cliArchs)): \(archs.isEmpty ? "—" : archs)")
         if !supportedPlatforms.isEmpty {
             lines.append("\(L10n.t(.cliPlatforms)): \(supportedPlatforms.joined(separator: ", "))")
+        }
+        if let dep = dependencies {
+            lines.append("\(L10n.t(.dependencies)): \(dep.total) (\(L10n.t(.depSystem)) \(dep.systemCount), \(L10n.t(.depMissing)) \(dep.missing.count), \(L10n.t(.depWeak)) \(dep.weak.count), \(L10n.t(.depArchMismatch)) \(dep.archMismatches.count))")
+            for m in dep.missing.prefix(5) {
+                lines.append("  ⚠︎ \(L10n.t(.depMissing)): \(m.path)")
+            }
+            for m in dep.archMismatches.prefix(3) {
+                lines.append("  ⚠︎ \(L10n.t(.depArchMismatch)): \(m.path) (\(m.missingArchs.joined(separator: ",")))")
+            }
         }
         if let v = principalClass { lines.append("NSPrincipalClass: \(v)") }
         if let v = humanReadableCopyright { lines.append("\(L10n.t(.cliCopyright)): \(v)") }
