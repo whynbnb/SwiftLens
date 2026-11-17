@@ -8,6 +8,7 @@
   <img src="https://img.shields.io/badge/platform-macOS%2015.0%2B-blue" alt="平台: macOS 15+">
   <img src="https://img.shields.io/badge/Swift-6.0-orange" alt="Swift 6">
   <img src="https://img.shields.io/badge/UI-SwiftUI-purple" alt="SwiftUI">
+  <img src="https://img.shields.io/badge/SPM-compatible-brightgreen" alt="Swift Package Manager">
   <img src="https://img.shields.io/badge/App%20Sandbox-enabled-brightgreen" alt="App Sandbox">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="许可: MIT">
 </p>
@@ -56,7 +57,7 @@
 - **原始 `Info.plist`**（扁平化全键值）与 **合成的 `codesign -dvvv` 输出**，便于调试。plist 中 `Bool` 值正确显示为 `YES` / `NO`，而不再是 `1` / `0`。
 - **搜索与导出** —— 搜索框（`⌘F`）可过滤 Info.plist 键值、entitlements、子 bundle、隐私清单、依赖与启动项；支持 **复制 JSON**（CLI 亦可 `--json`）与 **复制 Entitlements XML**。
 - **最近打开** —— `更多 ▸ 最近打开`（二级菜单）保留最近 10 个 app，并实时标记有效性（有效 / 已失效 / 无效）；点击重新打开，支持移除单项与清空全部。设置中默认开启、可关闭；使用安全作用域书签，重启后仍可只读访问。
-- **帮助 sheet** —— 解释 header 上的每一个徽章（公证 6 级、沙盒、隔离、签名有效性、Agent / Background / iOS 移植），告诉你如何解读它们；通过工具栏 `?` 按钮、菜单 `⌘?` 或窗口通知打开。
+- **帮助 sheet** —— 解释 header 上的每一个徽章（公证 6 级、沙盒、隔离、签名有效性、严格验证、Agent / Background / iOS 移植）；从 `更多 ▸ 帮助` 或菜单 `⌘?` 打开。
 - **原生设置窗口** —— 使用 macOS 标准 `Settings` scene，**通用** / **最近打开** 两个标签页：语言（跟随系统 / 中文 / English）、主题、最近打开记录（默认开启），通过 `@AppStorage` 持久化。
 - **标准关于面板** —— 系统 About 面板，包含应用图标、版本 / 构建号、版权，以及可点击的仓库 / 许可证链接。
 - **隐藏 CLI 模式** —— `swift run SwiftLens /path/to.app` 打印完整本地化纯文本摘要并退出；`--json` 输出结构化 JSON，便于脚本化。
@@ -81,7 +82,7 @@ com.apple.security.files.bookmarks.app-scope = true
 ## 环境要求
 
 - macOS 15.0+
-- Xcode 26.x（用于附带的 Xcode 项目），或仅需 Swift 6.0+ 工具链（用于 SPM）
+- Xcode 27.x（用于附带的 Xcode 项目），或仅需 Swift 6.0+ 工具链（用于 SPM）
 
 ## 构建与运行
 
@@ -144,7 +145,7 @@ SwiftLens/
 
 ## 许可
 
-MIT —— 如存在 `LICENSE` 文件则以其为准。源码按 "as-is" 提供。
+MIT —— 见 `LICENSE`。源码按 "as-is" 提供。
 
 ## 鸣谢
 

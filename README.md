@@ -8,6 +8,7 @@
   <img src="https://img.shields.io/badge/platform-macOS%2015.0%2B-blue" alt="Platform: macOS 15+">
   <img src="https://img.shields.io/badge/Swift-6.0-orange" alt="Swift 6">
   <img src="https://img.shields.io/badge/UI-SwiftUI-purple" alt="SwiftUI">
+  <img src="https://img.shields.io/badge/SPM-compatible-brightgreen" alt="Swift Package Manager">
   <img src="https://img.shields.io/badge/App%20Sandbox-enabled-brightgreen" alt="App Sandbox">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT">
 </p>
@@ -56,7 +57,7 @@ A native macOS app — built with Swift / SwiftUI / SPM — for inspecting `.app
 - **Raw `Info.plist`** (full flattened key/value dump) and **synthesized `codesign -dvvv` output** for debugging. Plist `Bool` values now render as `YES` / `NO` instead of `1` / `0`.
 - **Search & export** — search bar with `⌘F` filters Info.plist keys, entitlements, sub-bundles, privacy manifests, dependencies and launch items; **Copy JSON** (also `--json` in CLI) and **Copy Entitlements XML**.
 - **Recent apps** — `More ▸ Recent Apps` (second-level menu) keeps up to 10 apps with a live validity marker (valid / missing / invalid); click to reopen, remove a single entry, or clear all. Enabled by default in Settings and can be turned off; uses security-scoped bookmarks so read-only access survives relaunch.
-- **Help sheet** — explains every header badge (notarization levels, sandbox, quarantine, validity, agent / background / iOS port) and how to interpret them, opened via the toolbar `?` button, menu `⌘?` or window notification.
+- **Help sheet** — explains every header badge (notarization levels, sandbox, quarantine, validity, strict validity, agent / background / iOS port) and how to interpret them; open it from `More ▸ Help` or the menu `⌘?`.
 - **Native Settings window** — standard macOS `Settings` scene with **General** / **Recent Apps** tabs: language (Follow system / 中文 / English), theme, and recent-apps recording (on by default), persisted via `@AppStorage`.
 - **Standard About panel** — macOS About panel with app icon, version / build, copyright, and clickable Repository / License links.
 - **Hidden CLI mode** — `swift run SwiftLens /path/to.app` prints a full localized plain-text summary and exits; `--json` outputs a structured JSON report. Useful for scripting.
@@ -81,7 +82,7 @@ That means:
 ## Requirements
 
 - macOS 15.0+
-- Xcode 26.x (for the bundled Xcode project) or just the Swift 6.0+ toolchain (for SPM)
+- Xcode 27.x (for the bundled Xcode project) or just the Swift 6.0+ toolchain (for SPM)
 
 ## Build & run
 
@@ -143,7 +144,7 @@ SwiftLens/
 
 ## License
 
-MIT — see `LICENSE` if present. Source code is provided as-is.
+MIT — see `LICENSE`. Source code is provided as-is.
 
 ## Acknowledgements
 
