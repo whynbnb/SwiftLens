@@ -36,9 +36,12 @@
 - **网络安全 / Electron** —— `NSAppTransportSecurity` 例外域、`ElectronAsarIntegrity` 哈希。
 - **Quarantine 隔离** —— 通过 `getxattr` 读取 `com.apple.quarantine`，解码 flags / agent / **下载事件 UUID** / 十六进制时间戳为日期，并提供 **复制移除命令** 按钮 —— `xattr -d com.apple.quarantine ...` 写入剪贴板，自己在终端粘贴运行（应用保持沙盒，不动他 app）。
 - **扩展属性全列表** —— `listxattr` 枚举所有 xattrs；二进制值（如 `com.apple.macl`）以十六进制展示。
-- **代码签名（无 `codesign` / `spctl` 子进程）** —— 全部来自 `SecStaticCodeCheckValidity` 与 `SecCodeCopySigningInformation`。同时报告 **基础验证**（`kSecCSBasicValidateOnly`）与 **严格验证**（`kSecCSStrictValidate`，额外校验资源封印与嵌套代码），均附加 `kSecCSCheckAllArchitectures` 覆盖所有 fat 切片；并列出状态、**公证**（6 级：已公证 / Developer ID / Mac App Store / iOS App Store / Apple 系统签名 / 未公证）、`Format`、`Identifier`、`TeamIdentifier`、`CDHash` / `CandidateCDHashFull`（sha256 截断，与 `codesign` 一致）、哈希类型 / choices、签名大小、解码后的 flags（`adhoc`、`runtime`、`library-validation`、`restrict`、`kill`、`linker-signed`…）、`Runtime Version`、签名时间、total / chosen signature、Info.plist entries、平台标识、source、Authority 链，并合成 `codesign -dvvv` 风格的原始视图。两个 **复制命令** 按钮把 `codesign -dvvv --strict --deep` 和 `spctl --assess -vvv` 写入剪贴板，方便在终端手动验证。
-- **Entitlements** —— 解析后的键值列表 + 原始 XML plist；顶部一行单独高亮 `com.apple.security.app-sandbox` 状态。
-- **内嵌子 bundle** —— 扫描 `Frameworks/`、`EmbeddedFrameworks/`、`SharedFrameworks/`、`SystemFrameworks/`、`PlugIns/`、`XPCServices/`、`Helpers/`、`Extensions/`、`Library/LoginItems/`、`Library/SystemExtensions/`、`Library/LaunchServices/`、`Library/Spotlight/`、`Library/QuickLook/`、`Library/Automator/`，支持 framework 的 `Versions/A/Resources/Info.plist` 布局；每个条目报告 BundleID / 版本 / 签名状态 / Runtime Version。
+- **代码签名（无 `codesign` / `spctl` 子进程）** —— 全部来自 `SecStaticCodeCheckValidity` 与 `SecCodeCopySigningInformation`。同时报告 **基础验证**（`kSecCSBasicValidateOnly`）与 **严格验证**（`kSecCSStrictValidate`，额外校验资源封印与嵌套代码），均附加 `kSecCSCheckAllArchitectures` 覆盖所有 fat 切片；并列出状态、**公证**（6 级：已公证 / Developer ID / Mac App Store / iOS App Store / Apple 系统签名 / 未公证）、`Format`、`Identifier`、`TeamIdentifier`、`CDHash` / `CandidateCDHashFull`（sha256 截断，与 `codesign` 一致）、哈希类型 / choices、签名大小、解码后的 flags（`adhoc`、`runtime`、`library-validation`、`restrict`、`kill`、`linker-signed`…）、`Runtime Version`、签名时间、total / chosen signature、Info.plist entries、平台标识、source、Authority 链，并合成 `codesign -dvvv` 风格的原始视图。两个 **复制命令** 按钮把 `codesign -dvvv --strict --deep` 和 `spctl --assess -vvv` 写入剪贴板，方便在终端手动验证。可展开的 **证书详情** 展示每张证书的签发者、有效期、SHA-256 指纹，以及过期 / 即将过期徽章。**一致性检查** 比对 Bundle ID 与签名 Identifier、Info.plist TeamIdentifier 与签名 TeamID，并显示 Hardened Runtime / Library Validation 状态。
+- **Entitlements** —— 解析后的键值列表 + 原始 XML plist，并提供 **复制 Entitlements XML** 按钮；顶部一行高亮 `com.apple.security.app-sandbox`，高风险 entitlement（disable-library-validation、allow-unsigned-executable-memory、DYLD 环境变量、get-task-allow、debugger、JIT、关闭可执行页保护、temporary-exception）会显示警告图标与说明。
+- **内嵌子 bundle** —— 扫描 `Frameworks/`、`EmbeddedFrameworks/`、`SharedFrameworks/`、`SystemFrameworks/`、`PlugIns/`、`XPCServices/`、`Helpers/`、`Extensions/`、`Library/LoginItems/`、`Library/SystemExtensions/`、`Library/LaunchServices/`、`Library/Spotlight/`、`Library/QuickLook/`、`Library/Automator/`，支持 framework 的 `Versions/A/Resources/Info.plist` 布局。每个条目报告 BundleID / 版本 / 签名状态 / 基础与严格验证 / TeamID / 架构 / Runtime Version，并展示 `NSExtensionPointIdentifier` / `NSExtensionPrincipalClass` 与 `XPCService` 类型 / run loop。TeamID 不一致、签名无效、严格验证失败、架构少于主应用时显示警告。
+- **Mach-O 依赖** —— 解析 fat 切片中的 `LC_LOAD_DYLIB` / `LC_LOAD_WEAK_DYLIB` / `LC_REEXPORT_DYLIB` / `LC_LOAD_UPWARD_DYLIB` / `LC_RPATH`，解析 `@rpath` / `@executable_path` / `@loader_path`；`/usr/lib` 与 `/System/Library` 视为 dyld 共享缓存不算缺失；缺失依赖或缺少主应用架构时告警，完整列表可展开。
+- **隐私清单与 App Store 收据** —— 扫描主包、子 bundle 与 iOS Wrapper 中的 `PrivacyInfo.xcprivacy`，展示访问的 API 类别与原因码、收集的数据类型、跟踪域名与 `NSPrivacyTracking`；检测 `Contents/_MASReceipt/receipt`。
+- **启动项** —— 列出 `Contents/Library/LaunchAgents` 与 `LaunchDaemons` 中的 plist 及其 `Label`。
 - **Sparkle 自动更新** —— `SUFeedURL`、`SUPublicEDKey`、`SUPublicDSAKeyFile`，以及所有 `SUEnable*` / `SUScheduled*` 开关（秒 ↔ 天自动换算）。
 - **AppleScript / Siri / Intents** —— `NSAppleScriptEnabled`、`OSAScriptingDefinition`、`NSUserActivityTypes`、`INIntentsSupported`、`SFSafariCorrespondingIOSAppBundleIdentifier`。
 - **iCloud** —— `NSUbiquitousContainers` 按容器完整展开（每个容器 ID 作为小节标题，多容器应用不再被合并成 1 项）。
@@ -48,11 +51,13 @@
 - **iOS 移植包字段** —— `UIDeviceFamily`、`UILaunchStoryboardName`、`UIRequiresFullScreen`、`UISupportedInterfaceOrientations`、`UIStatusBarStyle`、`UIBackgroundModes`、`ASWebAuthenticationSession…`。`Wrapper/<name>.app/` 布局的 iOS 移植包能正确解析。
 - **Electron / 构建元数据 / 厂商** —— `ElectronTeamID`、`SourceVersion`、`requiredBuildHash`、`SCMRevision`、`AppIdentifierPrefix`、`CFBundleSpokenName`、`VendorCode`、`OrganizationIdentifier`、`CTFontSuppressAutoDownload`。
 - **Bonjour** —— `NSBonjourServices` 原样显示，不再追加 `_…._tcp` 后缀造成重复拼接。
-- **文件信息** —— 递归 bundle 体积、修改 / 创建时间、八进制权限。
+- **文件信息** —— 递归 bundle 体积、修改 / 创建时间、八进制权限、App Store 收据，以及按 `Contents` 一级目录统计的 **体积构成** 与占比。
+- **Info.plist 健康检查** —— 实际 plist 路径、XML / Binary 格式、缺失必需键、主可执行文件与 `_CodeSignature` 资源检查，并展示 `LSMinimumSystemVersionByArchitecture`。
 - **原始 `Info.plist`**（扁平化全键值）与 **合成的 `codesign -dvvv` 输出**，便于调试。plist 中 `Bool` 值正确显示为 `YES` / `NO`，而不再是 `1` / `0`。
+- **搜索与导出** —— 搜索框（`⌘F`）可过滤 Info.plist 键值、entitlements、子 bundle、隐私清单、依赖与启动项；支持 **复制 JSON**（CLI 亦可 `--json`）与 **复制 Entitlements XML**。
 - **帮助 sheet** —— 解释 header 上的每一个徽章（公证 6 级、沙盒、隔离、签名有效性、Agent / Background / iOS 移植），告诉你如何解读它们；通过工具栏 `?` 按钮、菜单 `⌘?` 或窗口通知打开。
 - **设置面板** —— 语言切换（跟随系统 / 中文 / English）与主题切换（跟随系统 / 浅色 / 深色），通过 `@AppStorage` 持久化。
-- **隐藏 CLI 模式** —— `swift run SwiftLens /path/to.app` 打印完整本地化纯文本摘要并退出，便于脚本化。
+- **隐藏 CLI 模式** —— `swift run SwiftLens /path/to.app` 打印完整本地化纯文本摘要并退出；`--json` 输出结构化 JSON，便于脚本化。
 
 ## 沙盒说明
 
