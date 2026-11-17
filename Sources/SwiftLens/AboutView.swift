@@ -23,7 +23,7 @@ struct AboutView: View {
                 Text(meta.appName)
                     .font(.system(.title2, design: .default).bold())
 
-                Text("version \(meta.versionString) (\(meta.buildString))")
+                Text("\(L10n.t(.versionLabel)) \(meta.versionString) (\(meta.buildString))")
                     .font(.system(.callout, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
@@ -35,13 +35,13 @@ struct AboutView: View {
             VStack(spacing: 10) {
                 linkRow(
                     systemImage: "globe",
-                    title: "Repository",
+                    title: L10n.t(.repository),
                     subtitle: meta.repositoryURL.absoluteString,
                     url: meta.repositoryURL
                 )
                 linkRow(
                     systemImage: "doc.text",
-                    title: "License",
+                    title: L10n.t(.license),
                     subtitle: meta.licenseName,
                     url: meta.licenseURL
                 )

@@ -148,6 +148,8 @@ enum L10n {
         case goEntitlementsSection
         // 关于面板
         case openInBrowser
+        case repository
+        case license
         // 帮助页 - 分区标题
         case helpNotarizationTitle
         case helpSandboxTitle
@@ -404,6 +406,7 @@ enum L10n {
         .goCodeSignSection: "跳转到「代码签名」分区",
         .goEntitlementsSection: "跳转到「Entitlements」分区",
         .openInBrowser: "在浏览器中打开: ",
+        .repository: "仓库", .license: "许可证",
         // 帮助页 - 分区标题
         .helpNotarizationTitle: "签名状态 / 公证状态",
         .helpSandboxTitle: "沙盒状态",
@@ -586,6 +589,7 @@ enum L10n {
         .goCodeSignSection: "Go to Code Signing section",
         .goEntitlementsSection: "Go to Entitlements section",
         .openInBrowser: "Open in browser: ",
+        .repository: "Repository", .license: "License",
         // 帮助页 - 分区标题
         .helpNotarizationTitle: "Signature / Notarization State",
         .helpSandboxTitle: "Sandbox State",
