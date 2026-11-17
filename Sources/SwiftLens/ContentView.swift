@@ -43,6 +43,35 @@ struct ContentView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Menu {
+                    let recents = appState.recentApps
+                    if appState.recentAppsEnabled, !recents.isEmpty {
+                        Menu {
+                            ForEach(recents) { entry in
+                                let status = appState.recentAppStatus(entry)
+                                Button {
+                                    openRecent(entry)
+                                } label: {
+                                    Label(recentText(entry, status: status),
+                                          systemImage: status.icon)
+                                }
+                                .disabled(status != .valid)
+                            }
+                            Divider()
+                            Menu(L10n.t(.removeRecent)) {
+                                ForEach(recents) { entry in
+                                    Button(entry.name) {
+                                        appState.removeRecentApp(path: entry.path)
+                                    }
+                                }
+                            }
+                            Button(L10n.t(.clearRecentApps)) {
+                                appState.clearRecentApps()
+                            }
+                        } label: {
+                            Label(L10n.t(.recentApps), systemImage: "clock.arrow.circlepath")
+                        }
+                        Divider()
+                    }
                     if let info {
                         Button {
                             NSWorkspace.shared.activateFileViewerSelecting([info.bundleURL])
@@ -157,6 +186,10 @@ struct ContentView: View {
     }
 
     // MARK: - Actions
+    private func recentText(_ entry: RecentAppEntry, status: RecentAppStatus) -> String {
+        status == .valid ? entry.name : "\(entry.name) — \(status.localizedName)"
+    }
+
     private func openPanel() {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
@@ -171,12 +204,14 @@ struct ContentView: View {
         }
     }
 
-    private func handle(url: URL) {
+    private func handle(url: URL, securityScoped: Bool = false) {
         guard url.pathExtension.lowercased() == "app" else {
+            if securityScoped { url.stopAccessingSecurityScopedResource() }
             lastError = L10n.t(.invalidApp) + ": \(url.lastPathComponent)"
             return
         }
         guard FileManager.default.fileExists(atPath: url.path) else {
+            if securityScoped { url.stopAccessingSecurityScopedResource() }
             lastError = L10n.t(.fileMissing) + ": \(url.path)"
             return
         }
@@ -185,18 +220,38 @@ struct ContentView: View {
         loadID &+= 1
         let currentID = loadID
         let work = url
+        // 在仍有访问权限时创建安全作用域书签，供「最近打开」重启后使用
+        let bookmark = appState.recentAppsEnabled ? try? url.bookmarkData(
+            options: [.withSecurityScope, .securityScopeAllowOnlyReadAccess],
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        ) : nil
         DispatchQueue.global(qos: .userInitiated).async {
             let result = AppInfoLoader.load(url: work)
+            if securityScoped { work.stopAccessingSecurityScopedResource() }
             DispatchQueue.main.async {
                 // 只接受最新一次请求的结果, 丢弃过期任务
                 guard currentID == loadID else { return }
                 self.info = result
                 self.loading = false
+                self.appState.recordRecentApp(
+                    url: work,
+                    name: result.displayName ?? result.bundleName
+                        ?? work.deletingPathExtension().lastPathComponent,
+                    bundleID: result.bundleIdentifier,
+                    bookmark: bookmark
+                )
                 // 加载完成后把应用拉到前台并使窗口获得焦点
                 NSApp.activate(ignoringOtherApps: true)
                 NSApp.windows.first(where: { $0.canBecomeKey })?.makeKeyAndOrderFront(nil)
             }
         }
+    }
+
+    private func openRecent(_ entry: RecentAppEntry) {
+        guard let url = appState.resolveRecentAppURL(entry) else { return }
+        let accessed = url.startAccessingSecurityScopedResource()
+        handle(url: url, securityScoped: accessed)
     }
 
     private func reset() {

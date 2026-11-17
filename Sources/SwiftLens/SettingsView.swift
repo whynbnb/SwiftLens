@@ -51,6 +51,31 @@ struct SettingsView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
+            // 最近打开
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle(isOn: bindingRecentApps) {
+                    Label(L10n.t(.recentAppsEnabled), systemImage: "clock.arrow.circlepath")
+                        .font(.headline)
+                }
+                .toggleStyle(.switch)
+                Text(L10n.t(.recentAppsHint))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                if !appState.recentApps.isEmpty {
+                    HStack {
+                        Text("\(appState.recentApps.count) \(L10n.t(.entryUnit))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button(L10n.t(.clearRecentApps)) {
+                            appState.clearRecentApps()
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
             // 占位提示
             Text(verbatim: "SwiftLens \(AppMeta.shared.versionString)")
                 .font(.caption2)
@@ -59,8 +84,15 @@ struct SettingsView: View {
             Spacer()
         }
         .padding(28)
-        .frame(width: 480, height: 280)
+        .frame(width: 480, height: 380)
         .background(.regularMaterial)
+    }
+
+    private var bindingRecentApps: Binding<Bool> {
+        Binding(
+            get: { appState.recentAppsEnabled },
+            set: { appState.recentAppsEnabled = $0 }
+        )
     }
 
     // AppStorage 双向绑定 (枚举) 需要走 String 中介

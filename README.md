@@ -55,6 +55,7 @@ A native macOS app — built with Swift / SwiftUI / SPM — for inspecting `.app
 - **Info.plist health** — actual plist path, XML / Binary format, missing required keys, main executable presence and `_CodeSignature` resources, plus `LSMinimumSystemVersionByArchitecture`.
 - **Raw `Info.plist`** (full flattened key/value dump) and **synthesized `codesign -dvvv` output** for debugging. Plist `Bool` values now render as `YES` / `NO` instead of `1` / `0`.
 - **Search & export** — search bar with `⌘F` filters Info.plist keys, entitlements, sub-bundles, privacy manifests, dependencies and launch items; **Copy JSON** (also `--json` in CLI) and **Copy Entitlements XML**.
+- **Recent apps** — `More ▸ Recent Apps` (second-level menu) keeps up to 10 apps with a live validity marker (valid / missing / invalid); click to reopen, remove a single entry, or clear all. Enabled by default in Settings and can be turned off; uses security-scoped bookmarks so read-only access survives relaunch.
 - **Help sheet** — explains every header badge (notarization levels, sandbox, quarantine, validity, agent / background / iOS port) and how to interpret them, opened via the toolbar `?` button, menu `⌘?` or window notification.
 - **Settings sheet** — language switch (Follow system / 中文 / English) and theme switch (Follow system / Light / Dark), persisted via `@AppStorage`.
 - **Hidden CLI mode** — `swift run SwiftLens /path/to.app` prints a full localized plain-text summary and exits; `--json` outputs a structured JSON report. Useful for scripting.
@@ -66,12 +67,14 @@ SwiftLens ships with these entitlements:
 ```xml
 com.apple.security.app-sandbox = true
 com.apple.security.files.user-selected.read-only = true
+com.apple.security.files.bookmarks.app-scope = true
 ```
 
 That means:
 
 - It cannot spawn `codesign`, `spctl`, `xattr`, `spctl` or any other subprocess.
 - It can read whatever file the user drops in via the open panel / drag-and-drop (`SecStaticCodeCheckValidity`, `getxattr`, `listxattr` all work under the sandbox), but it cannot mutate other apps' bundles.
+- Recent apps use **security-scoped bookmarks** (read-only) so they can be reopened after a relaunch; this is still the standard App Sandbox model and does not grant write access.
 - Removing `com.apple.quarantine` is therefore exposed as a **Copy command** button, not a destructive action.
 
 ## Requirements

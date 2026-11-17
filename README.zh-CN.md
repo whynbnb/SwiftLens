@@ -55,6 +55,7 @@
 - **Info.plist 健康检查** —— 实际 plist 路径、XML / Binary 格式、缺失必需键、主可执行文件与 `_CodeSignature` 资源检查，并展示 `LSMinimumSystemVersionByArchitecture`。
 - **原始 `Info.plist`**（扁平化全键值）与 **合成的 `codesign -dvvv` 输出**，便于调试。plist 中 `Bool` 值正确显示为 `YES` / `NO`，而不再是 `1` / `0`。
 - **搜索与导出** —— 搜索框（`⌘F`）可过滤 Info.plist 键值、entitlements、子 bundle、隐私清单、依赖与启动项；支持 **复制 JSON**（CLI 亦可 `--json`）与 **复制 Entitlements XML**。
+- **最近打开** —— `更多 ▸ 最近打开`（二级菜单）保留最近 10 个 app，并实时标记有效性（有效 / 已失效 / 无效）；点击重新打开，支持移除单项与清空全部。设置中默认开启、可关闭；使用安全作用域书签，重启后仍可只读访问。
 - **帮助 sheet** —— 解释 header 上的每一个徽章（公证 6 级、沙盒、隔离、签名有效性、Agent / Background / iOS 移植），告诉你如何解读它们；通过工具栏 `?` 按钮、菜单 `⌘?` 或窗口通知打开。
 - **设置面板** —— 语言切换（跟随系统 / 中文 / English）与主题切换（跟随系统 / 浅色 / 深色），通过 `@AppStorage` 持久化。
 - **隐藏 CLI 模式** —— `swift run SwiftLens /path/to.app` 打印完整本地化纯文本摘要并退出；`--json` 输出结构化 JSON，便于脚本化。
@@ -66,12 +67,14 @@ SwiftLens 自带如下 entitlements：
 ```xml
 com.apple.security.app-sandbox = true
 com.apple.security.files.user-selected.read-only = true
+com.apple.security.files.bookmarks.app-scope = true
 ```
 
 这意味着：
 
 - 不会调用 `codesign`、`spctl`、`xattr` 等任何子进程。
 - 通过用户从打开面板 / 拖拽进来的 app 文件，可以读取（`SecStaticCodeCheckValidity`、`getxattr`、`listxattr` 在沙盒下都能用），但不能修改其它 app 的 bundle。
+- 「最近打开」使用 **security-scoped bookmark**（只读）以便重启后重新打开；仍属于标准 App Sandbox 模型，不会获得写权限。
 - 因此「移除隔离」只能以 **复制命令** 按钮方式提供，不能直接代为执行 `xattr -d`。
 
 ## 环境要求

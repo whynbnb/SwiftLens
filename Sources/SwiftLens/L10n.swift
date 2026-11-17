@@ -13,6 +13,14 @@ enum L10n {
         case about
         case help
         case more
+        case recentApps
+        case recentAppsEnabled
+        case recentAppsHint
+        case removeRecent
+        case clearRecentApps
+        case recentValid
+        case recentMissing
+        case recentInvalid
         case language
         case theme
         case langSystem
@@ -401,6 +409,10 @@ enum L10n {
     /// 中文表
     private static let zh: [Key: String] = [
         .settings: "设置", .about: "关于 SwiftLens", .help: "帮助", .more: "更多", .language: "语言", .theme: "主题",
+        .recentApps: "最近打开", .recentAppsEnabled: "记录最近打开的 app",
+        .recentAppsHint: "仅保存在本机；使用安全作用域书签在重启后保持只读访问。",
+        .removeRecent: "移除单项", .clearRecentApps: "清空最近打开",
+        .recentValid: "有效", .recentMissing: "已失效", .recentInvalid: "无效",
         .langSystem: "跟随系统", .langZh: "中文", .langEn: "English",
         .themeSystem: "跟随系统", .themeLight: "浅色", .themeDark: "深色",
         .close: "关闭",
@@ -633,6 +645,10 @@ enum L10n {
     /// 英文表（缺失时回退到 zh key 字面名）
     private static let en: [Key: String] = [
         .settings: "Settings", .about: "About SwiftLens", .help: "Help", .more: "More", .language: "Language", .theme: "Theme",
+        .recentApps: "Recent Apps", .recentAppsEnabled: "Remember recent apps",
+        .recentAppsHint: "Stored locally; security-scoped bookmarks keep read-only access after relaunch.",
+        .removeRecent: "Remove Item", .clearRecentApps: "Clear Recent Apps",
+        .recentValid: "Valid", .recentMissing: "Missing", .recentInvalid: "Invalid",
         .langSystem: "Follow System", .langZh: "中文", .langEn: "English",
         .themeSystem: "Follow System", .themeLight: "Light", .themeDark: "Dark",
         .close: "Close",
