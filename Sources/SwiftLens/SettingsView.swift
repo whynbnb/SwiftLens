@@ -1,5 +1,4 @@
 import SwiftUI
-import AppKit
 
 // MARK: - 设置面板
 
@@ -49,10 +48,6 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(maxWidth: 400)
-                .onChange(of: appState.theme) {
-                    // 切换时直接给已经存在的窗口广播一个通知，确保色板立即生效
-                    NotificationCenter.default.post(name: .themeDidChange, object: nil)
-                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -81,8 +76,4 @@ struct SettingsView: View {
             set: { appState.theme = $0 }
         )
     }
-}
-
-extension Notification.Name {
-    static let themeDidChange = Notification.Name("SwiftLens.themeDidChange")
 }
