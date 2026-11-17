@@ -4,7 +4,8 @@ import Foundation
 
 /// 扫描 .app 包内嵌的子 bundle（Frameworks / PlugIns / XPCServices / Helpers / Library/LoginItems）。
 struct SubBundle: Identifiable {
-    let id = UUID()
+    // 用相对路径作 id, 身份稳定 (重渲染/diff 不抖动)
+    var id: String { relativePath }
     let kind: Kind
     let relativePath: String        // 相对父 .app 路径
     let bundleIdentifier: String?
