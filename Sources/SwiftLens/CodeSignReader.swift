@@ -114,6 +114,16 @@ struct CodeSignInfo {
     let entitlementsRaw: String?      // 由 entitlements dict 序列化的 XML plist
     let entitlements: [String: Any]?
     let error: String?
+
+    /// 是否启用 Hardened Runtime（flags 中的 runtime 位）
+    var hasHardenedRuntime: Bool {
+        runtimeVersion != nil || decodedFlags.contains("runtime")
+    }
+
+    /// 是否启用 Library Validation
+    var hasLibraryValidation: Bool {
+        decodedFlags.contains("library-validation")
+    }
 }
 
 enum CodeSignReader {

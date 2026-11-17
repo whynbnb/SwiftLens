@@ -371,6 +371,19 @@ extension AppInfo {
         return name
     }
 
+    /// BundleID 与签名 Identifier 是否一致（任一方缺失时返回 nil）
+    var bundleIDMatchesSignature: Bool? {
+        guard let bid = bundleIdentifier, let sid = codeSign.identifier else { return nil }
+        return bid == sid
+    }
+
+    /// Info.plist TeamIdentifier 与签名 TeamIdentifier 是否一致
+    var plistTeamMatchesSignature: Bool? {
+        guard let p = extra.teamIdentifierPlist, !p.isEmpty,
+              let s = codeSign.teamIdentifier else { return nil }
+        return p == s
+    }
+
     /// 是否启用了 App Sandbox：
     /// - entitlements 中含 `com.apple.security.app-sandbox = true`
     /// - 或为 iOS 应用 (通过 iPhone OS Application Signing 证书判定, iOS 应用天然沙盒)
@@ -429,6 +442,16 @@ extension AppInfo {
         if let v = cs.format { lines.append("  Format: \(v)") }
         if let v = cs.identifier { lines.append("  Identifier: \(v)") }
         lines.append("  TeamIdentifier: \(cs.teamIdentifier ?? "not set")")
+        var checks: [String] = []
+        if let ok = bundleIDMatchesSignature {
+            checks.append("BundleID=\(ok ? L10n.t(.match) : L10n.t(.mismatch))")
+        }
+        if let ok = plistTeamMatchesSignature {
+            checks.append("TeamID=\(ok ? L10n.t(.match) : L10n.t(.mismatch))")
+        }
+        checks.append("\(L10n.t(.hardenedRuntime))=\(cs.hasHardenedRuntime ? "YES" : "NO")")
+        checks.append("\(L10n.t(.libraryValidation))=\(cs.hasLibraryValidation ? "YES" : "NO")")
+        lines.append("  \(L10n.t(.consistencyCheck)): \(checks.joined(separator: ", "))")
         if let v = cs.cdHash { lines.append("  CDHash: \(v)") }
         if let v = cs.candidateCDHashFull { lines.append("  CandidateCDHashFull: \(v)") }
         if let v = cs.hashType { lines.append("  HashType: \(v)") }

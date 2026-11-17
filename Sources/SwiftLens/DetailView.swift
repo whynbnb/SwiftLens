@@ -500,6 +500,27 @@ struct DetailView: View {
             RowView(key: L10n.t(.strictValidation), value: cs.strictValidity.strictName)
             RowView(key: L10n.t(.notarization), value: cs.notarization.localizedName)
 
+            Divider().padding(.vertical, 2)
+            Text(L10n.t(.consistencyCheck))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if let ok = info.bundleIDMatchesSignature {
+                RowView(key: L10n.t(.consistencyBundleID),
+                        value: ok ? L10n.t(.match) : L10n.t(.mismatch),
+                        warning: ok ? nil : L10n.t(.warnBundleIDMismatch))
+            }
+            if let ok = info.plistTeamMatchesSignature {
+                RowView(key: L10n.t(.consistencyTeamID),
+                        value: ok ? L10n.t(.match) : L10n.t(.mismatch),
+                        warning: ok ? nil : L10n.t(.warnTeamIDPlistMismatch))
+            }
+            RowView(key: L10n.t(.hardenedRuntime),
+                    value: cs.hasHardenedRuntime ? "YES" : "NO",
+                    warning: cs.hasHardenedRuntime ? nil : L10n.t(.warnNoHardenedRuntime))
+            RowView(key: L10n.t(.libraryValidation),
+                    value: cs.hasLibraryValidation ? "YES" : "NO",
+                    warning: cs.hasLibraryValidation ? nil : L10n.t(.warnNoLibraryValidation))
+
             // 手动验证命令 — 沙盒内无法调用 spctl/codesign, 提供复制命令让用户在终端运行
             HStack(spacing: 10) {
                 Button {

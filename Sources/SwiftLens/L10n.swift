@@ -109,6 +109,17 @@ enum L10n {
         case validity
         case strictValidation
         case notarization
+        case consistencyCheck
+        case consistencyBundleID
+        case consistencyTeamID
+        case hardenedRuntime
+        case libraryValidation
+        case match
+        case mismatch
+        case warnBundleIDMismatch
+        case warnTeamIDPlistMismatch
+        case warnNoHardenedRuntime
+        case warnNoLibraryValidation
         case copyCodesignCmd
         case copySpctlCmd
         case pasteToVerifyHint
@@ -401,6 +412,16 @@ enum L10n {
         // 代码签名
         .signState: "签名状态", .validity: "有效性", .strictValidation: "严格验证 (Strict)",
         .notarization: "公证 (Notarization)",
+        .consistencyCheck: "一致性检查",
+        .consistencyBundleID: "Bundle ID vs 签名 Identifier",
+        .consistencyTeamID: "TeamIdentifier vs 签名 TeamID",
+        .hardenedRuntime: "Hardened Runtime",
+        .libraryValidation: "Library Validation",
+        .match: "一致", .mismatch: "不一致",
+        .warnBundleIDMismatch: "CFBundleIdentifier 与签名 Identifier 不一致 (可能被改包)",
+        .warnTeamIDPlistMismatch: "Info.plist TeamIdentifier 与签名 TeamID 不一致",
+        .warnNoHardenedRuntime: "未启用 Hardened Runtime",
+        .warnNoLibraryValidation: "未启用 Library Validation",
         .copyCodesignCmd: "复制 codesign 命令", .copySpctlCmd: "复制 spctl 命令",
         .pasteToVerifyHint: "在终端粘贴运行即可手动验证签名 / 公证状态",
         .authorityChain: "Authority 链", .noEntitlements: "无 entitlements (未签名 / 无沙盒)",
@@ -600,6 +621,16 @@ enum L10n {
         // 代码签名
         .signState: "Signature State", .validity: "Validity", .strictValidation: "Strict Validation",
         .notarization: "Notarization",
+        .consistencyCheck: "Consistency Checks",
+        .consistencyBundleID: "Bundle ID vs Signature Identifier",
+        .consistencyTeamID: "TeamIdentifier vs Signature TeamID",
+        .hardenedRuntime: "Hardened Runtime",
+        .libraryValidation: "Library Validation",
+        .match: "Match", .mismatch: "Mismatch",
+        .warnBundleIDMismatch: "CFBundleIdentifier differs from the signature Identifier (possible repackaging)",
+        .warnTeamIDPlistMismatch: "Info.plist TeamIdentifier differs from the signature TeamID",
+        .warnNoHardenedRuntime: "Hardened Runtime is not enabled",
+        .warnNoLibraryValidation: "Library Validation is not enabled",
         .copyCodesignCmd: "Copy codesign Command", .copySpctlCmd: "Copy spctl Command",
         .pasteToVerifyHint: "Paste in Terminal to manually verify signature / notarization",
         .authorityChain: "Authority Chain", .noEntitlements: "No entitlements (unsigned / no sandbox)",
