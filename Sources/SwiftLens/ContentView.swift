@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 /// 主界面 — 即用即走：拖入或选择一个 .app bundle 直接展示详情。
 struct ContentView: View {
     @EnvironmentObject private var appState: AppState
+    @Environment(\.openSettings) private var openSettings
     @State private var info: AppInfo?
     @State private var loading: Bool = false
     @State private var dropHover: Bool = false
@@ -103,7 +104,7 @@ struct ContentView: View {
                         Divider()
                     }
                     Button {
-                        NotificationCenter.default.post(name: .openSettings, object: nil)
+                        openSettings()
                     } label: {
                         Label(L10n.t(.settings), systemImage: "gearshape")
                     }

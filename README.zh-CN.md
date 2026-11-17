@@ -57,7 +57,8 @@
 - **搜索与导出** —— 搜索框（`⌘F`）可过滤 Info.plist 键值、entitlements、子 bundle、隐私清单、依赖与启动项；支持 **复制 JSON**（CLI 亦可 `--json`）与 **复制 Entitlements XML**。
 - **最近打开** —— `更多 ▸ 最近打开`（二级菜单）保留最近 10 个 app，并实时标记有效性（有效 / 已失效 / 无效）；点击重新打开，支持移除单项与清空全部。设置中默认开启、可关闭；使用安全作用域书签，重启后仍可只读访问。
 - **帮助 sheet** —— 解释 header 上的每一个徽章（公证 6 级、沙盒、隔离、签名有效性、Agent / Background / iOS 移植），告诉你如何解读它们；通过工具栏 `?` 按钮、菜单 `⌘?` 或窗口通知打开。
-- **设置面板** —— 语言切换（跟随系统 / 中文 / English）与主题切换（跟随系统 / 浅色 / 深色），通过 `@AppStorage` 持久化。
+- **原生设置窗口** —— 使用 macOS 标准 `Settings` scene，**通用** / **最近打开** 两个标签页：语言（跟随系统 / 中文 / English）、主题、最近打开记录（默认开启），通过 `@AppStorage` 持久化。
+- **标准关于面板** —— 系统 About 面板，包含应用图标、版本 / 构建号、版权，以及可点击的仓库 / 许可证链接。
 - **隐藏 CLI 模式** —— `swift run SwiftLens /path/to.app` 打印完整本地化纯文本摘要并退出；`--json` 输出结构化 JSON，便于脚本化。
 
 ## 沙盒说明
@@ -111,15 +112,15 @@ SwiftLens/
 ├─ SwiftLens.xcodeproj/                # 生成的 Xcode 项目 (入库)
 ├─ SwiftLens/
 │  ├─ Info.plist
-│  ├─ SwiftLens.entitlements           # app-sandbox + 只读用户文件访问
+│  ├─ SwiftLens.entitlements           # app-sandbox + 只读用户文件访问 + bookmarks
 │  └─ Assets.xcassets/
 │     └─ AppIcon.appiconset/
 └─ Sources/SwiftLens/
    ├─ SwiftLensApp.swift               # @main App + AppDelegate (CLI 模式 + Dock 焦点修复)
-   ├─ AppState.swift                   # 语言 / 主题持久化
+   ├─ AppState.swift                   # 语言 / 主题 / 最近打开持久化
    ├─ L10n.swift                       # 运行时 zh/en 字符串表 (实时切换)
-   ├─ SettingsView.swift               # 设置 sheet
-   ├─ AboutView.swift                  # 关于 sheet
+   ├─ SettingsView.swift               # 原生设置窗口 (通用 / 最近打开)
+   ├─ AppMeta.swift                    # 应用元数据 + 标准 About 面板
    ├─ HelpView.swift                   # 帮助 sheet (徽章说明)
    ├─ ContentView.swift                # 拖放壳 + 加载遮罩 (带竞态保护)
    ├─ DetailView.swift                 # 所有信息分区 + header 徽章 + Badge view
@@ -129,13 +130,15 @@ SwiftLens/
    ├─ QuarantineReader.swift           # com.apple.quarantine 读取 (含 UUID)
    ├─ ExtendedXattrReader.swift        # 全 xattr 枚举
    ├─ ArchitectureReader.swift         # Mach-O / fat 头解析 (识别 arm64e / PAC)
+   ├─ MachODependencyReader.swift      # LC_LOAD_DYLIB / LC_RPATH + @rpath 解析
    ├─ CodeSignReader.swift             # 仅用 Security framework:
    │                                    #   SecStaticCodeCheckValidity
    │                                    #   (kSecCSStrictValidate | kSecCSCheckAllArchitectures)
    │                                    #   + SecCodeCopySigningInformation
-   ├─ SubBundleScanner.swift           # Frameworks / Helpers / XPC / PlugIns / Extensions /
-   │                                    #   Library/SystemExtensions / Library/LaunchServices 扫描
+   ├─ SubBundleScanner.swift           # Frameworks / SharedFrameworks / Helpers / XPC /
+   │                                    #   PlugIns / Extensions / Library 扫描
    ├─ PrivacyReader.swift              # TCC 权限描述目录
+   ├─ PrivacyManifestReader.swift      # PrivacyInfo.xcprivacy + MAS 收据
    └─ ExtraInfoReader.swift            # Sparkle / AppleScript / iCloud / Bonjour / ...
 ```
 

@@ -42,6 +42,7 @@ targets:
         CFBundleExecutable: SwiftLens
         CFBundleInfoDictionaryVersion: "6.0"
         LSMinimumSystemVersion: "15.0"
+        NSHumanReadableCopyright: "Copyright © 2026 0x574859. MIT License."
         LSUIElement: false
         NSHighResolutionCapable: true
         LSRequiresNativeExecution: true

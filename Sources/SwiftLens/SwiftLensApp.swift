@@ -7,8 +7,6 @@ import AppKit
 struct SwiftLensApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var appState = AppState()
-    @State private var showSettings: Bool = false
-    @State private var showAbout: Bool = false
     @State private var showHelp: Bool = false
 
     var body: some Scene {
@@ -17,41 +15,20 @@ struct SwiftLensApp: App {
                 .preferredColorScheme(appState.theme.colorScheme)
                 .environmentObject(appState)
                 .frame(minWidth: 960, minHeight: 640)
-                .sheet(isPresented: $showSettings) {
-                    SettingsView()
-                        .environmentObject(appState)
-                        .id(appState.language.rawValue)
-                }
-                .sheet(isPresented: $showAbout) {
-                    AboutView()
-                        .id(appState.language.rawValue)
-                }
                 .sheet(isPresented: $showHelp) {
                     HelpView()
                         .id(appState.language.rawValue)
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .openSettings)) { _ in
-                    showSettings = true
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .openAbout)) { _ in
-                    showAbout = true
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .openHelp)) { _ in
                     showHelp = true
                 }
         }
         .commands {
-            // 保留系统默认 "About SwiftLens" 项, 但拦截其动作打开自定义 AboutView
+            // 拦截系统默认 About 项，改用标准 About 面板（带仓库/许可证链接）
             CommandGroup(replacing: .appInfo) {
                 Button(L10n.t(.about)) {
-                    showAbout = true
+                    AboutPanel.show()
                 }
-            }
-            CommandGroup(after: .appSettings) {
-                Button(L10n.t(.settings)) {
-                    showSettings = true
-                }
-                .keyboardShortcut(",", modifiers: .command)
             }
             CommandGroup(after: .help) {
                 Button(L10n.t(.help)) {
@@ -60,12 +37,16 @@ struct SwiftLensApp: App {
                 .keyboardShortcut("?", modifiers: .command)
             }
         }
+
+        Settings {
+            SettingsView()
+                .preferredColorScheme(appState.theme.colorScheme)
+                .environmentObject(appState)
+        }
     }
 }
 
 extension Notification.Name {
-    static let openSettings = Notification.Name("SwiftLens.openSettings")
-    static let openAbout    = Notification.Name("SwiftLens.openAbout")
     static let openHelp     = Notification.Name("SwiftLens.openHelp")
     static let focusSearch  = Notification.Name("SwiftLens.focusSearch")
 }

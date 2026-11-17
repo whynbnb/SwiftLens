@@ -10,6 +10,7 @@ enum L10n {
     enum Key: String {
         // 设置 / 关于 / 帮助
         case settings
+        case general
         case about
         case help
         case more
@@ -409,6 +410,7 @@ enum L10n {
     /// 中文表
     private static let zh: [Key: String] = [
         .settings: "设置", .about: "关于 SwiftLens", .help: "帮助", .more: "更多", .language: "语言", .theme: "主题",
+        .general: "通用",
         .recentApps: "最近打开", .recentAppsEnabled: "记录最近打开的 app",
         .recentAppsHint: "仅保存在本机；使用安全作用域书签在重启后保持只读访问。",
         .removeRecent: "移除单项", .clearRecentApps: "清空最近打开",
@@ -645,6 +647,7 @@ enum L10n {
     /// 英文表（缺失时回退到 zh key 字面名）
     private static let en: [Key: String] = [
         .settings: "Settings", .about: "About SwiftLens", .help: "Help", .more: "More", .language: "Language", .theme: "Theme",
+        .general: "General",
         .recentApps: "Recent Apps", .recentAppsEnabled: "Remember recent apps",
         .recentAppsHint: "Stored locally; security-scoped bookmarks keep read-only access after relaunch.",
         .removeRecent: "Remove Item", .clearRecentApps: "Clear Recent Apps",

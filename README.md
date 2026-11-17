@@ -57,7 +57,8 @@ A native macOS app — built with Swift / SwiftUI / SPM — for inspecting `.app
 - **Search & export** — search bar with `⌘F` filters Info.plist keys, entitlements, sub-bundles, privacy manifests, dependencies and launch items; **Copy JSON** (also `--json` in CLI) and **Copy Entitlements XML**.
 - **Recent apps** — `More ▸ Recent Apps` (second-level menu) keeps up to 10 apps with a live validity marker (valid / missing / invalid); click to reopen, remove a single entry, or clear all. Enabled by default in Settings and can be turned off; uses security-scoped bookmarks so read-only access survives relaunch.
 - **Help sheet** — explains every header badge (notarization levels, sandbox, quarantine, validity, agent / background / iOS port) and how to interpret them, opened via the toolbar `?` button, menu `⌘?` or window notification.
-- **Settings sheet** — language switch (Follow system / 中文 / English) and theme switch (Follow system / Light / Dark), persisted via `@AppStorage`.
+- **Native Settings window** — standard macOS `Settings` scene with **General** / **Recent Apps** tabs: language (Follow system / 中文 / English), theme, and recent-apps recording (on by default), persisted via `@AppStorage`.
+- **Standard About panel** — macOS About panel with app icon, version / build, copyright, and clickable Repository / License links.
 - **Hidden CLI mode** — `swift run SwiftLens /path/to.app` prints a full localized plain-text summary and exits; `--json` outputs a structured JSON report. Useful for scripting.
 
 ## Sandbox notes
@@ -111,15 +112,15 @@ SwiftLens/
 ├─ SwiftLens.xcodeproj/                # generated Xcode project (kept in git)
 ├─ SwiftLens/
 │  ├─ Info.plist
-│  ├─ SwiftLens.entitlements           # app-sandbox + read-only user file access
+│  ├─ SwiftLens.entitlements           # app-sandbox + read-only user file access + bookmarks
 │  └─ Assets.xcassets/
 │     └─ AppIcon.appiconset/
 └─ Sources/SwiftLens/
    ├─ SwiftLensApp.swift               # @main App + AppDelegate (CLI mode + Dock focus fix)
-   ├─ AppState.swift                   # language / theme persistence
+   ├─ AppState.swift                   # language / theme / recent apps persistence
    ├─ L10n.swift                       # runtime zh/en string table (live switch)
-   ├─ SettingsView.swift               # settings sheet
-   ├─ AboutView.swift                  # about sheet
+   ├─ SettingsView.swift               # native Settings window (General / Recent Apps)
+   ├─ AppMeta.swift                    # app metadata + standard About panel
    ├─ HelpView.swift                   # help sheet (badge legend)
    ├─ ContentView.swift                # drag-and-drop shell + loading overlay (race-safe)
    ├─ DetailView.swift                 # all info sections + header badges + Badge view
@@ -129,12 +130,14 @@ SwiftLens/
    ├─ QuarantineReader.swift           # com.apple.quarantine read (incl. UUID)
    ├─ ExtendedXattrReader.swift        # full xattr enumeration
    ├─ ArchitectureReader.swift         # Mach-O / fat header parse (arm64e / PAC aware)
+   ├─ MachODependencyReader.swift      # LC_LOAD_DYLIB / LC_RPATH + @rpath resolution
    ├─ CodeSignReader.swift             # Security-framework-only: SecStaticCodeCheckValidity
    │                                    #   (kSecCSStrictValidate | kSecCSCheckAllArchitectures)
    │                                    #   + SecCodeCopySigningInformation
-   ├─ SubBundleScanner.swift           # Frameworks / Helpers / XPC / PlugIns / Extensions /
-   │                                    #   Library/SystemExtensions / Library/LaunchServices scan
+   ├─ SubBundleScanner.swift           # Frameworks / SharedFrameworks / Helpers / XPC /
+   │                                    #   PlugIns / Extensions / Library scans
    ├─ PrivacyReader.swift              # TCC usage-description catalog
+   ├─ PrivacyManifestReader.swift      # PrivacyInfo.xcprivacy + MAS receipt
    └─ ExtraInfoReader.swift            # Sparkle / AppleScript / iCloud / Bonjour / ...
 ```
 
