@@ -60,6 +60,7 @@ enum L10n {
         case codeSigning
         case entitlements
         case subBundles
+        case launchAgents
         case sparkle
         case appleScriptSiri
         case icloud
@@ -403,6 +404,7 @@ enum L10n {
         .ats: "网络安全 / ATS · Electron", .quarantine: "Quarantine 隔离标记",
         .xattrs: "扩展属性 (xattrs)", .codeSigning: "代码签名 (Code Signing)",
         .entitlements: "Entitlements 权限", .subBundles: "内嵌子 bundle",
+        .launchAgents: "启动项 (Launch Agents / Daemons)",
         .sparkle: "Sparkle 自动更新", .appleScriptSiri: "AppleScript / Siri / Intents",
         .icloud: "iCloud (NSUbiquitousContainers)", .notifications: "通知 (Notifications)",
         .behaviors: "杂项开关 (生命周期 / 加密合规 / GPU)",
@@ -623,6 +625,7 @@ enum L10n {
         .ats: "Network Security / ATS · Electron", .quarantine: "Quarantine Flag",
         .xattrs: "Extended Attributes (xattrs)", .codeSigning: "Code Signing",
         .entitlements: "Entitlements", .subBundles: "Embedded Sub Bundles",
+        .launchAgents: "Launch Agents / Daemons",
         .sparkle: "Sparkle Auto Update", .appleScriptSiri: "AppleScript / Siri / Intents",
         .icloud: "iCloud (NSUbiquitousContainers)", .notifications: "Notifications",
         .behaviors: "Misc Switches (Lifecycle / Crypto / GPU)",

@@ -69,6 +69,7 @@ struct DetailView: View {
                         .id(DetailAnchor.entitlements)
                     subBundlesSection
                         .id(DetailAnchor.subBundles)
+                    launchItemsSection
                     sparkleSection
                     appleScriptSiriSection
                     iCloudSection
@@ -919,6 +920,18 @@ struct DetailView: View {
                                 RowView(key: L10n.t(.archShort),
                                         value: sub.architectures.joined(separator: ", "))
                             }
+                            if let v = sub.extensionPoint {
+                                RowView(key: "NSExtensionPointIdentifier", value: v)
+                            }
+                            if let v = sub.principalClass {
+                                RowView(key: "NSExtensionPrincipalClass", value: v)
+                            }
+                            if let v = sub.xpcServiceType {
+                                RowView(key: "XPCService.ServiceType", value: v)
+                            }
+                            if let v = sub.xpcRunLoopType {
+                                RowView(key: "XPCService.RunLoopType", value: v)
+                            }
                             if let runtime = sub.runtimeVersion {
                                 RowView(key: "Runtime Version", value: runtime)
                             }
@@ -976,6 +989,18 @@ struct DetailView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(maxHeight: 280)
+            }
+        }
+    }
+
+    // MARK: Launch Agents / Daemons
+    @ViewBuilder
+    private var launchItemsSection: some View {
+        if !info.launchAgents.isEmpty {
+            SectionView(L10n.t(.launchAgents), subtitle: "\(info.launchAgents.count)") {
+                ForEach(info.launchAgents) { item in
+                    RowView(key: item.label, value: item.relativePath)
+                }
             }
         }
     }

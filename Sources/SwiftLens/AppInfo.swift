@@ -3,6 +3,13 @@ import AppKit
 
 // MARK: - AppInfo 模型
 
+/// Contents/Library/LaunchAgents 或 LaunchDaemons 中的一项。
+struct LaunchAgentItem: Identifiable {
+    var id: String { relativePath }
+    let relativePath: String
+    let label: String
+}
+
 /// 收集一个 .app bundle 的完整信息。
 struct AppInfo {
     let bundleURL: URL
@@ -99,6 +106,7 @@ struct AppInfo {
     // 子 bundle
     let subBundles: [SubBundle]
     let subBundlesTotalSize: UInt64
+    let launchAgents: [LaunchAgentItem]
 
     // 其它高价值键 (Sparkle / AppleScript / iCloud / Notifications / 开关)
     let extra: ExtraInfo
@@ -204,6 +212,9 @@ enum AppInfoLoader {
         // 隐私清单 / App Store 收据
         let privacyManifests = PrivacyManifestReader.read(bundleURL: url, subBundles: subResult.subBundles)
         let hasMASReceipt = PrivacyManifestReader.hasMASReceipt(bundleURL: url)
+
+        // LaunchAgents / LaunchDaemons
+        let launchAgents = scanLaunchAgents(at: url)
 
         // 隐私权限条目
         let privacyEntries = PrivacyReader.parse(from: rawPlist)
@@ -339,11 +350,38 @@ enum AppInfoLoader {
             dependencies: dependencies,
             subBundles: subResult.subBundles,
             subBundlesTotalSize: subResult.totalSize,
+            launchAgents: launchAgents,
             extra: ExtraInfoReader.read(from: rawPlist, bundleURL: url),
             privacyManifests: privacyManifests,
             hasMASReceipt: hasMASReceipt,
             icon: icon
         )
+    }
+
+    /// 扫描 Contents/Library/LaunchAgents 与 LaunchDaemons 中的 plist。
+    private static func scanLaunchAgents(at bundleURL: URL) -> [LaunchAgentItem] {
+        let dirs = [
+            "Contents/Library/LaunchAgents",
+            "Contents/Library/LaunchDaemons"
+        ]
+        var items: [LaunchAgentItem] = []
+        for dir in dirs {
+            let dirURL = bundleURL.appendingPathComponent(dir)
+            guard let entries = try? FileManager.default.contentsOfDirectory(atPath: dirURL.path) else { continue }
+            for name in entries where name.hasSuffix(".plist") {
+                let url = dirURL.appendingPathComponent(name)
+                var label = name
+                if let data = try? Data(contentsOf: url),
+                   let plist = try? PropertyListSerialization.propertyList(
+                    from: data, options: [], format: nil) as? [String: Any],
+                   let l = plist["Label"] as? String, !l.isEmpty {
+                    label = l
+                }
+                let rel = url.path.replacingOccurrences(of: bundleURL.path + "/", with: "")
+                items.append(LaunchAgentItem(relativePath: rel, label: label))
+            }
+        }
+        return items.sorted { $0.relativePath < $1.relativePath }
     }
 }
 
@@ -678,6 +716,12 @@ extension AppInfo {
         }
         if subBundles.count > 8 {
             lines.append("  ... \(L10n.t(.cliMore)) \(subBundles.count - 8) \(L10n.t(.cliPlistKeys))")
+        }
+        if !launchAgents.isEmpty {
+            lines.append("\(L10n.t(.launchAgents)): \(launchAgents.count)")
+            for item in launchAgents.prefix(5) {
+                lines.append("  · \(item.label) — \(item.relativePath)")
+            }
         }
         lines.append("\(L10n.t(.cliFileSize)): \(formattedFileSize()) (\(fileSize) \(L10n.t(.bytesUnit)))")
         lines.append("\(L10n.t(.masReceipt)): \(hasMASReceipt ? "YES" : "NO")")

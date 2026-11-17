@@ -21,6 +21,12 @@ struct SubBundle: Identifiable {
     let strictValidity: CodeSignInfo.Validity
     /// 该子 bundle 主可执行文件包含的架构（如 ["arm64", "x86_64"]）
     let architectures: [String]
+    /// App Extension: NSExtensionPointIdentifier / NSExtensionPrincipalClass
+    let extensionPoint: String?
+    let principalClass: String?
+    /// XPC Service: ServiceType / RunLoopType
+    let xpcServiceType: String?
+    let xpcRunLoopType: String?
     let note: String?                // 比如签名失败原因
 
     enum Kind: String {
@@ -155,6 +161,8 @@ enum SubBundleScanner {
         let sign = quickSign(at: url)
         let archs = executablePath(at: url, plist: plist)
             .map { ArchitectureReader.archNames(at: $0) } ?? []
+        let extensionInfo = plist["NSExtension"] as? [String: Any]
+        let xpcInfo = plist["XPCService"] as? [String: Any]
 
         return SubBundle(
             kind: kind,
@@ -169,6 +177,10 @@ enum SubBundleScanner {
             validity: sign.validity,
             strictValidity: sign.strictValidity,
             architectures: archs,
+            extensionPoint: extensionInfo?["NSExtensionPointIdentifier"] as? String,
+            principalClass: extensionInfo?["NSExtensionPrincipalClass"] as? String,
+            xpcServiceType: xpcInfo?["ServiceType"] as? String,
+            xpcRunLoopType: xpcInfo?["RunLoopType"] as? String,
             note: nil
         )
     }
