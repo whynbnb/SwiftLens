@@ -105,6 +105,17 @@ enum L10n {
         case offsetInFat
         case nonFat
         case machOMinOS
+        case lsMinByArch
+        case plistHealth
+        case plistPath
+        case plistFormat
+        case missingKeys
+        case executableExists
+        case codeSignatureResources
+        case healthOK
+        case healthIssues
+        case warnMissingPlistKeys
+        case warnNoExecutable
         case dependencies
         case depTotal
         case depSystem
@@ -436,6 +447,13 @@ enum L10n {
         .noExecOrIntelSlice: "未找到可执行文件或无法解析 Intel 切片",
         .sliceSize: "切片大小", .offsetInFat: "在 Fat 中偏移", .nonFat: "—(非 Fat)",
         .machOMinOS: "Mach-O 最低系统 (minos)",
+        .lsMinByArch: "按架构的最低系统版本",
+        .plistHealth: "Info.plist 健康检查", .plistPath: "Info.plist 路径",
+        .plistFormat: "格式", .missingKeys: "缺失的必需键",
+        .executableExists: "主可执行文件存在", .codeSignatureResources: "签名资源 (_CodeSignature)",
+        .healthOK: "正常", .healthIssues: "个问题",
+        .warnMissingPlistKeys: "缺少系统读取应用所需的键，可能导致无法启动",
+        .warnNoExecutable: "未找到主可执行文件",
         .dependencies: "依赖库 (Mach-O)", .depTotal: "依赖总数", .depSystem: "系统库",
         .depMissing: "缺失", .depWeak: "弱链接", .depArchMismatch: "架构不匹配",
         .depOk: "可解析", .depRPaths: "RPaths", .showAllDeps: "显示全部依赖",
@@ -661,6 +679,13 @@ enum L10n {
         .noExecOrIntelSlice: "No executable found, or Intel slice could not be parsed",
         .sliceSize: "Slice Size", .offsetInFat: "Offset in Fat", .nonFat: "— (not fat)",
         .machOMinOS: "Mach-O minos",
+        .lsMinByArch: "Min OS by Architecture",
+        .plistHealth: "Info.plist Health", .plistPath: "Info.plist path",
+        .plistFormat: "Format", .missingKeys: "Missing required keys",
+        .executableExists: "Executable exists", .codeSignatureResources: "Signature resources (_CodeSignature)",
+        .healthOK: "OK", .healthIssues: "issues",
+        .warnMissingPlistKeys: "Missing keys required by the system to launch the app",
+        .warnNoExecutable: "Main executable not found",
         .dependencies: "Dependencies (Mach-O)", .depTotal: "Total", .depSystem: "System",
         .depMissing: "Missing", .depWeak: "Weak", .depArchMismatch: "Arch mismatch",
         .depOk: "Resolved", .depRPaths: "RPaths", .showAllDeps: "Show all dependencies",

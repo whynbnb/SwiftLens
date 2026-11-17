@@ -17,6 +17,19 @@ struct SizeBreakdownItem: Identifiable {
     let size: UInt64
 }
 
+/// Info.plist 结构健康检查。
+struct InfoPlistHealth {
+    let path: String?
+    let format: String?
+    let missingKeys: [String]
+    let hasExecutable: Bool
+    let hasCodeSignature: Bool
+
+    var isOK: Bool {
+        path != nil && hasExecutable && missingKeys.isEmpty
+    }
+}
+
 /// 收集一个 .app bundle 的完整信息。
 struct AppInfo {
     let bundleURL: URL
@@ -45,6 +58,8 @@ struct AppInfo {
     let canAnimateAlpha: Bool?
     let supportsHighResolutionDisplays: Bool?
     let uses24HourClock: Bool?
+    /// LSMinimumSystemVersionByArchitecture: { "arm64": "11.0", "x86_64": "10.15" }
+    let lsMinimumSystemVersionByArchitecture: [String: String]
 
     // 链接 / 部署
     let sdkVersion: String?   // DTSDKName
@@ -97,6 +112,7 @@ struct AppInfo {
     // Info.plist 全部键值
     let rawInfoPlist: [String: Any]
     let flatRows: [(String, String)]
+    let infoPlistHealth: InfoPlistHealth
 
     // 扩展属性 / 隔离
     let quarantine: QuarantineInfo?
@@ -309,6 +325,44 @@ enum AppInfoLoader {
             mainArchs: architectures.map(\.name)
         )
 
+        // Info.plist 健康检查
+        let plistURL = InfoPlistParser.plistURL(at: url)
+        let requiredKeys = [
+            "CFBundleIdentifier", "CFBundleExecutable", "CFBundlePackageType",
+            "CFBundleVersion", "CFBundleShortVersionString", "CFBundleName"
+        ]
+        var codeSignatureCandidates = [
+            url.appendingPathComponent("Contents/_CodeSignature/CodeResources"),
+            url.appendingPathComponent("_CodeSignature/CodeResources")
+        ]
+        let wrapperDirForSig = url.appendingPathComponent("Wrapper")
+        if let apps = try? FileManager.default.contentsOfDirectory(atPath: wrapperDirForSig.path) {
+            for app in apps where app.hasSuffix(".app") {
+                codeSignatureCandidates.append(
+                    wrapperDirForSig.appendingPathComponent("\(app)/_CodeSignature/CodeResources"))
+            }
+        }
+        let infoPlistHealth = InfoPlistHealth(
+            path: plistURL.map {
+                $0.path.replacingOccurrences(of: url.path + "/", with: "")
+            },
+            format: plistURL.flatMap { InfoPlistParser.formatDescription(at: $0) },
+            missingKeys: requiredKeys.filter { key in
+                guard let value = rawPlist[key] else { return true }
+                if let s = value as? String {
+                    return s.trimmingCharacters(in: .whitespaces).isEmpty
+                }
+                return false
+            },
+            hasExecutable: execPath != nil,
+            hasCodeSignature: codeSignatureCandidates.contains {
+                FileManager.default.fileExists(atPath: $0.path)
+            }
+        )
+        let lsMinByArch: [String: String] =
+            (rawPlist["LSMinimumSystemVersionByArchitecture"] as? [String: Any])?
+                .mapValues { InfoPlistParser.describe($0) } ?? [:]
+
         return AppInfo(
             bundleURL: url,
             displayName: str("CFBundleDisplayName"),
@@ -331,6 +385,7 @@ enum AppInfoLoader {
             canAnimateAlpha: (rawPlist["NSCanAnimateAlpha"] as? Bool),
             supportsHighResolutionDisplays: (rawPlist["NSSupportsHighResolutionDisplays"] as? Bool),
             uses24HourClock: (rawPlist["CFBundleUses24HourClock"] as? Bool),
+            lsMinimumSystemVersionByArchitecture: lsMinByArch,
             sdkVersion: str("DTSDKName"),
             platformName: str("DTPlatformName"),
             platformVersion: str("DTPlatformVersion"),
@@ -369,6 +424,7 @@ enum AppInfoLoader {
             permissions: perms,
             rawInfoPlist: rawPlist,
             flatRows: rows,
+            infoPlistHealth: infoPlistHealth,
             quarantine: QuarantineReader.read(for: url),
             extendedXattrs: extendedXattrs,
             codeSign: CodeSignReader.read(for: url),
@@ -507,7 +563,21 @@ extension AppInfo {
         lines.append("BundleID: \(bundleIdentifier ?? "—")")
         lines.append("\(L10n.t(.cliVersion)): \(bundleShortVersion ?? "—") (\(bundleVersion ?? "—"))")
         lines.append("\(L10n.t(.cliMinOS)): \(minimumOSVersion ?? "—")")
+        if !lsMinimumSystemVersionByArchitecture.isEmpty {
+            let pairs = lsMinimumSystemVersionByArchitecture.keys.sorted().map {
+                "\($0)=\(lsMinimumSystemVersionByArchitecture[$0] ?? "—")"
+            }
+            lines.append("  \(L10n.t(.lsMinByArch)): \(pairs.joined(separator: ", "))")
+        }
         lines.append("\(L10n.t(.cliSDK)): \(sdkVersion ?? "—") / \(platformName ?? "—") \(sdkBuild ?? "")")
+        let plistHealth = infoPlistHealth
+        let plistIssues = (plistHealth.path == nil ? 1 : 0)
+            + plistHealth.missingKeys.count
+            + (plistHealth.hasExecutable ? 0 : 1)
+        let healthText = plistIssues == 0
+            ? L10n.t(.healthOK)
+            : "\(plistIssues) \(L10n.t(.healthIssues))"
+        lines.append("\(L10n.t(.plistHealth)): \(plistHealth.format ?? "—") (\(plistHealth.path ?? "—")) — \(healthText)")
         let archs = architectures.map { "\($0.name)(\($0.bits)-bit, \($0.cpuType))" }.joined(separator: ", ")
         lines.append("\(L10n.t(.cliArchs)): \(archs.isEmpty ? "—" : archs)")
         if !supportedPlatforms.isEmpty {
@@ -762,6 +832,15 @@ extension AppInfo {
     /// 结构化 JSON 摘要（复制到剪贴板，供脚本/问题报告使用）。
     var jsonSummary: String {
         let cs = codeSign
+        let health = infoPlistHealth
+        let plistHealthDict: [String: Any] = [
+            "path": health.path ?? "",
+            "format": health.format ?? "",
+            "missingKeys": health.missingKeys,
+            "executableExists": health.hasExecutable,
+            "codeSignature": health.hasCodeSignature,
+            "ok": health.isOK
+        ]
         let dict: [String: Any] = [
             "name": displayName ?? bundleName ?? bundleURL.lastPathComponent,
             "path": bundleURL.path,
@@ -781,6 +860,8 @@ extension AppInfo {
                 return d
             },
             "sizeBreakdown": sizeBreakdown.map { ["name": $0.name, "size": $0.size] },
+            "infoPlist": plistHealthDict,
+            "lsMinByArch": lsMinimumSystemVersionByArchitecture,
             "signature": [
                 "state": cs.state.rawValue,
                 "validity": cs.validity.rawValue,

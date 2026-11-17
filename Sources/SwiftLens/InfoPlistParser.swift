@@ -10,26 +10,40 @@ enum InfoPlistParser {
     ///   - 标准 macOS: Contents/Info.plist
     ///   - iOS 应用 (Apple Silicon "iTMSTransporter" Wrapper): Wrapper/<name>.app/Info.plist
     static func parse(at bundleURL: URL) -> [String: Any]? {
-        // 1. 标准 macOS 布局
-        let standardPlist = bundleURL.appendingPathComponent("Contents/Info.plist")
-        if FileManager.default.fileExists(atPath: standardPlist.path),
-           let data = try? Data(contentsOf: standardPlist),
-           let pl = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
-            return pl
-        }
-        // 2. iOS 应用 Wrapper 布局: Wrapper/<name>.app/Info.plist
+        guard let url = plistURL(at: bundleURL),
+              let data = try? Data(contentsOf: url),
+              let pl = try? PropertyListSerialization.propertyList(
+                from: data, options: [], format: nil) as? [String: Any]
+        else { return nil }
+        return pl
+    }
+
+    /// 定位实际使用的 Info.plist（标准布局或 iOS Wrapper 布局）。
+    static func plistURL(at bundleURL: URL) -> URL? {
+        let standard = bundleURL.appendingPathComponent("Contents/Info.plist")
+        if FileManager.default.fileExists(atPath: standard.path) { return standard }
         let wrapperDir = bundleURL.appendingPathComponent("Wrapper")
         if let entries = try? FileManager.default.contentsOfDirectory(atPath: wrapperDir.path) {
             for name in entries where name.hasSuffix(".app") {
                 let iosPlist = wrapperDir.appendingPathComponent("\(name)/Info.plist")
-                if FileManager.default.fileExists(atPath: iosPlist.path),
-                   let data = try? Data(contentsOf: iosPlist),
-                   let pl = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
-                    return pl
-                }
+                if FileManager.default.fileExists(atPath: iosPlist.path) { return iosPlist }
             }
         }
         return nil
+    }
+
+    /// plist 文件格式（XML / Binary / OpenStep）。
+    static func formatDescription(at url: URL) -> String? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        var format = PropertyListSerialization.PropertyListFormat.xml
+        guard (try? PropertyListSerialization.propertyList(
+            from: data, options: [], format: &format)) != nil else { return nil }
+        switch format {
+        case .xml:      return "XML"
+        case .binary:   return "Binary"
+        case .openStep: return "OpenStep"
+        default:        return "Unknown"
+        }
     }
 
     /// 将任意 plist 值规整为可展示字符串。

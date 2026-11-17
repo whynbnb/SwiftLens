@@ -85,6 +85,7 @@ struct DetailView: View {
                         bonjourSection
                         sizeBreakdownSection
                         fileSection
+                        plistHealthSection
                         rawPlistSection
                         rawCodesignSection
                     } else {
@@ -360,6 +361,16 @@ struct DetailView: View {
             if info.lsMinimumSystemVersion == nil, info.minimumOSVersionIOS == nil,
                let v = info.machOMinimumOSVersion {
                 RowView(key: L10n.t(.machOMinOS), value: v)
+            }
+            if !info.lsMinimumSystemVersionByArchitecture.isEmpty {
+                Divider().padding(.vertical, 2)
+                Text(L10n.t(.lsMinByArch))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ForEach(info.lsMinimumSystemVersionByArchitecture.keys.sorted(), id: \.self) { arch in
+                    RowView(key: arch,
+                            value: info.lsMinimumSystemVersionByArchitecture[arch] ?? "—")
+                }
             }
             RowView(key: "LSApplicationCategoryType", value: info.applicationCategoryType ?? "—")
             RowView(key: "LSRequiresAquaSystemAppearance", value: bool(info.requiresAquaSystemAppearance))
@@ -1097,6 +1108,28 @@ struct DetailView: View {
                     bodyContent
                 }
             }
+        }
+    }
+
+    // MARK: Info.plist 健康检查
+    private var plistHealthSection: some View {
+        let health = info.infoPlistHealth
+        let issues = (health.path == nil ? 1 : 0)
+            + health.missingKeys.count
+            + (health.hasExecutable ? 0 : 1)
+        return SectionView(L10n.t(.plistHealth),
+                           subtitle: issues == 0 ? L10n.t(.healthOK) : "\(issues) \(L10n.t(.healthIssues))") {
+            RowView(key: L10n.t(.plistPath), value: health.path ?? "—")
+            RowView(key: L10n.t(.plistFormat), value: health.format ?? "—")
+            RowView(key: L10n.t(.missingKeys),
+                    value: health.missingKeys.isEmpty ? L10n.t(.healthOK)
+                        : health.missingKeys.joined(separator: ", "),
+                    warning: health.missingKeys.isEmpty ? nil : L10n.t(.warnMissingPlistKeys))
+            RowView(key: L10n.t(.executableExists),
+                    value: health.hasExecutable ? "YES" : "NO",
+                    warning: health.hasExecutable ? nil : L10n.t(.warnNoExecutable))
+            RowView(key: L10n.t(.codeSignatureResources),
+                    value: health.hasCodeSignature ? "YES" : "NO")
         }
     }
 
