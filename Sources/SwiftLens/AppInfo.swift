@@ -486,6 +486,16 @@ extension AppInfo {
         ArchitectureReader.maxMinOSVersion(architectures)
     }
 
+    /// 解析符号链接后的真实路径（例如 /Applications/Safari.app → /System/...）。
+    var resolvedBundlePath: String {
+        bundleURL.resolvingSymlinksInPath().path
+    }
+
+    /// 是否位于只读系统卷 /System 下（用于区分“Apple 签名”与“系统预装”）。
+    var isSystemLocation: Bool {
+        resolvedBundlePath.hasPrefix("/System/")
+    }
+
     /// 子 bundle 审计：签名有效性 / TeamID / 架构与主应用是否一致。
     /// 返回首个问题的本地化描述，全部正常时返回 nil。
     func subBundleIssue(_ sub: SubBundle) -> String? {
@@ -560,6 +570,10 @@ extension AppInfo {
 
         lines.append("# \(displayName ?? bundleName ?? bundleURL.lastPathComponent)")
         lines.append("\(L10n.t(.cliPath)): \(bundleURL.path)")
+        if resolvedBundlePath != bundleURL.path {
+            lines.append("  \(L10n.t(.resolvedPath)): \(resolvedBundlePath)")
+        }
+        lines.append("  \(L10n.t(.systemLocation)): \(isSystemLocation ? "YES" : "NO")")
         lines.append("BundleID: \(bundleIdentifier ?? "—")")
         lines.append("\(L10n.t(.cliVersion)): \(bundleShortVersion ?? "—") (\(bundleVersion ?? "—"))")
         lines.append("\(L10n.t(.cliMinOS)): \(minimumOSVersion ?? "—")")
@@ -844,6 +858,8 @@ extension AppInfo {
         let dict: [String: Any] = [
             "name": displayName ?? bundleName ?? bundleURL.lastPathComponent,
             "path": bundleURL.path,
+            "resolvedPath": resolvedBundlePath,
+            "systemLocation": isSystemLocation,
             "bundleIdentifier": bundleIdentifier ?? "",
             "version": bundleShortVersion ?? "",
             "build": bundleVersion ?? "",

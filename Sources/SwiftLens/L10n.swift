@@ -191,6 +191,9 @@ enum L10n {
         case riskTempException
         // 文件信息
         case fullPath
+        case resolvedPath
+        case systemLocation
+        case systemLocationHint
         case totalSize
         case modifiedTime
         case createdTime
@@ -515,6 +518,8 @@ enum L10n {
         .riskTempException: "使用临时例外 entitlement (通常仅限 App Store)",
         // 文件信息
         .fullPath: "完整路径", .totalSize: "总大小", .modifiedTime: "修改时间",
+        .resolvedPath: "解析后路径", .systemLocation: "系统位置 (/System)",
+        .systemLocationHint: "「系统位置」表示解析符号链接后位于 /System 只读系统卷；Apple 签名但不在 /System 的应用属于 Apple 分发工具，不一定预装。",
         .createdTime: "创建时间", .permissionsOctal: "权限 (octal)",
         // 子 bundle
         .versionLabel: "版本",
@@ -553,11 +558,11 @@ enum L10n {
         .helpDevIDTitle: "Developer ID 签名",
         .helpDevIDDesc: "Developer ID 证书签名，但未通过严格验证（签名可能已损坏、资源缺失或被修改）。Gatekeeper 会拒绝运行。",
         .helpMASTitle: "Mac App Store",
-        .helpMASDesc: "通过 Mac App Store 分发的应用，使用 Apple Mac OS Application Signing 证书签名。",
+        .helpMASDesc: "通过 Mac App Store 分发的应用（含第三方），使用 Apple Mac OS Application Signing 证书签名。",
         .helpIOSStoreTitle: "iOS App Store",
-        .helpIOSStoreDesc: "iOS 应用（在 Apple Silicon Mac 上运行），使用 Apple iPhone OS Application Signing 证书签名。天然沙盒。",
+        .helpIOSStoreDesc: "iOS App Store 应用（含第三方），在 Apple Silicon Mac 上运行，使用 Apple iPhone OS Application Signing 证书签名。天然沙盒。",
         .helpAppleSystemTitle: "Apple 系统签名",
-        .helpAppleSystemDesc: "macOS 系统自带应用，使用 macOS Software Signing 证书签名。无需公证。",
+        .helpAppleSystemDesc: "由 Apple 的 macOS Software Signing 证书签名（系统自带应用或 Apple 分发的工具）。不要求公证；是否预装可结合「系统位置」判断。",
         .helpNotNotarizedTitle: "未公证",
         .helpNotNotarizedDesc: "Ad-hoc 签名、未签名或其它无法判定公证状态的情况。Gatekeeper 默认拒绝。",
         // 沙盒
@@ -752,6 +757,8 @@ enum L10n {
         .riskTempException: "Uses temporary-exception entitlement (normally App Store only)",
         // 文件信息
         .fullPath: "Full Path", .totalSize: "Total Size", .modifiedTime: "Modification Time",
+        .resolvedPath: "Resolved Path", .systemLocation: "System location (/System)",
+        .systemLocationHint: "System location means the resolved path is on the read-only /System volume. An Apple-signed app outside /System is Apple-distributed but not necessarily preinstalled.",
         .createdTime: "Creation Time", .permissionsOctal: "Permissions (octal)",
         // 子 bundle
         .versionLabel: "Version",
@@ -790,11 +797,11 @@ enum L10n {
         .helpDevIDTitle: "Developer ID (not notarized)",
         .helpDevIDDesc: "Signed with a Developer ID certificate but failed strict validation (signature may be damaged, resources missing, or modified). Gatekeeper will refuse to run.",
         .helpMASTitle: "Mac App Store",
-        .helpMASDesc: "Distributed via the Mac App Store, signed with the Apple Mac OS Application Signing certificate.",
+        .helpMASDesc: "Distributed via the Mac App Store (including third-party apps), signed with the Apple Mac OS Application Signing certificate.",
         .helpIOSStoreTitle: "iOS App Store",
-        .helpIOSStoreDesc: "iOS app running on Apple Silicon Mac, signed with the Apple iPhone OS Application Signing certificate. Inherently sandboxed.",
+        .helpIOSStoreDesc: "iOS App Store app (including third-party) running on Apple Silicon Mac, signed with the Apple iPhone OS Application Signing certificate. Inherently sandboxed.",
         .helpAppleSystemTitle: "Apple System Signed",
-        .helpAppleSystemDesc: "Bundled with macOS, signed with the macOS Software Signing certificate. Notarization not required.",
+        .helpAppleSystemDesc: "Signed with Apple's macOS Software Signing certificate (preinstalled system apps or Apple-distributed tools). Notarization is not required; use System location to tell whether it is preinstalled.",
         .helpNotNotarizedTitle: "Not Notarized",
         .helpNotNotarizedDesc: "Ad-hoc signed, unsigned, or otherwise unable to determine notarization. Gatekeeper refuses by default.",
         // 沙盒

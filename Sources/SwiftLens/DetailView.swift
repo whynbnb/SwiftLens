@@ -984,6 +984,13 @@ struct DetailView: View {
     private var fileSection: some View {
         SectionView(L10n.t(.fileInfo)) {
             RowView(key: L10n.t(.fullPath), value: info.bundleURL.path)
+            if info.resolvedBundlePath != info.bundleURL.path {
+                RowView(key: L10n.t(.resolvedPath), value: info.resolvedBundlePath)
+            }
+            RowView(key: L10n.t(.systemLocation), value: info.isSystemLocation ? "YES" : "NO")
+            Text(L10n.t(.systemLocationHint))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
             RowView(key: L10n.t(.totalSize), value: "\(info.formattedFileSize()) (\(info.fileSize) \(L10n.t(.bytesUnit)))")
             RowView(key: L10n.t(.modifiedTime), value: info.modificationDate.map { iso($0) } ?? "—")
             RowView(key: L10n.t(.createdTime), value: info.creationDate.map { iso($0) } ?? "—")
