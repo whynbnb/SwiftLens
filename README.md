@@ -1,4 +1,16 @@
-# SwiftLens
+<p align="center">
+  <img src="docs/appicon.png" width="140" alt="SwiftLens icon">
+</p>
+
+<h1 align="center">SwiftLens</h1>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-macOS%2015.0%2B-blue" alt="Platform: macOS 15+">
+  <img src="https://img.shields.io/badge/Swift-6.0-orange" alt="Swift 6">
+  <img src="https://img.shields.io/badge/UI-SwiftUI-purple" alt="SwiftUI">
+  <img src="https://img.shields.io/badge/App%20Sandbox-enabled-brightgreen" alt="App Sandbox">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT">
+</p>
 
 > Vibe-coded with DeepSeek V4.1 Flash / OpenCode.
 
