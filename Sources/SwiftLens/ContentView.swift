@@ -41,7 +41,7 @@ struct ContentView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { openPanel() } label: {
-                    Label(L10n.t(.openApp), systemImage: "folder.badge.plus")
+                    Label(L10n.t(.openApp), systemImage: "square.and.arrow.down")
                 }
                 .help(L10n.t(.openApp))
             }
