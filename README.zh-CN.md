@@ -54,6 +54,7 @@
 - **Bonjour** —— `NSBonjourServices` 原样显示，不再追加 `_…._tcp` 后缀造成重复拼接。
 - **文件信息** —— 递归 bundle 体积、修改 / 创建时间、八进制权限、App Store 收据，以及按 `Contents` 一级目录统计的 **体积构成** 与占比。
 - **Info.plist 健康检查** —— 实际 plist 路径、XML / Binary 格式、缺失必需键、主可执行文件与 `_CodeSignature` 资源检查，并展示 `LSMinimumSystemVersionByArchitecture`。
+- **版本对比窗口** —— `⌘⇧D` 或 `更多 ▸ 版本对比…` 打开独立窗口，选择两个 `.app`（也可直接拖入）。两边分析完成后，会用 Bundle ID、Team ID、签名证书、可执行文件名、应用名与内嵌结构判断是否同一软件——换 Bundle ID 或改名后仍可对比；证据不足时默认不对比，可手动强制对比。差异按基本信息、体积构成、架构、Mach-O 依赖、子 bundle、entitlements、完整 Info.plist、文档类型、URL Scheme、隐私清单与启动项分区展示，支持筛选与「显示未变化项」。
 - **文件树** —— 可展开的 bundle 文件树，目录体积递归汇总，经典目录优先排序，标准路径带角色徽章和 ⓘ 悬浮说明。可在 `更多 ▸ 显示文件树` 或设置中隐藏，并记住选择。超大 bundle 的可见树最多 4,000 个节点，体积统计仍为完整值。
 - **经典结构帮助标签页** —— `帮助 ▸ 经典结构` 按「容器与代码 / 签名与元数据 / 资源与隐私」三组解释每个标准条目：`Contents/Info.plist`、`MacOS/<CFBundleExecutable>`、`Resources`、`Frameworks`、`SharedFrameworks`、`PlugIns`、`XPCServices`、`Library`、`_CodeSignature/CodeResources`、`PkgInfo`、`embedded.provisionprofile`、`PrivacyInfo.xcprivacy`、`*.lproj`、`Assets.car`、`*.icns`、`_MASReceipt/receipt` 以及 iOS 的 `Wrapper/` 布局。
 - **原始 `Info.plist`**（扁平化全键值）与 **合成的 `codesign -dvvv` 输出**，便于调试。plist 中 `Bool` 值正确显示为 `YES` / `NO`，而不再是 `1` / `0`。

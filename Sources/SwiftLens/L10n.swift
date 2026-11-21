@@ -152,6 +152,52 @@ enum L10n {
         case roleReceiptDesc
         case roleWrapper
         case roleWrapperDesc
+        // 版本对比
+        case compareVersions
+        case compareWindowTitle
+        case cmpOldVersion
+        case cmpNewVersion
+        case cmpPickApp
+        case cmpChange
+        case cmpDropHint
+        case cmpReadyHint
+        case cmpAnalyzing
+        case cmpSwap
+        case cmpIdentitySame
+        case cmpIdentityLikely
+        case cmpIdentityUncertain
+        case cmpIdentityHint
+        case cmpForceCompare
+        case cmpEvidence
+        case cmpConcerns
+        case cmpSimilarity
+        case cmpChangedUnit
+        case cmpDifferences
+        case cmpSizeDelta
+        case cmpCaution
+        case cmpShowUnchanged
+        case cmpNoChanges
+        case cmpFilterPlaceholder
+        case cmpIdentity
+        case cmpSize
+        case cmpStructure
+        case cmpPlist
+        case cmpFileCount
+        case cmpSandbox
+        case cmpForced
+        case cmpEvidenceBundleID
+        case cmpEvidenceTeam
+        case cmpEvidenceCert
+        case cmpEvidenceName
+        case cmpEvidenceNameSimilar
+        case cmpEvidenceExec
+        case cmpEvidenceStructure
+        case cmpConcernBundleID
+        case cmpConcernTeam
+        case cmpConcernName
+        case cmpConcernExec
+        case cmpConcernStructure
+        case cmpConcernSigning
         case rawPlist
         case rawCodesign
         // 文档类型 row inner
@@ -551,6 +597,34 @@ enum L10n {
         .roleIcon: "图标文件", .roleIconDesc: "CFBundleIconFile / CFBundleIconName 引用的 .icns 图标。",
         .roleReceipt: "App Store 收据", .roleReceiptDesc: "_MASReceipt/receipt 证明应用来自 Mac App Store。",
         .roleWrapper: "iOS 移植包", .roleWrapperDesc: "Wrapper/<name>.app 是 iPhone / iPad 应用的包结构，可在 Apple 芯片上运行。",
+        // 版本对比
+        .compareVersions: "版本对比…", .compareWindowTitle: "版本对比",
+        .cmpOldVersion: "旧版本", .cmpNewVersion: "新版本",
+        .cmpPickApp: "选择 .app", .cmpChange: "更换",
+        .cmpDropHint: "拖入 .app，或点击选择",
+        .cmpReadyHint: "选择两个不同版本的 .app 开始对比。Bundle ID 或应用名变化也能识别。",
+        .cmpAnalyzing: "正在分析两个版本…",
+        .cmpSwap: "交换新旧版本",
+        .cmpIdentitySame: "确认同一软件", .cmpIdentityLikely: "很可能是同一软件",
+        .cmpIdentityUncertain: "无法确认是同一软件",
+        .cmpIdentityHint: "通过签名、可执行文件名、应用名与内嵌结构综合判断。若确认无误，可以强制对比。",
+        .cmpForceCompare: "仍然对比",
+        .cmpEvidence: "判定依据", .cmpConcerns: "疑点", .cmpSimilarity: "相似度",
+        .cmpChangedUnit: "处变化", .cmpDifferences: "处差异", .cmpSizeDelta: "体积变化",
+        .cmpCaution: "差异较大：可能是大版本更新，也可能不是同一软件，请结合判定依据确认。",
+        .cmpShowUnchanged: "显示未变化项", .cmpNoChanges: "两个版本在已检查的项目中没有差异",
+        .cmpFilterPlaceholder: "筛选差异项…",
+        .cmpIdentity: "基本信息", .cmpSize: "体积与构成", .cmpStructure: "结构变化",
+        .cmpPlist: "Info.plist 差异", .cmpFileCount: "文件数", .cmpSandbox: "沙盒",
+        .cmpForced: "已强制对比：两项可能不是同一软件，差异仅供参考。",
+        .cmpEvidenceBundleID: "Bundle ID 相同", .cmpEvidenceTeam: "Team ID 相同",
+        .cmpEvidenceCert: "签名证书相同", .cmpEvidenceName: "应用名称相同",
+        .cmpEvidenceNameSimilar: "应用名称相近", .cmpEvidenceExec: "可执行文件名相同",
+        .cmpEvidenceStructure: "内嵌结构高度重合",
+        .cmpConcernBundleID: "Bundle ID 不同", .cmpConcernTeam: "Team ID 不同",
+        .cmpConcernName: "应用名称不同", .cmpConcernExec: "可执行文件名不同",
+        .cmpConcernStructure: "内嵌结构差异较大",
+        .cmpConcernSigning: "任一侧为 Ad-hoc 或未签名，缺少身份证据",
         .extName: "扩展名", .prioLogo: "优先级", .utis: "UTIs", .prioKey: "优先级",
         .iconFile: "图标文件", .noneDocType: "未声明自定义文档类型",
         .noneXattrs: "无任何扩展属性", .invalidApp: "不是 .app bundle",
@@ -825,6 +899,34 @@ enum L10n {
         .roleIcon: "Icon", .roleIconDesc: "The .icns icon referenced by CFBundleIconFile / CFBundleIconName.",
         .roleReceipt: "App Store receipt", .roleReceiptDesc: "_MASReceipt/receipt proves the app came from the Mac App Store.",
         .roleWrapper: "iOS wrapper", .roleWrapperDesc: "Wrapper/<name>.app is the iPhone / iPad bundle layout, runnable on Apple silicon.",
+        // 版本对比
+        .compareVersions: "Compare Versions…", .compareWindowTitle: "Compare Versions",
+        .cmpOldVersion: "Older version", .cmpNewVersion: "Newer version",
+        .cmpPickApp: "Choose .app", .cmpChange: "Change",
+        .cmpDropHint: "Drop an .app, or click to choose",
+        .cmpReadyHint: "Pick two versions of an .app to compare. A changed bundle ID or app name can still be matched.",
+        .cmpAnalyzing: "Analyzing both versions…",
+        .cmpSwap: "Swap versions",
+        .cmpIdentitySame: "Same software confirmed", .cmpIdentityLikely: "Likely the same software",
+        .cmpIdentityUncertain: "Cannot confirm the same software",
+        .cmpIdentityHint: "Signing identity, executable name, app name and embedded structure are used as evidence. If you are sure, compare anyway.",
+        .cmpForceCompare: "Compare anyway",
+        .cmpEvidence: "Evidence", .cmpConcerns: "Concerns", .cmpSimilarity: "Similarity",
+        .cmpChangedUnit: "changed", .cmpDifferences: "Differences", .cmpSizeDelta: "Size change",
+        .cmpCaution: "Large differences: could be a major update, or a different app. Check the evidence before trusting the result.",
+        .cmpShowUnchanged: "Show unchanged", .cmpNoChanges: "No differences in the checked items",
+        .cmpFilterPlaceholder: "Filter differences…",
+        .cmpIdentity: "Identity & basics", .cmpSize: "Size & composition", .cmpStructure: "Structure changes",
+        .cmpPlist: "Info.plist diff", .cmpFileCount: "Files", .cmpSandbox: "Sandbox",
+        .cmpForced: "Forced comparison: these may not be the same software; treat the differences as reference only.",
+        .cmpEvidenceBundleID: "Same bundle ID", .cmpEvidenceTeam: "Same Team ID",
+        .cmpEvidenceCert: "Same signing certificate", .cmpEvidenceName: "Same app name",
+        .cmpEvidenceNameSimilar: "Similar app name", .cmpEvidenceExec: "Same executable name",
+        .cmpEvidenceStructure: "Embedded structure largely matches",
+        .cmpConcernBundleID: "Different bundle ID", .cmpConcernTeam: "Different Team ID",
+        .cmpConcernName: "Different app name", .cmpConcernExec: "Different executable name",
+        .cmpConcernStructure: "Embedded structure differs substantially",
+        .cmpConcernSigning: "At least one side is ad-hoc or unsigned; identity evidence is weak",
         .extName: "Extensions", .prioLogo: "Rank", .utis: "UTIs", .prioKey: "Rank",
         .iconFile: "Icon file", .noneDocType: "No custom document type declared",
         .noneXattrs: "No extended attributes", .invalidApp: "Not an .app bundle",

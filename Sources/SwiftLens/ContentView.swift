@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.openSettings) private var openSettings
+    @Environment(\.openWindow) private var openWindow
     @State private var info: AppInfo?
     @State private var loading: Bool = false
     @State private var dropHover: Bool = false
@@ -108,6 +109,12 @@ struct ContentView: View {
                     }
                     Divider()
                     Toggle(L10n.t(.showFileTree), isOn: $appState.showFileTree)
+                    Divider()
+                    Button {
+                        openWindow(id: "compare")
+                    } label: {
+                        Label(L10n.t(.compareVersions), systemImage: "rectangle.split.2x1")
+                    }
                     Divider()
                     Button {
                         openSettings()
@@ -247,12 +254,12 @@ struct ContentView: View {
         loadID &+= 1
         let currentID = loadID
         let work = url
-        // 在仍有访问权限时创建安全作用域书签，供「最近打开」重启后使用
-        let bookmark = appState.recentAppsEnabled ? try? url.bookmarkData(
+        // 在仍有访问权限时创建安全作用域书签，供「最近打开」与版本对比窗口使用
+        let bookmark = try? url.bookmarkData(
             options: [.withSecurityScope, .securityScopeAllowOnlyReadAccess],
             includingResourceValuesForKeys: nil,
             relativeTo: nil
-        ) : nil
+        )
         DispatchQueue.global(qos: .userInitiated).async {
             let result = AppInfoLoader.load(url: work)
             if securityScoped { work.stopAccessingSecurityScopedResource() }
@@ -262,6 +269,8 @@ struct ContentView: View {
                 self.pendingTitle = nil
                 self.info = result
                 self.loading = false
+                self.appState.currentAppURL = work
+                self.appState.currentAppBookmark = bookmark
                 self.appState.recordRecentApp(
                     url: work,
                     name: result.displayName ?? result.bundleName
@@ -289,6 +298,8 @@ struct ContentView: View {
         lastError = nil
         pendingTitle = nil
         loading = false
+        appState.currentAppURL = nil
+        appState.currentAppBookmark = nil
     }
 }
 

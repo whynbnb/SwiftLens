@@ -37,12 +37,36 @@ struct SwiftLensApp: App {
                 }
                 .keyboardShortcut("?", modifiers: .command)
             }
+            CompareCommands()
         }
 
         Settings {
             SettingsView()
                 .preferredColorScheme(appState.theme.colorScheme)
                 .environmentObject(appState)
+        }
+
+        Window(L10n.t(.compareWindowTitle), id: "compare") {
+            CompareView()
+                .preferredColorScheme(appState.theme.colorScheme)
+                .environmentObject(appState)
+        }
+        .defaultSize(width: 1120, height: 780)
+    }
+}
+
+// MARK: - 菜单命令
+
+/// 版本对比窗口的全局菜单项（⌘⇧D）。
+struct CompareCommands: Commands {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some Commands {
+        CommandGroup(after: .newItem) {
+            Button(L10n.t(.compareVersions)) {
+                openWindow(id: "compare")
+            }
+            .keyboardShortcut("d", modifiers: [.command, .shift])
         }
     }
 }

@@ -82,6 +82,11 @@ final class AppState: ObservableObject {
     /// 由 Finder / 其他应用「用 SwiftLens 打开」传入的 .app，等待 ContentView 消费。
     @Published var pendingOpenURL: URL?
 
+    /// 主窗口当前正在展示的 .app（供版本对比窗口预填）。
+    @Published var currentAppURL: URL?
+    /// 当前 app 的安全作用域书签：对比窗口预填时恢复读取权限。
+    @Published var currentAppBookmark: Data?
+
     @AppStorage("swiftlens.language") var language: AppLanguage = .system
     @AppStorage("swiftlens.theme")   var theme: AppTheme = .system
     @AppStorage("swiftlens.recentAppsEnabled") var recentAppsEnabled: Bool = true
