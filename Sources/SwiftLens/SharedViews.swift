@@ -7,6 +7,41 @@ func copyToPasteboard(_ string: String) {
     NSPasteboard.general.setString(string, forType: .string)
 }
 
+/// 与应用内语言一致的体积格式化。
+/// ByteCountFormatter 跟随系统 Locale，英文界面下会出现中文单位（如「字节」），
+/// 因此这里自行选择单位与小数位。
+enum ByteSize {
+    static func string(_ bytes: UInt64) -> String {
+        let units = ["KB", "MB", "GB", "TB", "PB"]
+        if bytes < 1000 {
+            return "\(bytes) \(L10n.t(.bytesUnit))"
+        }
+        var value = Double(bytes) / 1000
+        var index = 0
+        while value >= 1000, index < units.count - 1 {
+            value /= 1000
+            index += 1
+        }
+
+        let number: String
+        if value >= 100 {
+            number = String(format: "%.0f", value)
+        } else if value >= 10 {
+            number = trimmed(String(format: "%.1f", value))
+        } else {
+            number = trimmed(String(format: "%.2f", value))
+        }
+        return "\(number) \(units[index])"
+    }
+
+    private static func trimmed(_ s: String) -> String {
+        var out = s
+        while out.hasSuffix("0") { out.removeLast() }
+        if out.hasSuffix(".") { out.removeLast() }
+        return out
+    }
+}
+
 /// 单行 键 -> 值 展示，支持长按 / 右键复制。
 /// 超长键名改为「键在上、值在下」，避免在单词中间换行。
 struct RowView: View {
@@ -69,15 +104,21 @@ struct RowView: View {
     }
 }
 
-/// 标题分区。
+/// 标题分区。可选在标题栏右侧放置操作按钮。
 struct SectionView<Content: View>: View {
     let title: String
     let subtitle: String?
+    let leading: AnyView?
+    let trailing: AnyView?
     @ViewBuilder let content: () -> Content
 
-    init(_ title: String, subtitle: String? = nil, @ViewBuilder content: @escaping () -> Content) {
+    init(_ title: String, subtitle: String? = nil,
+         leading: AnyView? = nil, trailing: AnyView? = nil,
+         @ViewBuilder content: @escaping () -> Content) {
         self.title = title
         self.subtitle = subtitle
+        self.leading = leading
+        self.trailing = trailing
         self.content = content
     }
 
@@ -91,7 +132,13 @@ struct SectionView<Content: View>: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                if let leading {
+                    leading
+                }
                 Spacer()
+                if let trailing {
+                    trailing
+                }
             }
             VStack(alignment: .leading, spacing: 4) {
                 content()

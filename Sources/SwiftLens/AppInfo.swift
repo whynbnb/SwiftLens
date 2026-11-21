@@ -105,6 +105,7 @@ struct AppInfo {
     // 文件系统
     let fileSize: UInt64
     let sizeBreakdown: [SizeBreakdownItem]
+    let bundleTree: BundleTree
     let modificationDate: Date?
     let creationDate: Date?
     let permissions: String?
@@ -190,7 +191,6 @@ enum AppInfoLoader {
         }()
 
         // 文件系统属性
-        var fileSize: UInt64 = 0
         var modDate: Date?
         var creationDate: Date?
         var perms: String?
@@ -201,32 +201,10 @@ enum AppInfoLoader {
                 perms = String(format: "%o", posix.intValue)
             }
         }
-        // bundle 是目录，体积需递归累加；同时按 Contents 下的一级目录统计构成
-        var breakdown: [String: UInt64] = [:]
-        let bundlePath = url.path
-        if let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey], options: []) {
-            for case let fileURL as URL in enumerator {
-                if let v = try? fileURL.resourceValues(forKeys: [.fileSizeKey]),
-                   let s = v.fileSize {
-                    fileSize += UInt64(s)
-                    let path = fileURL.path
-                    let rel = path.hasPrefix(bundlePath + "/")
-                        ? String(path.dropFirst(bundlePath.count + 1))
-                        : path
-                    let parts = rel.split(separator: "/")
-                    let key: String
-                    if parts.first == "Contents", parts.count > 1 {
-                        key = String(parts[1])
-                    } else {
-                        key = parts.first.map(String.init) ?? "—"
-                    }
-                    breakdown[key, default: 0] += UInt64(s)
-                }
-            }
-        }
-        let sizeBreakdown = breakdown
-            .map { SizeBreakdownItem(name: $0.key, size: $0.value) }
-            .sorted { $0.size > $1.size }
+        // bundle 是目录：一次遍历同时得到总体积、顶级目录构成与限量文件树
+        let treeResult = BundleTreeReader.read(bundleURL: url, executableName: execName)
+        let fileSize = treeResult.totalSize
+        let sizeBreakdown = treeResult.breakdown
 
         // URL Schemes
         var schemes: [String] = []
@@ -419,6 +397,7 @@ enum AppInfoLoader {
             isIOSPort: isIOSPort,
             fileSize: fileSize,
             sizeBreakdown: sizeBreakdown,
+            bundleTree: treeResult.tree,
             modificationDate: modDate,
             creationDate: creationDate,
             permissions: perms,
@@ -469,16 +448,8 @@ enum AppInfoLoader {
 
 // MARK: - 格式化辅助
 extension AppInfo {
-    /// 共享的 ByteCountFormatter (避免每次调用重新分配)
-    nonisolated(unsafe) private static let byteFormatter: ByteCountFormatter = {
-        let f = ByteCountFormatter()
-        f.allowedUnits = [.useAll]
-        f.countStyle = .file
-        return f
-    }()
-
     func formattedFileSize() -> String {
-        Self.byteFormatter.string(fromByteCount: Int64(fileSize))
+        ByteSize.string(fileSize)
     }
 
     /// 仅来自 Mach-O 切片的最低系统版本 (Info.plist 未声明时的兜底/交叉校验)。
@@ -558,7 +529,7 @@ extension AppInfo {
     nonisolated(unsafe) private static let isoFormatter = ISO8601DateFormatter()
 
     private static func formatBytes(_ n: UInt64) -> String {
-        ByteCountFormatter.string(fromByteCount: Int64(n), countStyle: .file)
+        ByteSize.string(n)
     }
 
     /// 生成纯文本摘要。CLI (`swift run SwiftLens app`) 与「复制摘要」按钮共用此逻辑，

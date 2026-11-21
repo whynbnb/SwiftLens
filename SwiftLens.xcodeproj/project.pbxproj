@@ -11,9 +11,11 @@
 		0E69795E93C32CEDDC2D0FC7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 60DE6ADB7031C28DA5958098 /* Assets.xcassets */; };
 		2D1D30BE9D26A6D592696032 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8A33852E2CCDA0DEF418B8 /* L10n.swift */; };
 		30A5B52914B1E3138477806C /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37D255005297A2E3CAA6D7E /* DetailView.swift */; };
+		31886A6A27E0D833DEEDE68B /* BundleTreeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B252E844B41119B85E171600 /* BundleTreeReader.swift */; };
 		4397F0C6BF65F046CCDDD0AA /* ExtraInfoReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EE3F81620219ECDED462D3E /* ExtraInfoReader.swift */; };
 		63446124D8536F3C0F7DA22F /* QuarantineReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F4FC2179C1929ECFB2F76B /* QuarantineReader.swift */; };
 		6A1B304AEA06001F9FBE5ABC /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704B61365126BC67978333B2 /* HelpView.swift */; };
+		7C1A61F94C180CD19D5E0BE7 /* BundleTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE6AB77B4D4B84562EEFAFD0 /* BundleTreeView.swift */; };
 		7DCF7F76132B80DF4BFAAE76 /* SwiftLensApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12CDEB5C90F426D51F23773D /* SwiftLensApp.swift */; };
 		880B808D17F4616316473A23 /* AppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C452BB8BE97BB79469AB8D /* AppInfo.swift */; };
 		90FAE49826412170FBE4EC18 /* InfoPlistParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 477E6AE75CCDD0E66CDC0B63 /* InfoPlistParser.swift */; };
@@ -46,11 +48,13 @@
 		704B61365126BC67978333B2 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		721350B973F0F0D2602AA76C /* MachODependencyReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachODependencyReader.swift; sourceTree = "<group>"; };
 		9F40FCCD35CE21ABC430456D /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
+		B252E844B41119B85E171600 /* BundleTreeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleTreeReader.swift; sourceTree = "<group>"; };
 		B8F4FC2179C1929ECFB2F76B /* QuarantineReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuarantineReader.swift; sourceTree = "<group>"; };
 		C37D255005297A2E3CAA6D7E /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
 		C46223D5510A6F3D23A95FB8 /* SubBundleScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubBundleScanner.swift; sourceTree = "<group>"; };
 		C9D75198F55662D1DF7CC70A /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		D3C452BB8BE97BB79469AB8D /* AppInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppInfo.swift; sourceTree = "<group>"; };
+		DE6AB77B4D4B84562EEFAFD0 /* BundleTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleTreeView.swift; sourceTree = "<group>"; };
 		E8E0EEAA59E4030BCDBC59E9 /* SwiftLens.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F89D7B19C67A6CC0E2288052 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -71,6 +75,8 @@
 				1F19C9265F3B7ACC99CD08DE /* AppMeta.swift */,
 				C9D75198F55662D1DF7CC70A /* AppState.swift */,
 				312272AC65AD4042BC50775A /* ArchitectureReader.swift */,
+				B252E844B41119B85E171600 /* BundleTreeReader.swift */,
+				DE6AB77B4D4B84562EEFAFD0 /* BundleTreeView.swift */,
 				3C795C5BDC92F66A143953E7 /* CodeSignReader.swift */,
 				F89D7B19C67A6CC0E2288052 /* ContentView.swift */,
 				C37D255005297A2E3CAA6D7E /* DetailView.swift */,
@@ -144,7 +150,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					8791C02596D8E133EC0CE543 = {
 						DevelopmentTeam = "";
@@ -191,6 +197,8 @@
 				02EE9E55A968F626942D8BCB /* AppMeta.swift in Sources */,
 				C8A558CE16D3FC89251F2168 /* AppState.swift in Sources */,
 				C69D032D84BD60CA0E4946BF /* ArchitectureReader.swift in Sources */,
+				31886A6A27E0D833DEEDE68B /* BundleTreeReader.swift in Sources */,
+				7C1A61F94C180CD19D5E0BE7 /* BundleTreeView.swift in Sources */,
 				BDFDC26FEAB4583F9CC04301 /* CodeSignReader.swift in Sources */,
 				F69D1B62FB8F63FA4E797C4B /* ContentView.swift in Sources */,
 				30A5B52914B1E3138477806C /* DetailView.swift in Sources */,

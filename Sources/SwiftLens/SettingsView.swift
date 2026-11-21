@@ -18,7 +18,7 @@ struct SettingsView: View {
                     Label(L10n.t(.recentApps), systemImage: "clock.arrow.circlepath")
                 }
         }
-        .frame(width: 520, height: 260)
+        .frame(width: 520, height: 300)
     }
 
     // MARK: 通用
@@ -35,6 +35,11 @@ struct SettingsView: View {
                         Text(theme.displayName).tag(theme)
                     }
                 }
+            }
+            Section {
+                Toggle(L10n.t(.showFileTree), isOn: bindingShowFileTree)
+            } footer: {
+                Text(L10n.t(.showFileTreeHint))
             }
         }
         .formStyle(.grouped)
@@ -81,6 +86,12 @@ struct SettingsView: View {
         Binding(
             get: { appState.recentAppsEnabled },
             set: { appState.recentAppsEnabled = $0 }
+        )
+    }
+    private var bindingShowFileTree: Binding<Bool> {
+        Binding(
+            get: { appState.showFileTree },
+            set: { appState.showFileTree = $0 }
         )
     }
 }

@@ -85,6 +85,7 @@ final class AppState: ObservableObject {
     @AppStorage("swiftlens.language") var language: AppLanguage = .system
     @AppStorage("swiftlens.theme")   var theme: AppTheme = .system
     @AppStorage("swiftlens.recentAppsEnabled") var recentAppsEnabled: Bool = true
+    @AppStorage("swiftlens.showFileTree") var showFileTree: Bool = true
     @AppStorage("swiftlens.recentApps") private var recentAppsJSON: String = "[]"
 
     private static let maxRecentApps = 10

@@ -89,6 +89,69 @@ enum L10n {
         case bonjour
         case fileInfo
         case sizeBreakdown
+        // 文件树 / 经典结构
+        case bundleTree
+        case treeOmitted
+        case treeTruncated
+        case treeCopyPath
+        case treeExpandCommon
+        case treeExpandAll
+        case treeCollapseAll
+        case treeFileUnit
+        case showFileTree
+        case showFileTreeHint
+        case hideFileTree
+        case helpTabBadges
+        case helpTabStructure
+        case helpStructureIntro
+        case structureGroupContainer
+        case structureGroupSignature
+        case structureGroupResources
+        // 经典结构角色
+        case roleBundleRoot
+        case roleBundleRootDesc
+        case roleContents
+        case roleContentsDesc
+        case roleMacOS
+        case roleMacOSDesc
+        case roleExecutable
+        case roleExecutableDesc
+        case roleResources
+        case roleResourcesDesc
+        case roleFrameworks
+        case roleFrameworksDesc
+        case roleSharedFrameworks
+        case roleSharedFrameworksDesc
+        case rolePlugIns
+        case rolePlugInsDesc
+        case roleXPCServices
+        case roleXPCServicesDesc
+        case roleHelpers
+        case roleHelpersDesc
+        case roleLibrary
+        case roleLibraryDesc
+        case roleCodeSignature
+        case roleCodeSignatureDesc
+        case roleCodeResources
+        case roleCodeResourcesDesc
+        case roleInfoPlist
+        case roleInfoPlistDesc
+        case rolePkgInfo
+        case rolePkgInfoDesc
+        case roleEmbeddedProfile
+        case roleEmbeddedProfileDesc
+        case rolePrivacyManifest
+        case rolePrivacyManifestDesc
+        case roleLocalization
+        case roleLocalizationDesc
+        case roleAssetCatalog
+        case roleAssetCatalogDesc
+        case roleIcon
+        case roleIconDesc
+        case roleReceipt
+        case roleReceiptDesc
+        case roleWrapper
+        case roleWrapperDesc
         case rawPlist
         case rawCodesign
         // 文档类型 row inner
@@ -425,7 +488,7 @@ enum L10n {
         .appName: "SwiftLens", .openApp: "打开 .app", .clear: "清空",
         .revealInFinder: "在访达中显示", .copySummary: "复制摘要",
         .copyJSON: "复制 JSON", .copyEntitlementsXML: "复制 Entitlements XML",
-        .search: "搜索", .searchPlaceholder: "搜索 Info.plist、entitlements、子 bundle、依赖…",
+        .search: "搜索", .searchPlaceholder: "搜索 Info.plist、entitlements、子 bundle、文件树、依赖…",
         .searchResults: "搜索结果", .noSearchResults: "没有匹配结果",
         .placeholderOpen: "拖入 .app 到此处", .placeholderDrop: "拖入 .app 到此处",
         .placeholderRelease: "松开以加载", .placeholderPick: "或点击右上角 “打开 .app” 选择",
@@ -453,6 +516,41 @@ enum L10n {
         .bonjour: "Bonjour 服务发现 (NSBonjourServices)",
         .fileInfo: "文件信息", .rawPlist: "Info.plist 完整内容", .rawCodesign: "codesign 原始输出",
         .sizeBreakdown: "体积构成",
+        // 文件树 / 经典结构
+        .bundleTree: "文件树",
+        .treeOmitted: "其余未展开项",
+        .treeTruncated: "文件数量过多，树中只列出部分条目；体积统计仍为完整值。",
+        .treeCopyPath: "复制相对路径",
+        .treeExpandCommon: "展开常用", .treeExpandAll: "展开所有",
+        .treeCollapseAll: "全部折叠", .treeFileUnit: "个文件",
+        .showFileTree: "显示文件树", .hideFileTree: "隐藏文件树",
+        .showFileTreeHint: "关闭后主面板不再展示文件树，可随时在「更多」菜单或此处重新开启。",
+        .helpTabBadges: "徽章说明", .helpTabStructure: "经典结构",
+        .helpStructureIntro: "macOS .app 的标准组成。文件树中带标注的条目与这里一一对应，重要的结构说明也直接显示在树中。",
+        .structureGroupContainer: "容器与代码", .structureGroupSignature: "签名与元数据",
+        .structureGroupResources: "资源与隐私",
+        .roleBundleRoot: "应用包", .roleBundleRootDesc: "应用包根目录；macOS 从这里读取 Contents/ 与顶层签名信息。",
+        .roleContents: "标准容器", .roleContentsDesc: "macOS 应用的标准布局：Info.plist、可执行文件、资源与内嵌代码都在这里。",
+        .roleMacOS: "可执行文件目录", .roleMacOSDesc: "存放 CFBundleExecutable 指定的主可执行文件及辅助二进制。",
+        .roleExecutable: "主可执行文件", .roleExecutableDesc: "Info.plist 中 CFBundleExecutable 指向的 Mach-O，是应用启动时真正运行的二进制。",
+        .roleResources: "资源目录", .roleResourcesDesc: "图片、声音、字符串、nib、图标与资源目录等运行时数据。",
+        .roleFrameworks: "内嵌框架", .roleFrameworksDesc: "随应用分发的私有 framework / dylib，通常各自带独立签名。",
+        .roleSharedFrameworks: "共享框架", .roleSharedFrameworksDesc: "供主程序与其内嵌组件（XPC、插件）共用的 framework。",
+        .rolePlugIns: "插件", .rolePlugInsDesc: "可加载插件：扩展、Quick Look 生成器、偏好面板等。",
+        .roleXPCServices: "XPC 服务", .roleXPCServicesDesc: "按需启动的沙盒辅助服务，用于隔离任务或跨权限边界。",
+        .roleHelpers: "辅助程序", .roleHelpersDesc: "主应用调用的 helper app 或命令行工具。",
+        .roleLibrary: "库与运行时资源", .roleLibraryDesc: "应用专用支持文件：LaunchAgents、登录项、脚本、配置描述文件等。",
+        .roleCodeSignature: "签名资源", .roleCodeSignatureDesc: "bundle 相对签名：资源封印清单与逐文件规则。",
+        .roleCodeResources: "资源封印", .roleCodeResourcesDesc: "CodeResources 记录每个被封签文件的哈希和签名规则，是签名完整性的一部分。",
+        .roleInfoPlist: "应用元数据", .roleInfoPlistDesc: "声明身份、版本、可执行文件名、文档类型等；系统启动应用时首先读取。",
+        .rolePkgInfo: "经典包类型", .rolePkgInfoDesc: "旧式 8 字节标记：4 字节包类型（APPL）+ 4 字节签名（常见 ????）。",
+        .roleEmbeddedProfile: "描述文件", .roleEmbeddedProfileDesc: "Developer ID / App Store 分发的 provisioning profile，含 entitlements 与证书链。",
+        .rolePrivacyManifest: "隐私清单", .rolePrivacyManifestDesc: "声明收集的数据、跟踪行为与 Required Reason API。",
+        .roleLocalization: "本地化资源", .roleLocalizationDesc: "*.lproj 保存单一语言的字符串、nib 与 .stringsdict。",
+        .roleAssetCatalog: "资源目录编译产物", .roleAssetCatalogDesc: "编译后的 Assets.car：图片、颜色、符号与应用图标。",
+        .roleIcon: "图标文件", .roleIconDesc: "CFBundleIconFile / CFBundleIconName 引用的 .icns 图标。",
+        .roleReceipt: "App Store 收据", .roleReceiptDesc: "_MASReceipt/receipt 证明应用来自 Mac App Store。",
+        .roleWrapper: "iOS 移植包", .roleWrapperDesc: "Wrapper/<name>.app 是 iPhone / iPad 应用的包结构，可在 Apple 芯片上运行。",
         .extName: "扩展名", .prioLogo: "优先级", .utis: "UTIs", .prioKey: "优先级",
         .iconFile: "图标文件", .noneDocType: "未声明自定义文档类型",
         .noneXattrs: "无任何扩展属性", .invalidApp: "不是 .app bundle",
@@ -664,7 +762,7 @@ enum L10n {
         .appName: "SwiftLens", .openApp: "Open .app", .clear: "Clear",
         .revealInFinder: "Reveal in Finder", .copySummary: "Copy Summary",
         .copyJSON: "Copy JSON", .copyEntitlementsXML: "Copy Entitlements XML",
-        .search: "Search", .searchPlaceholder: "Search Info.plist, entitlements, sub-bundles, dependencies…",
+        .search: "Search", .searchPlaceholder: "Search Info.plist, entitlements, sub-bundles, files, dependencies…",
         .searchResults: "Search Results", .noSearchResults: "No matches",
         .placeholderOpen: "Drop .app here", .placeholderDrop: "Drop .app here",
         .placeholderRelease: "Release to load", .placeholderPick: "or click “Open .app” at top right",
@@ -692,6 +790,41 @@ enum L10n {
         .bonjour: "Bonjour (NSBonjourServices)",
         .fileInfo: "File Info", .rawPlist: "Info.plist (raw)", .rawCodesign: "codesign (raw)",
         .sizeBreakdown: "Size Breakdown",
+        // 文件树 / 经典结构
+        .bundleTree: "File Tree",
+        .treeOmitted: "More items not expanded",
+        .treeTruncated: "Very large bundle: only part of the tree is listed; sizes are still complete.",
+        .treeCopyPath: "Copy relative path",
+        .treeExpandCommon: "Expand common", .treeExpandAll: "Expand all",
+        .treeCollapseAll: "Collapse all", .treeFileUnit: "files",
+        .showFileTree: "Show file tree", .hideFileTree: "Hide file tree",
+        .showFileTreeHint: "When off, the file tree is hidden from the main panel; re-enable it here or from the More menu.",
+        .helpTabBadges: "Badges", .helpTabStructure: "Bundle Structure",
+        .helpStructureIntro: "Standard composition of a macOS .app. Annotated items in the file tree map to these entries, and the important explanations also appear inline in the tree.",
+        .structureGroupContainer: "Container & Code", .structureGroupSignature: "Signature & Metadata",
+        .structureGroupResources: "Resources & Privacy",
+        .roleBundleRoot: "App bundle", .roleBundleRootDesc: "Bundle root; macOS reads Contents/ and the top-level signature data from here.",
+        .roleContents: "Standard container", .roleContentsDesc: "Standard macOS layout: Info.plist, the executable, resources and embedded code live here.",
+        .roleMacOS: "Executables", .roleMacOSDesc: "Holds the main executable named by CFBundleExecutable plus helper binaries.",
+        .roleExecutable: "Main executable", .roleExecutableDesc: "The Mach-O binary named by CFBundleExecutable; this is what actually runs at launch.",
+        .roleResources: "Resources", .roleResourcesDesc: "Images, sounds, strings, nibs, icons, asset catalogs and other runtime data.",
+        .roleFrameworks: "Embedded frameworks", .roleFrameworksDesc: "Private frameworks and dylibs shipped with the app; each usually carries its own signature.",
+        .roleSharedFrameworks: "Shared frameworks", .roleSharedFrameworksDesc: "Frameworks shared by the main app and its embedded XPC services or plug-ins.",
+        .rolePlugIns: "Plug-ins", .rolePlugInsDesc: "Loadable plug-ins: extensions, Quick Look generators, preference panes and more.",
+        .roleXPCServices: "XPC services", .roleXPCServicesDesc: "Helper services launched on demand to isolate work or cross privilege boundaries.",
+        .roleHelpers: "Helpers", .roleHelpersDesc: "Helper apps or command-line tools launched by the main app.",
+        .roleLibrary: "Library", .roleLibraryDesc: "App-specific support files: LaunchAgents, login items, scripts, provisioning profiles.",
+        .roleCodeSignature: "Signature resources", .roleCodeSignatureDesc: "Bundle-relative signature: the resource seal plus per-file rules.",
+        .roleCodeResources: "Resource seal", .roleCodeResourcesDesc: "CodeResources lists hashes and signing rules for every sealed file.",
+        .roleInfoPlist: "App metadata", .roleInfoPlistDesc: "Declares identity, version, executable name and document types; read first at launch.",
+        .rolePkgInfo: "Legacy package info", .rolePkgInfoDesc: "Old 8-byte marker: 4-byte package type (APPL) plus a 4-byte creator code (often ????).",
+        .roleEmbeddedProfile: "Provisioning profile", .roleEmbeddedProfileDesc: "Embedded profile for Developer ID / App Store distribution with entitlements and certificates.",
+        .rolePrivacyManifest: "Privacy manifest", .rolePrivacyManifestDesc: "Declares collected data, tracking and Required Reason APIs.",
+        .roleLocalization: "Localized resources", .roleLocalizationDesc: "A *.lproj folder holds one language's strings, nibs and .stringsdict files.",
+        .roleAssetCatalog: "Compiled asset catalog", .roleAssetCatalogDesc: "Assets.car: compiled images, colors, symbols and the app icon.",
+        .roleIcon: "Icon", .roleIconDesc: "The .icns icon referenced by CFBundleIconFile / CFBundleIconName.",
+        .roleReceipt: "App Store receipt", .roleReceiptDesc: "_MASReceipt/receipt proves the app came from the Mac App Store.",
+        .roleWrapper: "iOS wrapper", .roleWrapperDesc: "Wrapper/<name>.app is the iPhone / iPad bundle layout, runnable on Apple silicon.",
         .extName: "Extensions", .prioLogo: "Rank", .utis: "UTIs", .prioKey: "Rank",
         .iconFile: "Icon file", .noneDocType: "No custom document type declared",
         .noneXattrs: "No extended attributes", .invalidApp: "Not an .app bundle",

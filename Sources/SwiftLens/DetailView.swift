@@ -4,6 +4,7 @@ import AppKit
 /// 详情面板：以分区形式展示 .app 信息。
 struct DetailView: View {
     let info: AppInfo
+    @EnvironmentObject private var appState: AppState
     @State private var searchText: String = ""
     @FocusState private var searchFocused: Bool
 
@@ -52,6 +53,9 @@ struct DetailView: View {
                     headerSection(proxy: proxy)
                     searchBar
                     if searchQuery.isEmpty {
+                        if appState.showFileTree {
+                            bundleTreeSection
+                        }
                         basicSection
                         runtimeSection
                         architecturesSection
@@ -167,6 +171,13 @@ struct DetailView: View {
         }
         for item in info.launchAgents {
             add(L10n.t(.launchAgents), item.label, item.relativePath)
+        }
+        if appState.showFileTree {
+            for node in info.bundleTree.flattenedNodes() {
+                add(L10n.t(.bundleTree),
+                    node.path.isEmpty ? info.bundleURL.lastPathComponent : node.path,
+                    node.role?.title ?? "")
+            }
         }
         return out
     }
@@ -992,8 +1003,7 @@ struct DetailView: View {
     }
 
     // MARK: 体积构成
-    private var sizeBreakdownSection: some View {
-        SectionView(L10n.t(.sizeBreakdown), subtitle: info.formattedFileSize()) {
+    private var sizeBreakdownSection: some View {        SectionView(L10n.t(.sizeBreakdown), subtitle: info.formattedFileSize()) {
             if info.sizeBreakdown.isEmpty {
                 PlaceholderRow(text: "—")
             } else {
@@ -1006,6 +1016,13 @@ struct DetailView: View {
                 }
             }
         }
+    }
+
+    // MARK: 文件树
+    private var bundleTreeSection: some View {
+        BundleTreeSection(tree: info.bundleTree,
+                          bundleURL: info.bundleURL,
+                          onHide: { appState.showFileTree = false })
     }
 
     // MARK: 文件信息
@@ -1493,7 +1510,7 @@ struct DetailView: View {
     }
 
     private func formattedSize(_ bytes: UInt64) -> String {
-        ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
+        ByteSize.string(bytes)
     }
 
     /// 顶部版本徽章文本：`1.2.3` / `1.2.3 (456)` / `(456)`，按可用字段组合

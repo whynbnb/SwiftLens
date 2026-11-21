@@ -106,6 +106,9 @@ struct ContentView: View {
                         }
                         Divider()
                     }
+                    Divider()
+                    Toggle(L10n.t(.showFileTree), isOn: $appState.showFileTree)
+                    Divider()
                     Button {
                         openSettings()
                     } label: {

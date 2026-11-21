@@ -2,10 +2,33 @@ import SwiftUI
 
 // MARK: - 帮助面板
 
-/// 帮助面板：说明顶部各徽章 / 签名状态 / 沙盒状态的含义，
-/// 帮助用户准确理解 SwiftLens 展示的各项信息。
+/// 帮助面板：两个标签页
+/// 1. 徽章说明：顶部各徽章 / 签名状态 / 沙盒状态的含义
+/// 2. 经典结构：macOS .app 的标准目录与文件说明（文件树中标注的条目对应此处）
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var tab: HelpTab = .badges
+
+    enum HelpTab: String, CaseIterable, Identifiable {
+        case badges
+        case structure
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .badges:    return L10n.t(.helpTabBadges)
+            case .structure: return L10n.t(.helpTabStructure)
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .badges:    return "tag"
+            case .structure: return "folder.badge.gearshape"
+            }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -25,23 +48,49 @@ struct HelpView: View {
             .padding(.top, 20)
             .padding(.bottom, 12)
 
+            // 标签页
+            Picker("", selection: $tab) {
+                ForEach(HelpTab.allCases) { item in
+                    Label(item.title, systemImage: item.icon)
+                        .tag(item)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, 24)
+            .padding(.bottom, 12)
+
             Divider()
 
             // 隐藏滚动条, 避免出现/消失时挤压内容
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 24) {
-                    notarizationSection
-                    sandboxSection
-                    quarantineSection
-                    signatureStateSection
-                    badgesSection
-                }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 20)
+                content
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 20)
             }
         }
         .frame(width: 640, height: 560)
         .background(.regularMaterial)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch tab {
+        case .badges:    badgesTab
+        case .structure: structureTab
+        }
+    }
+
+    // MARK: - 徽章说明
+
+    private var badgesTab: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            notarizationSection
+            sandboxSection
+            quarantineSection
+            signatureStateSection
+            badgesSection
+        }
     }
 
     // MARK: - 签名 / 公证状态
@@ -88,6 +137,79 @@ struct HelpView: View {
             badgeRow(color: .purple, title: L10n.t(.helpAgentAppTitle), desc: L10n.t(.helpAgentAppDesc))
             badgeRow(color: .indigo, title: L10n.t(.helpBackgroundTitle), desc: L10n.t(.helpBackgroundDesc))
             badgeRow(color: .pink,   title: L10n.t(.helpIOSPortTitle), desc: L10n.t(.helpIOSPortDesc))
+        }
+    }
+
+    // MARK: - 经典结构
+
+    private var structureTab: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            Text(L10n.t(.helpStructureIntro))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            structureGroup(
+                title: L10n.t(.structureGroupContainer),
+                icon: "shippingbox",
+                roles: [.bundleRoot, .contents, .macos, .executable,
+                        .frameworks, .sharedFrameworks, .plugins,
+                        .xpcServices, .helpers, .library, .wrapper]
+            )
+            structureGroup(
+                title: L10n.t(.structureGroupSignature),
+                icon: "checkmark.seal",
+                roles: [.infoPlist, .pkgInfo, .codeSignature,
+                        .codeResources, .embeddedProfile, .receipt, .privacyManifest]
+            )
+            structureGroup(
+                title: L10n.t(.structureGroupResources),
+                icon: "photo.on.rectangle",
+                roles: [.resources, .localization, .assetCatalog, .icon]
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func structureGroup(title: String, icon: String,
+                                roles: [BundleRole]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.headline)
+                    .foregroundStyle(.tint)
+                Text(title)
+                    .font(.system(.headline, design: .default).bold())
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(roles) { role in
+                    structureRow(role)
+                }
+            }
+            .padding(.leading, 28)
+        }
+    }
+
+    private func structureRow(_ role: BundleRole) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: role.symbol)
+                    .font(.caption)
+                    .foregroundStyle(.tint)
+                    .frame(width: 16)
+                Text(role.title)
+                    .font(.callout.weight(.semibold))
+                Text(role.pattern)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            Text(role.detail)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.leading, 24)
         }
     }
 

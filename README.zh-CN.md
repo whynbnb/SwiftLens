@@ -54,6 +54,8 @@
 - **Bonjour** —— `NSBonjourServices` 原样显示，不再追加 `_…._tcp` 后缀造成重复拼接。
 - **文件信息** —— 递归 bundle 体积、修改 / 创建时间、八进制权限、App Store 收据，以及按 `Contents` 一级目录统计的 **体积构成** 与占比。
 - **Info.plist 健康检查** —— 实际 plist 路径、XML / Binary 格式、缺失必需键、主可执行文件与 `_CodeSignature` 资源检查，并展示 `LSMinimumSystemVersionByArchitecture`。
+- **文件树** —— 可展开的 bundle 文件树，目录体积递归汇总，经典目录优先排序，标准路径带角色徽章和 ⓘ 悬浮说明。可在 `更多 ▸ 显示文件树` 或设置中隐藏，并记住选择。超大 bundle 的可见树最多 4,000 个节点，体积统计仍为完整值。
+- **经典结构帮助标签页** —— `帮助 ▸ 经典结构` 按「容器与代码 / 签名与元数据 / 资源与隐私」三组解释每个标准条目：`Contents/Info.plist`、`MacOS/<CFBundleExecutable>`、`Resources`、`Frameworks`、`SharedFrameworks`、`PlugIns`、`XPCServices`、`Library`、`_CodeSignature/CodeResources`、`PkgInfo`、`embedded.provisionprofile`、`PrivacyInfo.xcprivacy`、`*.lproj`、`Assets.car`、`*.icns`、`_MASReceipt/receipt` 以及 iOS 的 `Wrapper/` 布局。
 - **原始 `Info.plist`**（扁平化全键值）与 **合成的 `codesign -dvvv` 输出**，便于调试。plist 中 `Bool` 值正确显示为 `YES` / `NO`，而不再是 `1` / `0`。
 - **搜索与导出** —— 搜索框（`⌘F`）可过滤 Info.plist 键值、entitlements、子 bundle、隐私清单、依赖与启动项；支持 **复制 JSON**（CLI 亦可 `--json`）与 **复制 Entitlements XML**。
 - **最近打开** —— `更多 ▸ 最近打开`（二级菜单）保留最近 10 个 app，并实时标记有效性（有效 / 已失效 / 无效）；点击重新打开，支持移除单项与清空全部。设置中默认开启、可关闭；使用安全作用域书签，重启后仍可只读访问。
