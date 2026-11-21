@@ -1022,6 +1022,7 @@ struct DetailView: View {
     private var bundleTreeSection: some View {
         BundleTreeSection(tree: info.bundleTree,
                           bundleURL: info.bundleURL,
+                          appIcon: info.icon,
                           onHide: { appState.showFileTree = false })
     }
 

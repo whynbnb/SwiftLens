@@ -7,13 +7,16 @@ import AppKit
 struct BundleTreeSection: View {
     let tree: BundleTree
     let bundleURL: URL
+    let appIcon: NSImage?
     let onHide: () -> Void
 
     @State private var expanded: Set<String>
 
-    init(tree: BundleTree, bundleURL: URL, onHide: @escaping () -> Void) {
+    init(tree: BundleTree, bundleURL: URL, appIcon: NSImage?,
+         onHide: @escaping () -> Void) {
         self.tree = tree
         self.bundleURL = bundleURL
+        self.appIcon = appIcon
         self.onHide = onHide
         _expanded = State(initialValue: Self.defaultExpanded(tree.root))
     }
@@ -21,12 +24,13 @@ struct BundleTreeSection: View {
     var body: some View {
         SectionView(L10n.t(.bundleTree), subtitle: subtitle,
                     leading: hideButton, trailing: headerActions) {
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 0) {
                 BundleNodeRow(node: tree.root,
                               depth: 0,
                               expanded: $expanded,
                               totalSize: tree.root.size,
-                              bundleURL: bundleURL)
+                              bundleURL: bundleURL,
+                              appIcon: appIcon)
             }
             .padding(.vertical, 2)
 
@@ -51,7 +55,7 @@ struct BundleTreeSection: View {
             }
             .buttonStyle(.plain)
             .font(.caption)
-            .foregroundStyle(Color.accentColor)
+            .foregroundStyle(.secondary)
             .help(L10n.t(.hideFileTree))
         )
     }
@@ -123,18 +127,32 @@ private struct BundleNodeRow: View {
     @Binding var expanded: Set<String>
     let totalSize: UInt64
     let bundleURL: URL
+    let appIcon: NSImage?
+
+    @State private var hovered = false
 
     private var isExpanded: Bool { expanded.contains(node.id) }
     private var canExpand: Bool { node.isDirectory && !node.children.isEmpty }
+    private var isRoot: Bool { node.path.isEmpty }
     private var percentText: String? {
         guard node.isDirectory, totalSize > 0, node.size > 0 else { return nil }
         return String(format: "%.1f%%", Double(node.size) / Double(totalSize) * 100)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: 0) {
             row
+                .padding(.vertical, 2)
+                .padding(.horizontal, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(hovered && canExpand
+                              ? Color.secondary.opacity(0.09)
+                              : Color.clear)
+                )
+                .padding(.leading, CGFloat(depth) * 16)
                 .contentShape(Rectangle())
+                .onHover { hovered = $0 }
                 .onTapGesture {
                     guard canExpand else { return }
                     withAnimation(.easeInOut(duration: 0.12)) { toggle() }
@@ -145,60 +163,56 @@ private struct BundleNodeRow: View {
                                   depth: depth + 1,
                                   expanded: $expanded,
                                   totalSize: totalSize,
-                                  bundleURL: bundleURL)
+                                  bundleURL: bundleURL,
+                                  appIcon: appIcon)
                 }
             }
         }
     }
 
     private var row: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
+        HStack(spacing: 7) {
             Image(systemName: "chevron.right")
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 8, weight: .semibold))
+                .foregroundStyle(.tertiary)
                 .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 .frame(width: 10)
                 .opacity(canExpand ? 1 : 0)
 
-            Image(systemName: iconName)
-                .font(.callout)
-                .foregroundStyle(node.role != nil ? Color.accentColor : Color.secondary)
-                .frame(width: 18)
+            icon
 
             Text(displayName)
-                .font(.system(.callout,
-                              design: node.isDirectory ? .default : .monospaced))
+                .font(.system(.callout, weight: node.isDirectory ? .medium : .regular))
                 .foregroundStyle(node.isOmitted ? Color.secondary : Color.primary)
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .help(fullPath)
 
-            if let role = node.role {
+            if let role = node.role, role != .bundleRoot,
+               role.title.caseInsensitiveCompare(node.name) != .orderedSame {
                 Text(role.title)
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(Capsule().fill(Color.accentColor.opacity(0.14)))
-                    .help("\(role.pattern)\n\(role.detail)")
-                // 说明收进图标，悬停查看，避免每个标准条目都占一行
-                Image(systemName: "info.circle")
-                    .font(.caption2)
+                    .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(Capsule().fill(.quaternary.opacity(0.45)))
+                    .help("\(role.pattern)\n\(role.detail)")
+                Image(systemName: "info.circle")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
                     .help("\(role.pattern)\n\(role.detail)")
             }
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 12)
 
             if !node.isOmitted {
                 Text(sizeText)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11))
+                    .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .help(percentText.map { "\(sizeText) · \($0)" } ?? sizeText)
             }
         }
-        .padding(.vertical, 1)
-        .padding(.leading, CGFloat(depth) * 14)
         .contextMenu {
             Button(L10n.t(.treeCopyPath)) {
                 copyToPasteboard(node.path.isEmpty ? node.name : node.path)
@@ -209,6 +223,22 @@ private struct BundleNodeRow: View {
                     : bundleURL.appendingPathComponent(node.path)
                 NSWorkspace.shared.activateFileViewerSelecting([url])
             }
+        }
+    }
+
+    @ViewBuilder
+    private var icon: some View {
+        if isRoot, let appIcon {
+            Image(nsImage: appIcon)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 16, height: 16)
+        } else {
+            Image(systemName: iconName)
+                .font(.system(size: 12))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.secondary)
+                .frame(width: 16)
         }
     }
 

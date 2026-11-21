@@ -374,7 +374,6 @@ enum BundleTreeReader {
         case "Contents/PkgInfo":            return .pkgInfo
         case "Contents/embedded.provisionprofile": return .embeddedProfile
         case "Wrapper":                     return .wrapper
-        case "CodeResources":               return .codeResources
         case "Info.plist":                  return .infoPlist
         case "PkgInfo":                     return .pkgInfo
         case "embedded.provisionprofile":   return .embeddedProfile
@@ -392,7 +391,7 @@ enum BundleTreeReader {
         if name == "Assets.car" { return .assetCatalog }
         if !isDirectory, name.hasSuffix(".icns") { return .icon }
         if rel.hasSuffix("_MASReceipt/receipt") { return .receipt }
-        if rel.hasSuffix("/CodeResources") { return .codeResources }
+        if rel.hasSuffix("/_CodeSignature/CodeResources") { return .codeResources }
         if name == "Info.plist" { return .infoPlist }
         if name == "PkgInfo" { return .pkgInfo }
         if isDirectory, rel.hasSuffix("/_CodeSignature") { return .codeSignature }
