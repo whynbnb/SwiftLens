@@ -123,7 +123,16 @@ struct ContentView: View {
             }
         }
         .navigationTitle(windowTitle)
+        .onAppear { consumePendingOpen() }
+        .onChange(of: appState.pendingOpenURL) { _, _ in consumePendingOpen() }
         // 设置 sheet 现在由 SwiftLensApp 统一管理，工具栏按钮只负责发通知
+    }
+
+    /// 消费 AppDelegate 从 open-file 事件放入的 URL（启动时可能早于窗口出现）。
+    private func consumePendingOpen() {
+        guard let url = appState.pendingOpenURL else { return }
+        appState.pendingOpenURL = nil
+        handle(url: url)
     }
 
     private var windowTitle: String {

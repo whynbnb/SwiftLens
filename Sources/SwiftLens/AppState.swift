@@ -74,7 +74,14 @@ enum RecentAppStatus: Equatable {
     }
 }
 
+@MainActor
 final class AppState: ObservableObject {
+    /// 共享实例：AppDelegate 接收 open-file 事件后，通过它把 URL 交给界面。
+    static let shared = AppState()
+
+    /// 由 Finder / 其他应用「用 SwiftLens 打开」传入的 .app，等待 ContentView 消费。
+    @Published var pendingOpenURL: URL?
+
     @AppStorage("swiftlens.language") var language: AppLanguage = .system
     @AppStorage("swiftlens.theme")   var theme: AppTheme = .system
     @AppStorage("swiftlens.recentAppsEnabled") var recentAppsEnabled: Bool = true

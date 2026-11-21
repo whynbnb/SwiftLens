@@ -6,11 +6,12 @@ import AppKit
 @main
 struct SwiftLensApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var appState = AppState()
+    @StateObject private var appState = AppState.shared
     @State private var showHelp: Bool = false
 
     var body: some Scene {
-        WindowGroup("SwiftLens") {
+        // 单窗口应用：open-file 事件不应像 WindowGroup 那样再开一个新窗口
+        Window("SwiftLens", id: "main") {
             ContentView()
                 .preferredColorScheme(appState.theme.colorScheme)
                 .environmentObject(appState)
@@ -76,5 +77,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    /// Finder「打开方式 → SwiftLens」或其他应用通过 LaunchServices
+    /// （NSWorkspace.open(_:withApplicationAt:configuration:)）传入 .app 时触发。
+    ///
+    /// 沙盒应用通过 open-file 事件获得系统附带的一次性文件读取授权，
+    /// 因此这里不需要 URL Scheme，也不需要预先取得安全作用域书签。
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard let url = urls.first(where: {
+            $0.pathExtension.lowercased() == "app"
+                && FileManager.default.fileExists(atPath: $0.path)
+        }) else { return }
+
+        // 交给 ContentView 走与拖放 / 选择面板相同的加载路径
+        AppState.shared.pendingOpenURL = url
+
+        // 应用可能处于后台且没有窗口：先激活并把窗口带到前台
+        if application.activationPolicy() != .regular {
+            application.setActivationPolicy(.regular)
+        }
+        application.activate(ignoringOtherApps: true)
+        application.windows.first(where: { $0.canBecomeKey })?.makeKeyAndOrderFront(nil)
+    }
+
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
+
+    /// 单窗口应用：关掉最后一个窗口就退出，避免留下一个没有窗口、也不知道该怎么再打开的进程。
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+
+    /// 点击 Dock 图标时把已有窗口带回前台（单窗口，不会有多个窗口需要挑选）。
+    func applicationShouldHandleReopen(_ sender: NSApplication,
+                                       hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            sender.windows.first(where: { $0.canBecomeKey })?.makeKeyAndOrderFront(nil)
+        }
+        return true
+    }
 }

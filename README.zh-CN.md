@@ -60,6 +60,7 @@
 - **帮助 sheet** —— 解释 header 上的每一个徽章（公证 6 级、沙盒、隔离、签名有效性、严格验证、Agent / Background / iOS 移植）；从 `更多 ▸ 帮助` 或菜单 `⌘?` 打开。
 - **原生设置窗口** —— 使用 macOS 标准 `Settings` scene，**通用** / **最近打开** 两个标签页：语言（跟随系统 / 中文 / English）、主题、最近打开记录（默认开启），通过 `@AppStorage` 持久化。
 - **标准关于面板** —— 系统 About 面板，包含应用图标、版本 / 构建号、版权，以及可点击的仓库 / 许可证链接。
+- **由其他应用打开** —— 其他应用（或 Finder 的「打开方式」）可以通过 LaunchServices open-file 事件把 `.app` 交给 SwiftLens，例如 `NSWorkspace.shared.open([url], withApplicationAt: swiftLensURL, configuration:)`。不需要 URL Scheme，沙盒对目标 bundle 的读取权限由系统随事件授予，加载后直接显示在单窗口中。
 - **隐藏 CLI 模式** —— `swift run SwiftLens /path/to.app` 打印完整本地化纯文本摘要并退出；`--json` 输出结构化 JSON，便于脚本化。
 
 ## 沙盒说明

@@ -60,6 +60,7 @@ A native macOS app — built with Swift / SwiftUI / SPM — for inspecting `.app
 - **Help sheet** — explains every header badge (notarization levels, sandbox, quarantine, validity, strict validity, agent / background / iOS port) and how to interpret them; open it from `More ▸ Help` or the menu `⌘?`.
 - **Native Settings window** — standard macOS `Settings` scene with **General** / **Recent Apps** tabs: language (Follow system / 中文 / English), theme, and recent-apps recording (on by default), persisted via `@AppStorage`.
 - **Standard About panel** — macOS About panel with app icon, version / build, copyright, and clickable Repository / License links.
+- **Open with SwiftLens** — other apps (or Finder's *Open With*) can hand a `.app` to SwiftLens through a LaunchServices open-file event, e.g. `NSWorkspace.shared.open([url], withApplicationAt: swiftLensURL, configuration:)`. No URL scheme is involved, so the sandbox still grants read access to the target bundle and it loads into the single window.
 - **Hidden CLI mode** — `swift run SwiftLens /path/to.app` prints a full localized plain-text summary and exits; `--json` outputs a structured JSON report. Useful for scripting.
 
 ## Sandbox notes
